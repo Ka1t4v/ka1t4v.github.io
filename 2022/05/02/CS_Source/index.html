@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="闲来无事研究一下FPS游戏的透视原理（基于坐标获取之后的GDI绘图），即我们熟知的方框透视 工具：CE7.4 目标：Counter-Strike:Source(Steam)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于GDI绘图的FPS游戏方框透视">
+<meta property="og:url" content="https://ka1t4v.github.io/2022/05/02/CS_Source/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="闲来无事研究一下FPS游戏的透视原理（基于坐标获取之后的GDI绘图），即我们熟知的方框透视 工具：CE7.4 目标：Counter-Strike:Source(Steam)">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/fov.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519142821105.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519142918454.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519144248514.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519144326616.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519163740590.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519163855140.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519163936047.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519202810945.png">
+<meta property="article:published_time" content="2022-05-02T12:46:25.000Z">
+<meta property="article:modified_time" content="2022-07-27T11:44:06.400Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/fov.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2022/05/02/CS_Source/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>基于GDI绘图的FPS游戏方框透视 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2022/05/02/CS_Source/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于GDI绘图的FPS游戏方框透视
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-05-02 20:46:25" itemprop="dateCreated datePublished" datetime="2022-05-02T20:46:25+08:00">2022-05-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Game/" itemprop="url" rel="index"><span itemprop="name">Game</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Windows/" itemprop="url" rel="index"><span itemprop="name">Windows</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>闲来无事研究一下FPS游戏的透视原理（基于坐标获取之后的GDI绘图），即我们熟知的方框透视</p>
+<p>工具：CE7.4</p>
+<p>目标：Counter-Strike:Source(Steam)</p>
+<span id="more"></span>
+
+<h1 id="CE定位关键信息基址"><a href="#CE定位关键信息基址" class="headerlink" title="CE定位关键信息基址"></a>CE定位关键信息基址</h1><p>使用CE获得FOV，人物坐标，准星坐标等关键信息基地址</p>
+<h2 id="FOV视场角"><a href="#FOV视场角" class="headerlink" title="FOV视场角"></a>FOV视场角</h2><p>通过狙击镜右键的变焦操作，寻找储存fov视角数值的内存地址</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/fov.png" alt="fov"></p>
+<p>由于分辨率的修改，gov视角的角度也随着变化</p>
+<p>这里使用4:3的分辨率，可知fov角度为90度，而这里的74猜测为垂直视场角</p>
+<p>这列使用第一块中的偏移，绿色为基地址，可以直接寻址获得</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">client.dll+506848   90  //fov</span><br><span class="line">client.dll+50684C   74  //fov_y</span><br></pre></td></tr></table></figure>
+
+<h2 id="寻找自己的坐标"><a href="#寻找自己的坐标" class="headerlink" title="寻找自己的坐标"></a>寻找自己的坐标</h2><p>一般来说坐标是以x，y，z的方式来存储的，那么首先可以来寻找z轴，只需要跳跃来判断，然后一般都是连续存储，所以找到z轴之后就可以找到x，y</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519142821105.png" alt="image-20220519142821105"></p>
+<p>最后找到的比较多的重复值，那么选第一个看一下，这里由于之前设置的数为4byte整数，显示比较奇怪，转换为folat就可以看到明显是坐标</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519142918454.png" alt="image-20220519142918454"></p>
+<p>然后按4byte偏移的方式寻找到对应的x，y坐标，即z坐标地址-4得到y坐标地址，再-4得到x坐标地址</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">client.dll+4FCB04   //x</span><br><span class="line">client.dll+4FCB08   //y</span><br><span class="line">client.dll+4FCB0C   //z</span><br></pre></td></tr></table></figure>
+
+<h2 id="寻找准星坐标"><a href="#寻找准星坐标" class="headerlink" title="寻找准星坐标"></a>寻找准星坐标</h2><p>通常fps游戏准星向上移动时，y轴坐标会减小，向下移动y轴坐标会增加</p>
+<p>找到y轴坐标后，+4得到x轴坐标</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519144248514.png" alt="image-20220519144248514"></p>
+<p>绿色的都是基地址，同样取第一个作为y坐标，然后+4获得x坐标</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519144326616.png" alt="image-20220519144326616"></p>
+<p>最终基地址为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">client.dll+49D504 //y</span><br><span class="line">client.dll+49D508 //x</span><br></pre></td></tr></table></figure>
+
+<h2 id="找到单个bot坐标"><a href="#找到单个bot坐标" class="headerlink" title="找到单个bot坐标"></a>找到单个bot坐标</h2><p>使用bot_add增加一个bot</p>
+<p>然后用bot_stop 0&#x2F;1来控制bot行动 然后不停检索变动的坐标值</p>
+<p>最终基地址为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">server.dll+54DD24 //x</span><br><span class="line">server.dll+54DD28 //y</span><br><span class="line">server.dll+54DD2C //z</span><br></pre></td></tr></table></figure>
+
+<p>但这只是一个bot的位置信息，下面获得bot个数</p>
+<h2 id="找到bot个数"><a href="#找到bot个数" class="headerlink" title="找到bot个数"></a>找到bot个数</h2><p>使用bot_add不断增加bot个数并精确查找人数，最后找到基地址</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">server.dll+58BA08 //bot个数</span><br></pre></td></tr></table></figure>
+
+<h2 id="找到bot血量"><a href="#找到bot血量" class="headerlink" title="找到bot血量"></a>找到bot血量</h2><p>找bot血量时出了点问题。没找到</p>
+<h2 id="找到bot坐标数组偏移"><a href="#找到bot坐标数组偏移" class="headerlink" title="找到bot坐标数组偏移"></a>找到bot坐标数组偏移</h2><p>每个bot都有自己的结构体，前面我们找到了单个bot坐标基地址，那么如果有多个bot的情况下，就需要找到所有bot的坐标，那么多添加三个bot</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519163740590.png" alt="image-20220519163740590"></p>
+<p>然后由于前面找到了第一个bot坐标的基地址，那么在第一个bot的x坐标地址处选择-&gt;找到哪个地方修改了这段数据</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519163855140.png" alt="image-20220519163855140"></p>
+<p>得到一个函数，然后选择-&gt;找到这段函数访问的地址</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519163936047.png" alt="image-20220519163936047"></p>
+<p>可以看到有四个地址，正好对应加上自己的四个玩家，那么经过测试2213DD00处存放的是自己的坐标</p>
+<p>然后2213DD24就是前面找到的单个bot的地址的x坐标</p>
+<p>偏移量表示为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">server.dll+54DD24</span><br></pre></td></tr></table></figure>
+
+<p>那么可知此时每个bot的结构体偏移量为24h</p>
+<p>首个bot的结构体从server.dll+54DD24开始</p>
+<p>然后剩下的每+24h为下一个结构体偏移，并且x，y，z坐标从结构体开始按4byte的方式连续存储</p>
+<h2 id="编写脚本动态获取这些数据"><a href="#编写脚本动态获取这些数据" class="headerlink" title="编写脚本动态获取这些数据"></a>编写脚本动态获取这些数据</h2><p>d，lx，ld，lu，这几个都是输出32位的<br> hd，hx，hu 这几个都是输出16位数据的<br> hhd，hhx，hhu，这几个都是输出8位的<br> lld，ll，llu，llx，这几个都是输出64位的</p>
+<p>使用函数来读取内存</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">BOOL ReadProcessMemory(</span><br><span class="line">  [in]  HANDLE  hProcess,</span><br><span class="line">  [in]  LPCVOID lpBaseAddress,</span><br><span class="line">  [out] LPVOID  lpBuffer,</span><br><span class="line">  [in]  SIZE_T  nSize,</span><br><span class="line">  [out] SIZE_T  *lpNumberOfBytesRead</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<p>偏移地址使用查找到的dll模块地址加上相应的偏移</p>
+<p>这里dll模块的句柄实际上就是dll模块的地址，可以直接转换为地址使用</p>
+<h2 id="GDI绘图透视"><a href="#GDI绘图透视" class="headerlink" title="GDI绘图透视"></a>GDI绘图透视</h2><p>那么就根据前面获取的自己的坐标和bot的坐标，还有fov角度和鼠标准星角度，进行计算，最后获得敌人相对于屏幕的坐标，然后基于坐标在屏幕实画框即可</p>
+<p>这里使用GDI绘图的方式，首先理解GDI坐标系，和一般的坐标有所不同</p>
+<p>GDI坐标系：</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519202810945.png" alt="image-20220519202810945"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/21/Commons-Collections4_%E9%93%BE%E5%88%86%E6%9E%90/" rel="prev" title="Commons-Collections4反序列化链分析">
+      <i class="fa fa-chevron-left"></i> Commons-Collections4反序列化链分析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/05/10/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" rel="next" title="Shiro反序列化漏洞">
+      Shiro反序列化漏洞 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CE%E5%AE%9A%E4%BD%8D%E5%85%B3%E9%94%AE%E4%BF%A1%E6%81%AF%E5%9F%BA%E5%9D%80"><span class="nav-number">1.</span> <span class="nav-text">CE定位关键信息基址</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#FOV%E8%A7%86%E5%9C%BA%E8%A7%92"><span class="nav-number">1.1.</span> <span class="nav-text">FOV视场角</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BB%E6%89%BE%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9D%90%E6%A0%87"><span class="nav-number">1.2.</span> <span class="nav-text">寻找自己的坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BB%E6%89%BE%E5%87%86%E6%98%9F%E5%9D%90%E6%A0%87"><span class="nav-number">1.3.</span> <span class="nav-text">寻找准星坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0%E5%8D%95%E4%B8%AAbot%E5%9D%90%E6%A0%87"><span class="nav-number">1.4.</span> <span class="nav-text">找到单个bot坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E4%B8%AA%E6%95%B0"><span class="nav-number">1.5.</span> <span class="nav-text">找到bot个数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E8%A1%80%E9%87%8F"><span class="nav-number">1.6.</span> <span class="nav-text">找到bot血量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E5%9D%90%E6%A0%87%E6%95%B0%E7%BB%84%E5%81%8F%E7%A7%BB"><span class="nav-number">1.7.</span> <span class="nav-text">找到bot坐标数组偏移</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E8%84%9A%E6%9C%AC%E5%8A%A8%E6%80%81%E8%8E%B7%E5%8F%96%E8%BF%99%E4%BA%9B%E6%95%B0%E6%8D%AE"><span class="nav-number">1.8.</span> <span class="nav-text">编写脚本动态获取这些数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GDI%E7%BB%98%E5%9B%BE%E9%80%8F%E8%A7%86"><span class="nav-number">1.9.</span> <span class="nav-text">GDI绘图透视</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

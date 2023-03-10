@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="TEB12TEB(Thread Environment Block，线程环境块)线程环境块中存放着进程中所有线程的各种信息  TEB不在系统内核空间中，而是应用层的一个结构，全程为Thread environment block即线程环境块，结构中包括着系统频繁使用的一些与线程相关的数据。进程中的每个线程（系统线程除外）都有一个自己的TEB">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TEB表&amp;PEB表&amp;LDR链学习">
+<meta property="og:url" content="https://ka1t4v.github.io/2022/07/29/TEB&PEB%E8%A1%A8%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="TEB12TEB(Thread Environment Block，线程环境块)线程环境块中存放着进程中所有线程的各种信息  TEB不在系统内核空间中，而是应用层的一个结构，全程为Thread environment block即线程环境块，结构中包括着系统频繁使用的一些与线程相关的数据。进程中的每个线程（系统线程除外）都有一个自己的TEB">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220731191036389.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220731191437876.png">
+<meta property="article:published_time" content="2022-07-29T14:46:25.000Z">
+<meta property="article:modified_time" content="2022-07-31T11:15:08.986Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220731191036389.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2022/07/29/TEB&PEB%E8%A1%A8%E5%AD%A6%E4%B9%A0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>TEB表&PEB表&LDR链学习 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2022/07/29/TEB&PEB%E8%A1%A8%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TEB表&PEB表&LDR链学习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-07-29 22:46:25" itemprop="dateCreated datePublished" datetime="2022-07-29T22:46:25+08:00">2022-07-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Windows/" itemprop="url" rel="index"><span itemprop="name">Windows</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="TEB"><a href="#TEB" class="headerlink" title="TEB"></a>TEB</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">TEB(Thread Environment Block，线程环境块)</span><br><span class="line">线程环境块中存放着进程中所有线程的各种信息</span><br></pre></td></tr></table></figure>
+
+<p>TEB不在系统内核空间中，而是应用层的一个结构，全程为Thread environment block即线程环境块，结构中包括着系统频繁使用的一些与线程相关的数据。进程中的每个线程（系统线程除外）都有一个自己的TEB</p>
+<span id="more"></span>
+
+<h2 id="TEB结构"><a href="#TEB结构" class="headerlink" title="TEB结构"></a>TEB结构</h2><p>每个OS版本中的TEB的结构都略有不同，并且x86和x64下的TEB偏移也不一样，以下都是x86程序的TEB示例</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">0:012&gt; dt nt!_teb</span><br><span class="line">ntdll!_TEB</span><br><span class="line">   +0x000 NtTib            : _NT_TIB</span><br><span class="line">   +0x01c EnvironmentPointer : Ptr32 Void</span><br><span class="line">   +0x020 ClientId         : _CLIENT_ID</span><br><span class="line">   +0x028 ActiveRpcHandle  : Ptr32 Void</span><br><span class="line">   +0x02c ThreadLocalStoragePointer : Ptr32 Void</span><br><span class="line">   +0x030 ProcessEnvironmentBlock : Ptr32 _PEB</span><br><span class="line">   +0x034 LastErrorValue   : Uint4B</span><br><span class="line">   +0x038 CountOfOwnedCriticalSections : Uint4B</span><br><span class="line">   +0x03c CsrClientThread  : Ptr32 Void</span><br><span class="line">   +0x040 Win32ThreadInfo  : Ptr32 Void</span><br><span class="line">   +0x044 User32Reserved   : [26] Uint4B</span><br><span class="line">   +0x0ac UserReserved     : [5] Uint4B</span><br><span class="line">   +0x0c0 WOW32Reserved    : Ptr32 Void</span><br><span class="line">   +0x0c4 CurrentLocale    : Uint4B</span><br><span class="line">   +0x0c8 FpSoftwareStatusRegister : Uint4B</span><br><span class="line">   +0x0cc SystemReserved1  : [54] Ptr32 Void</span><br><span class="line">   +0x1a4 ExceptionCode    : Int4B</span><br><span class="line">...省略</span><br></pre></td></tr></table></figure>
+
+<h2 id="获取TEB基地址的方法"><a href="#获取TEB基地址的方法" class="headerlink" title="获取TEB基地址的方法"></a>获取TEB基地址的方法</h2><p><strong>1.使用ntdll.NtCurrentTeb()</strong></p>
+<p>ntdll.dll导出了一个函数NtCurrentTeb()，该函数可以返回获取当前线程TEB的基地址，可兼容x86和x64</p>
+<p>使用以下代码即可获得，由于返回的是一个基地址，需要定义一个相关结构体来读取，不需要包含全部变量，只需包含几个即可</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">_TEB</span> &#123;</span><br><span class="line">    NT_TIB Tib;</span><br><span class="line">    PVOID Env;</span><br><span class="line">&#125;TEB,*PTEB;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">PTEB</span><span class="params">(NTAPI* NtCurrentTeb)</span><span class="params">()</span></span>;</span><br><span class="line">NtCurrentTeb currentteb = (NtCurrentTeb)<span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandle</span>(<span class="string">L&quot;ntdll.dll&quot;</span>), <span class="string">&quot;NtCurrentTeb&quot;</span>);</span><br><span class="line">PTEB pteb = <span class="built_in">currentteb</span>();</span><br></pre></td></tr></table></figure>
+
+<p><strong>2.使用FS段寄存器（x86）或GS段寄存器（x64）</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">FS寄存器指向当前活动线程的TEB结构（线程结构）</span><br><span class="line">偏移 说明</span><br><span class="line">000 指向SEH链指针</span><br><span class="line">004 线程堆栈顶部</span><br><span class="line">008 线程堆栈底部</span><br><span class="line">00C SubSystemTib</span><br><span class="line">010 FiberData</span><br><span class="line">014 ArbitraryUserPointer</span><br><span class="line">018 FS段寄存器在内存中的镜像地址</span><br><span class="line">020 进程PID</span><br><span class="line">024 线程ID</span><br><span class="line">02C 指向线程局部存储指针</span><br><span class="line">030 PEB结构地址（进程结构）</span><br><span class="line">034 上个错误号</span><br></pre></td></tr></table></figure>
+
+<p>所以使用汇编指令可以直接获取，看表可知0x18位置为当前TEB基地址</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mov eax,dword ptr fs:[18h]</span><br></pre></td></tr></table></figure>
+
+<p>当一个x64进程时，TEB基地址存储在GS段寄存器中，偏移为0x30，所以使用如下汇编指令获取</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mov rax,qword ptr gs:[30h]</span><br></pre></td></tr></table></figure>
+
+<p><strong>2.使用_readfsdword()（x86）或_readgsqword()（x64）</strong></p>
+<p>也提供了内联的函数来读取fs和gs寄存器</p>
+<p>x86：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_readfsdword(<span class="number">0x18</span>);</span><br></pre></td></tr></table></figure>
+
+<p>x64：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_readgsqword(<span class="number">0x30</span>);</span><br></pre></td></tr></table></figure>
+
+<h1 id="PEB"><a href="#PEB" class="headerlink" title="PEB"></a>PEB</h1><p>TEB表中的一个重要的结构就是PEB（Process Environment Block）代表进程环境块，存在于用户地址空间中，记录了进程的相关信息，每个进程都有自己的PEB信息</p>
+<p>由上面TEB结构可知0x30位置为存储PEB结构的指针，所以可以通过fs寄存器同样获得PEB基地址</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mov eax,dword ptr fs:[30h]</span><br></pre></td></tr></table></figure>
+
+<p>在x64下获取gs寄存器偏移也可以获取PEB基地址，但是此时PEB相比于TEB偏移为0x60</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mov rax,qword ptr gs:[60h]</span><br></pre></td></tr></table></figure>
+
+<p>PEB块的部分定义如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">0:012&gt; dt nt!_peb</span><br><span class="line">ntdll!_PEB</span><br><span class="line">   +0x000 InheritedAddressSpace : UChar</span><br><span class="line">   +0x001 ReadImageFileExecOptions : UChar</span><br><span class="line">   +0x002 BeingDebugged    : UChar</span><br><span class="line">   +0x003 SpareBool        : UChar</span><br><span class="line">   +0x004 Mutant           : Ptr32 Void</span><br><span class="line">   +0x008 ImageBaseAddress : Ptr32 Void</span><br><span class="line">   +0x00c Ldr              : Ptr32 _PEB_LDR_DATA</span><br><span class="line">   +0x010 ProcessParameters : Ptr32 _RTL_USER_PROCESS_PARAMETERS</span><br><span class="line">   +0x014 SubSystemData    : Ptr32 Void</span><br><span class="line">   +0x018 ProcessHeap      : Ptr32 Void</span><br><span class="line">...省略</span><br></pre></td></tr></table></figure>
+
+<p>对其中比较有用的结构进行分析</p>
+<h2 id="0x002-BeingDebugged"><a href="#0x002-BeingDebugged" class="headerlink" title="0x002 BeingDebugged"></a>0x002 BeingDebugged</h2><p>这个字段表示当前进程是否处于调试状态，也就是函数 <strong>IsDebuggerPresent()</strong> 所访问的结构体成员.</p>
+<h2 id="0x00c-Ldr"><a href="#0x00c-Ldr" class="headerlink" title="0x00c Ldr"></a>0x00c Ldr</h2><p>这个结构体成员就很复杂了，它是指向 <strong>_PEB_LDR_DATA</strong> 的结构体指针，当DLL加载到进程，可从 <strong>PEB.Ldr</strong> 中获取该模块的基址和其他信息，通过这个结构体就可以直接根据偏移获取加载到进程中的各种DLL的基地址，而不使用任何函数</p>
+<p>看一下这个结构</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">0:012&gt; dt _PEB_LDR_DATA</span><br><span class="line">ntdll!_PEB_LDR_DATA</span><br><span class="line">   +0x000 Length            //结构体大小</span><br><span class="line">   +0x004 Initialized      //进程是否初始化完成</span><br><span class="line">   +0x008 SsHandle</span><br><span class="line">   +0x00c InLoadOrderModuleList : _LIST_ENTRY //模块加载顺序</span><br><span class="line">   +0x014 InMemoryOrderModuleList : _LIST_ENTRY //模块在内存中的顺序</span><br><span class="line">   +0x01c InInitializationOrderModuleList : _LIST_ENTRY //模块初始化装载顺序</span><br><span class="line">   +0x024 EntryInProgress</span><br><span class="line">   +0x028 ShutdownInProgress</span><br><span class="line">   +0x02c ShutdownThreadId</span><br></pre></td></tr></table></figure>
+
+<p><strong>InLoadOrderModuleList、InMemoryOrderModuleList、InInitializationOrderModuleList</strong> 这三个成员都是**_LIST_ENTRY**结构体，看一下这个结构体</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">0:012&gt; dt _LIST_ENTRY</span><br><span class="line">ntdll!_LIST_ENTRY</span><br><span class="line">   +0x000 Flink            : Ptr64 _LIST_ENTRY</span><br><span class="line">   +0x008 Blink            : Ptr64 _LIST_ENTRY</span><br></pre></td></tr></table></figure>
+
+<p>是一个双向链表的结构，其中Flink，Blink都是一个指向名为 <strong>_LDR_DATA_TABLE_ENTRY</strong> 的结构体指针：</p>
+<p>所以InLoadOrderModuleList、InMemoryOrderModuleList、InInitializationOrderModuleList是**_LIST_ENTRY**结构体，其中的Flink就指向了一个_LDR_DATA_TABLE_ENTRY结构体，可以理解为双向链表的头，看一下这个结构体</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">0:012&gt; dt _LDR_DATA_TABLE_ENTRY</span><br><span class="line">ntdll!_LDR_DATA_TABLE_ENTRY</span><br><span class="line">   +0x000 InLoadOrderLinks : _LIST_ENTRY</span><br><span class="line">   +0x008 InMemoryOrderLinks : _LIST_ENTRY</span><br><span class="line">   +0x010 InInitializationOrderLinks : _LIST_ENTRY</span><br><span class="line">   +0x018 DllBase          : Ptr64 Void</span><br><span class="line">   +0x01c EntryPoint       : Ptr64 Void</span><br><span class="line">   +0x020 SizeOfImage      : Uint4B</span><br><span class="line">   +0x024 FullDllName      : _UNICODE_STRING</span><br><span class="line">   +0x02c BaseDllName      : _UNICODE_STRING</span><br><span class="line">   +0x034 FlagGroup        : [4] UChar</span><br></pre></td></tr></table></figure>
+
+<p>每个进程中的DLL加载进来都有与之对于的  <strong>_LDR_DATA_TABLE_ENTRY</strong> 结构体，这些结构相互链接就形成了双向链表，其中InLoadOrderLinks，InMemoryOrderLinks，InInitializationOrderLinks同样是一个_LIST_ENTRY结构体，存储了与之相连的 _LDR_DATA_TABLE_ENTRY的结构体指针，每个链不同点就是根据不同的顺序对模块进行链接，顺序分别为模块加载顺序，模型在内存中的顺序，和模块初始化顺序</p>
+<p>这个表包含着很多加载DLL的关键信息，可以使用其获取加载DLL的基地址，然后再根据DLL结构和获取其相应DLL的各种信息</p>
+<p>所以TEB，PEB，LDR链之间的关系如下图所示，在x86和x64下偏移量稍微有点区别，但是基本结构还是变化不大的</p>
+<p>x86下：</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220731191036389.png" alt="image-20220731191036389"></p>
+<p>x64下：</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220731191437876.png" alt="image-20220731191437876"></p>
+<p>注：上文中获取TEB和PEB模块基地址的方式分为x64和x86进程两种情况，但还有一种情况为32位的程序通过WoW64库转换后运行在64位系统上的情况，此时情况较为特殊，还是在fs寄存器中存储TEB基地址但需要减去偏移，获取方式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_readfsdword(0x18)-0x2000;</span><br></pre></td></tr></table></figure>
+
+<p>获取PEB块的偏移还是0x60，但和x64不同的是还是存储在fs寄存器中</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_readfsdword(0x60);</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/07/28/C2profile%E6%96%87%E4%BB%B6%E5%88%86%E6%9E%90/" rel="prev" title="cobaltstrike_c2profile结构学习">
+      <i class="fa fa-chevron-left"></i> cobaltstrike_c2profile结构学习
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/08/01/Syscall_Bypass/" rel="next" title="Syscall学习">
+      Syscall学习 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#TEB"><span class="nav-number">1.</span> <span class="nav-text">TEB</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#TEB%E7%BB%93%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">TEB结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96TEB%E5%9F%BA%E5%9C%B0%E5%9D%80%E7%9A%84%E6%96%B9%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">获取TEB基地址的方法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PEB"><span class="nav-number">2.</span> <span class="nav-text">PEB</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x002-BeingDebugged"><span class="nav-number">2.1.</span> <span class="nav-text">0x002 BeingDebugged</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00c-Ldr"><span class="nav-number">2.2.</span> <span class="nav-text">0x00c Ldr</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

