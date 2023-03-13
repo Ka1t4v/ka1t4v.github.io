@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="对于反射DLL注入的学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="反射DLL注入">
+<meta property="og:url" content="https://ka1t4v.github.io/2022/09/01/%E5%8F%8D%E5%B0%84DLL%E5%8A%A0%E8%BD%BD/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="对于反射DLL注入的学习">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221025174245253.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221025203342158.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026111854565.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026111932144.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026112053695.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026112509717.png">
+<meta property="article:published_time" content="2022-09-01T14:46:25.000Z">
+<meta property="article:modified_time" content="2023-03-13T08:59:10.738Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221025174245253.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2022/09/01/%E5%8F%8D%E5%B0%84DLL%E5%8A%A0%E8%BD%BD/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>反射DLL注入 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2022/09/01/%E5%8F%8D%E5%B0%84DLL%E5%8A%A0%E8%BD%BD/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          反射DLL注入
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2022-09-01 22:46:25" itemprop="dateCreated datePublished" datetime="2022-09-01T22:46:25+08:00">2022-09-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Windows/" itemprop="url" rel="index"><span itemprop="name">Windows</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ReadTeam/" itemprop="url" rel="index"><span itemprop="name">ReadTeam</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>对于反射DLL注入的学习</p>
+<span id="more"></span>
+
+<h1 id="基本的反射dll项目"><a href="#基本的反射dll项目" class="headerlink" title="基本的反射dll项目"></a>基本的反射dll项目</h1><h2 id="ReflectiveDLLInjection"><a href="#ReflectiveDLLInjection" class="headerlink" title="ReflectiveDLLInjection"></a>ReflectiveDLLInjection</h2><p>可以说是整个反射dll技术的开山之作，之后的很多项目都是基于此项目的思想进行改进的，通过学习这个项目就可以明白反射dll加载的原理</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/stephenfewer/ReflectiveDLLInjection">https://github.com/stephenfewer/ReflectiveDLLInjection</a></p>
+<p>实现原理为自实现了一个DLL文件，其中导出了一个函数ReflectiveLoader，这个函数做的事情就是自己读取本身全部数据，然后模仿loadlibrary的操作，将自身DLL反射加载到程序当中，所以注入程序只需将其数据写入到指定进程的内存当中，然后定位ReflectiveLoader函数地址，创建远线程运行这个函数，这个函数将会完成之后的的反射DLL自加载操作，加载完成之后便进入DLLMain函数进行正常运行，恶意代码可以写入DLLMain函数，并且支持传参操作，通过lpReserved传参</p>
+<p>流程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1.Open target process with RWX permissions and allocate memory large enough for the DLL.</span><br><span class="line">2.Copy the DLL into the allocated memory space.</span><br><span class="line">3.Calculate the memory offset within the DLL to the export used for doing reflective loading.</span><br><span class="line">4.Call CreateRemoteThread (or an equivalent undocumented API function like RtlCreateUserThread) to start execution in the remote process, using the offset address of the reflective loader function as the entry point.</span><br><span class="line">5.The reflective loader function finds the Process Environment Block (PEB) of the target process using the appropriate CPU register, and uses that to find the address in memory of kernel32.dll and any other required libraries.</span><br><span class="line">6.Parse the exports directory of kernel32 to find the memory addresses of required API functions such as LoadLibraryA, GetProcAddress, and VirtualAlloc.</span><br><span class="line">7.Use these functions to then properly load the DLL (itself) into memory and call its entry point, DllMain.</span><br></pre></td></tr></table></figure>
+
+<p>基于此项目，有如下二开项目</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/alfarom256/StinkyLoader">StinkyLoader</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/Cracked5pider/KaynLdr/">KaynLdr</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/mgeeky/ElusiveMice/">ElusiveMice</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/SecIdiot/TitanLdr">TitanLdr</a></li>
+</ul>
+<h3 id="关于此项目的缺点"><a href="#关于此项目的缺点" class="headerlink" title="关于此项目的缺点"></a>关于此项目的缺点</h3><p><a target="_blank" rel="noopener" href="https://bruteratel.com/research/feature-update/2021/06/01/PE-Reflection-Long-Live-The-King/">PE Reflection: The King is Dead, Long Live the King</a></p>
+<p>该文指出了最基本ReflectiveDLLInjection中存在的问题，其中导出函数ReflectiveLoader，在重新申请内存时，使用rwx权限重新申请一块地址空间写入dll数据，存在被检测到的风险</p>
+<p>提出的解决方案就是，对于pe中的不同段分配时使用不同的内存地址权限，而不是全部使用rwx</p>
+<h2 id="MemoryModule"><a href="#MemoryModule" class="headerlink" title="MemoryModule"></a>MemoryModule</h2><p><a target="_blank" rel="noopener" href="https://github.com/fancycode/MemoryModule">https://github.com/fancycode/MemoryModule</a></p>
+<p>实现原理为模拟loadlibrary的操作，但是支持将读到内存中的DLL文件加载到程序当中，目前看来，注入的DLL是一个完全自定义的DLL，注入操作都实现在其.h和.c文件当中</p>
+<p>使用方法：</p>
+<ol>
+<li>将要加载的PE文件读入内存</li>
+<li>初始化MemoryModule句柄</li>
+<li>装载内存</li>
+<li>获得导出函数地址</li>
+<li>执行导出函数</li>
+<li>释放MemoryModule句柄</li>
+</ol>
+<p>所以实际上就是通过编写一个具有导出函数的dll文件，通过内存加载后，获取其相应导出函数，然后加载即可</p>
+<p>这里想到的利用方式就是在自己实现的木马程序当中，通过远程访问dll数据读取到内存，之后进行一些解密操作，反射加载到当前程序当中， 然后调用导出函数实现一些功能</p>
+<h2 id="StinkyLoader"><a href="#StinkyLoader" class="headerlink" title="StinkyLoader"></a>StinkyLoader</h2><p><a target="_blank" rel="noopener" href="https://github.com/alfarom256/StinkyLoader">https://github.com/alfarom256/StinkyLoader</a></p>
+<h2 id="Kaynldr"><a href="#Kaynldr" class="headerlink" title="Kaynldr"></a>Kaynldr</h2><p><a target="_blank" rel="noopener" href="https://github.com/Cracked5pider/KaynLdr">https://github.com/Cracked5pider/KaynLdr</a></p>
+<p>具有的特点：</p>
+<ul>
+<li>Erases the DOS and NT header  （申请新内存时，不复制DOS头和NT头到新地址中，只复制section过去）</li>
+<li>Library&#x2F;Api used:<ul>
+<li>ntdll.dll<ul>
+<li>LdrLoadDll  （解析导入表时导入对于库时使用）</li>
+<li>NtAllocateVirtualMemory  （申请内存）</li>
+<li>NtProtectVirtualMemory  （改变内存保护）</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>kayninject为反射dll的注入程序，使用了syscall的方式进行注入，这里主要研究反射dll加载技术，只分析kaynldr</p>
+<p>其中的主要自加载流程实现在kaynldr.c中的kaynloader函数，kaynloader为导出函数</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221025174245253.png" alt="image-20221025174245253"></p>
+<p>首先获取当前加载dll的基地址，这里使用汇编实现在util.s中</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">global KaynCaller                ;导出函数KaynCaller</span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line"></span><br><span class="line">   KaynCaller:</span><br><span class="line">       call pop                  ;此命令为了将下一条指令的地址入栈</span><br><span class="line">       pop:</span><br><span class="line">       pop rcx                   ;取出当前指令地址到rcx               </span><br><span class="line">   loop:                         ;循环查找pe文件头</span><br><span class="line">       xor rbx, rbx              ;rbx=0</span><br><span class="line">       mov ebx, 0x5A4D           ;dos头4d5a存入ebx</span><br><span class="line">       dec rcx                   ;rcx自减</span><br><span class="line">       cmp bx,  word ds:[ rcx ]  ;判断是否找到</span><br><span class="line">       jne loop                  ;不相等则重新循环</span><br><span class="line">       xor rax, rax              ;rax=0</span><br><span class="line">       mov ax,  [ rcx + 0x3C ]   ;取e_lfanew字段，即pe头偏移</span><br><span class="line">       add rax, rcx              ;此时rax指向pe头</span><br><span class="line">       xor rbx, rbx              ;rbx=0</span><br><span class="line">       add bx,  0x4550           ;pe头PE</span><br><span class="line">       cmp bx,  word ds:[ rax ]  ;判断是否等于PE</span><br><span class="line">       jne loop                  ;不满足则继续循环</span><br><span class="line">       mov rax, rcx              ;rax返回寻找到的pe基地址</span><br><span class="line">   ret</span><br></pre></td></tr></table></figure>
+
+<p>然后通过teb-ldr链获取ntdll基地址，然后解析导出表获取使用到的api的地址</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221025203342158.png" alt="image-20221025203342158"></p>
+<p>然后是解析节表，依次分配到新申请的内存中，此时内存权限为RW</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026111854565.png" alt="image-20221026111854565"></p>
+<p>处理导入表和重定向表</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026111932144.png" alt="image-20221026111932144"></p>
+<p>这里根据<a target="_blank" rel="noopener" href="https://bruteratel.com/research/feature-update/2021/06/01/PE-Reflection-Long-Live-The-King/">PE Reflection: The King is Dead, Long Live the King</a>中说到的方法，给每个节分配不同的内存权限，避免被检测</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026112053695.png" alt="image-20221026112053695"></p>
+<p>最后使用函数指针的方式执行dllmain</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026112509717.png" alt="image-20221026112509717"></p>
+<p>其中的构建dll的make文档</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MAKEFLAGS += -s</span><br><span class="line"></span><br><span class="line">COMPILER_x86 		= i686-w64-mingw32-gcc</span><br><span class="line">COMPILER_x64 		= x86_64-w64-mingw32-gcc</span><br><span class="line"></span><br><span class="line">CFLAGS 				= -s -w -Wall -Wextra -masm=intel -shared -fPIC -e DllMain -Os -fno-asynchronous-unwind-tables</span><br><span class="line"></span><br><span class="line">INCLUDE				= -I include</span><br><span class="line">SOURCE 				= $(wildcard src/*.c)</span><br><span class="line"></span><br><span class="line">x64:</span><br><span class="line">	nasm -f win64 src/Util.s -o src/Util.o</span><br><span class="line">	$(COMPILER_x64) src/*.o $(INCLUDE) $(SOURCE) $(CFLAGS) -o ../bin/KaynLdr.x64.dll -lntdll -luser32 -DWIN_X64</span><br><span class="line">	rm src/*.o</span><br></pre></td></tr></table></figure>
+
+<h2 id="ElusiveMice"><a href="#ElusiveMice" class="headerlink" title="ElusiveMice"></a>ElusiveMice</h2><p><a target="_blank" rel="noopener" href="https://github.com/mgeeky/ElusiveMice/">https://github.com/mgeeky/ElusiveMice/</a></p>
+<h2 id="TitanLdr"><a href="#TitanLdr" class="headerlink" title="TitanLdr"></a>TitanLdr</h2><p><a target="_blank" rel="noopener" href="https://github.com/SecIdiot/TitanLdr">https://github.com/SecIdiot/TitanLdr</a></p>
+<h1 id="修补反射dll，使其成为shellcode"><a href="#修补反射dll，使其成为shellcode" class="headerlink" title="修补反射dll，使其成为shellcode"></a>修补反射dll，使其成为shellcode</h1><h2 id="sRDI"><a href="#sRDI" class="headerlink" title="sRDI"></a>sRDI</h2><p>项目地址：<a target="_blank" rel="noopener" href="https://github.com/monoxgas/sRDI">https://github.com/monoxgas/sRDI</a></p>
+<p>此项目基于一篇文章</p>
+<p><a target="_blank" rel="noopener" href="https://disman.tl/2015/01/30/an-improved-reflective-dll-injection-technique.html">https://disman.tl/2015/01/30/an-improved-reflective-dll-injection-technique.html</a></p>
+<p>这篇文章项目地址：<a target="_blank" rel="noopener" href="https://github.com/dismantl/ImprovedReflectiveDLLInjection%EF%BC%88%E6%AD%A4%E9%A1%B9%E7%9B%AE%E6%98%AF%E5%9F%BA%E4%BA%8Estephenfewer%E7%9A%84%E9%A1%B9%E7%9B%AE%EF%BC%8C%E5%A2%9E%E5%8A%A0%E4%BA%86%E4%B8%80%E6%AE%B5%E5%BC%95%E5%AF%BC%E7%9A%84shellcode%EF%BC%89">https://github.com/dismantl/ImprovedReflectiveDLLInjection（此项目是基于stephenfewer的项目，增加了一段引导的shellcode）</a></p>
+<h2 id="donut"><a href="#donut" class="headerlink" title="donut"></a>donut</h2><p>项目地址：<a target="_blank" rel="noopener" href="https://github.com/TheWover/donut">https://github.com/TheWover/donut</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/08/02/DNS_rebinding/" rel="prev" title="DNS_rebinding">
+      <i class="fa fa-chevron-left"></i> DNS_rebinding
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/09/07/Mimikatz_SSP/" rel="next" title="Mimikatz_SSP">
+      Mimikatz_SSP <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%9A%84%E5%8F%8D%E5%B0%84dll%E9%A1%B9%E7%9B%AE"><span class="nav-number">1.</span> <span class="nav-text">基本的反射dll项目</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ReflectiveDLLInjection"><span class="nav-number">1.1.</span> <span class="nav-text">ReflectiveDLLInjection</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%AD%A4%E9%A1%B9%E7%9B%AE%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">1.1.1.</span> <span class="nav-text">关于此项目的缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MemoryModule"><span class="nav-number">1.2.</span> <span class="nav-text">MemoryModule</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#StinkyLoader"><span class="nav-number">1.3.</span> <span class="nav-text">StinkyLoader</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kaynldr"><span class="nav-number">1.4.</span> <span class="nav-text">Kaynldr</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ElusiveMice"><span class="nav-number">1.5.</span> <span class="nav-text">ElusiveMice</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TitanLdr"><span class="nav-number">1.6.</span> <span class="nav-text">TitanLdr</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BF%AE%E8%A1%A5%E5%8F%8D%E5%B0%84dll%EF%BC%8C%E4%BD%BF%E5%85%B6%E6%88%90%E4%B8%BAshellcode"><span class="nav-number">2.</span> <span class="nav-text">修补反射dll，使其成为shellcode</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sRDI"><span class="nav-number">2.1.</span> <span class="nav-text">sRDI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#donut"><span class="nav-number">2.2.</span> <span class="nav-text">donut</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
