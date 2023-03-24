@@ -220,13 +220,13 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>NTLM和Kerberos协议学习  </p>
+        <p>NTLM和Kerberos协议学习</p>
 <span id="more"></span>
-
 <p>资料网站</p>
 <p><a target="_blank" rel="noopener" href="https://daiker.gitbook.io/windows-protocol/">https://daiker.gitbook.io/windows-protocol/</a></p>
 <p><a target="_blank" rel="noopener" href="https://medium.com/@robert.broeckelmann/kerberos-and-windows-security-series-59282e0f9465">https://medium.com/@robert.broeckelmann/kerberos-and-windows-security-series-59282e0f9465</a></p>
-<h1 id="名词扫盲"><a href="#名词扫盲" class="headerlink" title="名词扫盲"></a>名词扫盲</h1><ul>
+<h1>名词扫盲</h1>
+<ul>
 <li>服务主题名称即 SPN (Service Principal Name）</li>
 <li>Client: 访问服务的客户端</li>
 <li>Server: 提供服务的服务器</li>
@@ -238,7 +238,8 @@
 <li>TGT (Ticket Granting Ticket): 票证授予票证</li>
 <li>ST (Servre Ticket): 服务票据</li>
 </ul>
-<h1 id="Windows-认证流程"><a href="#Windows-认证流程" class="headerlink" title="Windows 认证流程"></a>Windows 认证流程</h1><p>本地身份认证：</p>
+<h1>Windows 认证流程</h1>
+<p>本地身份认证：</p>
 <table>
 <thead>
 <tr>
@@ -246,32 +247,41 @@
 <th>即 winlogon.exe,是Windows NT 用户登陆程序，用于管理用户登录和退出。</th>
 </tr>
 </thead>
-<tbody><tr>
+<tbody>
+<tr>
 <td>LSASS</td>
 <td>本地安全认证子系统服务,用于微软Windows系统的安全机制。负责用户在本地验证或远程登陆时验证用户身份，管理用户密码变更，并产生访问日志。</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
 <p><strong>整体流程</strong></p>
 <ul>
-<li><p>开机</p>
+<li>
+<p>开机</p>
 </li>
-<li><p>winlogon.exe显示输入用户名密码的图形化页面</p>
+<li>
+<p>winlogon.exe显示输入用户名密码的图形化页面</p>
 </li>
-<li><p>用户输入用户名密码,winlogon.exe进程将输入信息交付给lsass.exe进程</p>
+<li>
+<p>用户输入用户名密码,winlogon.exe进程将输入信息交付给lsass.exe进程</p>
 </li>
-<li><p>lsass.exe将密码加密为NTLM Hash，并与本地SAM数据库中的NTLM Hash进行比较</p>
+<li>
+<p>lsass.exe将密码加密为NTLM Hash，并与本地SAM数据库中的NTLM Hash进行比较</p>
 </li>
-<li><p>如果相同，则认证通过</p>
+<li>
+<p>如果相同，则认证通过</p>
 </li>
 </ul>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/1_h7LRo1t-yChn4eaZvTsOwQ.webp" alt="1_h7LRo1t-yChn4eaZvTsOwQ"></p>
 <p>域环境内身份认证</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/1_8fjtVc2ekqlxxpZ1y0NWGg.webp" alt="1_8fjtVc2ekqlxxpZ1y0NWGg"></p>
-<h1 id="0x01-NTLM-Hash与NTLM"><a href="#0x01-NTLM-Hash与NTLM" class="headerlink" title="0x01 NTLM Hash与NTLM"></a>0x01 NTLM Hash与NTLM</h1><p>在Windows中，密码Hash目前称之为NTLM Hash，其中NTLM全称是：“NT LAN Manager”。</p>
+<h1>0x01 NTLM Hash与NTLM</h1>
+<p>在Windows中，密码Hash目前称之为NTLM Hash，其中NTLM全称是：“NT LAN Manager”。</p>
 <p>这个NTLM是一种网络认证协议，与NTLM Hash的关系就是：NTLM网络认证协议是以NTLM Hash作为根本凭证进行认证的协议。</p>
 <p>也就是说，NTLM与NTLM Hash相互对应。</p>
 <p>在本地认证的过程中，其实就是将用户输入的密码转换为NTLM Hash与本地SAM中的NTLM Hash进行比较</p>
-<h2 id="NTLM协议"><a href="#NTLM协议" class="headerlink" title="NTLM协议"></a>NTLM协议</h2><p><strong>这个协议只支持Windows</strong></p>
+<h2 id="NTLM协议"><a class="header-anchor" href="#NTLM协议">¶</a>NTLM协议</h2>
+<p><strong>这个协议只支持Windows</strong></p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/35efa6d8-4f5f-11ec-807d-00d861bf4abb.png" alt="0x01.png"></p>
 <p>1.Server接收到Client发送的用户名后，判断本地账户列表是否有用户名share_user</p>
 <ul>
@@ -282,13 +292,15 @@
 <p>3.Server接收到Client发送的Response，将Response与之 前的Net-NTLM Hash进行比较，如果相等，则认证通过。</p>
 <p>注意:</p>
 <p>Response的表现形式是<strong>Net-NTLM Hash</strong>，它是由NTLM Hash当作密钥加密的Challenge数据</p>
-<h2 id="NTLM-V2协议"><a href="#NTLM-V2协议" class="headerlink" title="NTLM V2协议"></a>NTLM V2协议</h2><p>NTLM v1与NTLM v2最显著的区别就是Challenge与加密算法不同，共同点就是加密的原料都是NTLM Hash</p>
+<h2 id="NTLM-V2协议"><a class="header-anchor" href="#NTLM-V2协议">¶</a>NTLM V2协议</h2>
+<p>NTLM v1与NTLM v2最显著的区别就是Challenge与加密算法不同，共同点就是加密的原料都是NTLM Hash</p>
 <p>下面细说一下有什么不同:</p>
 <ul>
 <li>Challage: NTLM v1的Challenge有8位，NTLM v2的Challenge为16位</li>
 <li>Net-NTLM Hash: NTLM v1的主要加密算法是DES，NTLM v2的主要加密算法是HMAC-MD5</li>
 </ul>
-<h2 id="Pass-The-Hash（PTH）"><a href="#Pass-The-Hash（PTH）" class="headerlink" title="Pass The Hash（PTH）"></a>Pass The Hash（PTH）</h2><p>哈希传递说白了就是利用窃取到的ntml hash和用户名，恶意重复认证过程，从而不需要获取明文密码即可完成认证</p>
+<h2 id="Pass-The-Hash（PTH）"><a class="header-anchor" href="#Pass-The-Hash（PTH）">¶</a>Pass The Hash（PTH）</h2>
+<p>哈希传递说白了就是利用窃取到的ntml hash和用户名，恶意重复认证过程，从而不需要获取明文密码即可完成认证</p>
 <p>Pass The Hash - 必要条件</p>
 <ul>
 <li>哈希传递需要被认证的主机能够访问到服务器(废话)</li>
@@ -304,12 +316,14 @@
 </ul>
 <p>为了防御PTH攻击，微软发布了<strong>KB2871997</strong>补丁，限制了PTH攻击，但是有一个例外，即administrator用户还可以进行PTH，普通用户则无法进行</p>
 <p>不管administrator账号怎么修改，或者新增的管理员账号，<strong>sid为500，即可进行hash传递攻击</strong></p>
-<h2 id="NTLM-Realy"><a href="#NTLM-Realy" class="headerlink" title="NTLM Realy"></a>NTLM Realy</h2><p>类似于中间人攻击，是在不知道具体NTML Hash的情况下实现的攻击</p>
+<h2 id="NTLM-Realy"><a class="header-anchor" href="#NTLM-Realy">¶</a>NTLM Realy</h2>
+<p>类似于中间人攻击，是在不知道具体NTML Hash的情况下实现的攻击</p>
 <p><strong>NTLM Relay 注意事项</strong></p>
 <ul>
 <li>从HTTP协议Relay到LDAP是不要求进行签名的，可以直接进行Relay，如CVE-2018-8581</li>
 <li>从SMB协议Relay到LDAP是要求进行签名的，这时，并不能直接进行Relay。CVE-2019-1040就是绕过了NTLM的MIC消息完整性校验，使得SMB协议Relay到LDAP时不需要签名，从而可以发动攻击</li>
-<li>NTLM Relay的防御<ul>
+<li>NTLM Relay的防御
+<ul>
 <li>SMB &amp; LDAP 签名：默认只有域控是开启了SMB签名；而LDAP签名默认策略是协商签名，也就是说是否签名是由客户端决定的。服务端跟客户端协商是否签名(客户端如果是SMB协议的话，默认要求签名的，如果是webadv或者http协议，是不要求签名的)，微软于 2019-09-11 日发布相关通告称微软计划于 2020 年 1 月发布安全更新。为了提升域控制器的安全性，该安全更新将强制开启所有域控制器上 LDAP channel binding 与 LDAP signing 功能。</li>
 <li>EAP (Enhanced Protection Authentication)：NTLM 认证和一个安全通道进行绑定，在 NTLM 认证过程中，最后的 NTLM 认证数据报文包含一个目标应用服务器的证书摘要，这个摘要使用客户端的 NTLM 值进行签名保护，可以防止伪造证书的攻击。</li>
 </ul>
@@ -317,51 +331,57 @@
 </ul>
 <p>总结文章：</p>
 <p><a target="_blank" rel="noopener" href="http://moonflower.fun/index.php/2022/05/01/329/">http://moonflower.fun/index.php/2022/05/01/329/</a></p>
-<h3 id="Origin-Potato（MS08-068）"><a href="#Origin-Potato（MS08-068）" class="headerlink" title="Origin Potato（MS08-068）"></a>Origin Potato（MS08-068）</h3><p>当拿到用户的SMB请求之后，最直接的就是把请求Relay回本身，即Reflection。从而控制机子本身。</p>
+<h3 id="Origin-Potato（MS08-068）"><a class="header-anchor" href="#Origin-Potato（MS08-068）">¶</a>Origin Potato（MS08-068）</h3>
+<p>当拿到用户的SMB请求之后，最直接的就是把请求Relay回本身，即Reflection。从而控制机子本身。</p>
 <p>漏洞危害特别高，该漏洞编号为MS08-068。微软在KB957097补丁里面通过修改SMB身份验证答复的验证方式来防止凭据重播，从而解决了该漏洞。防止凭据重播的做法如下:</p>
 <ol>
-<li>在Type 1阶段，主机A访问主机B进行SMB认证的时候，将 <em>pszTargetName</em> 设置为CIFS&#x2F;B</li>
-<li>在Type 2阶段，主机A拿到主机B发送的Challenge挑战值之后，在lsass进程里面缓存(Challenge,CIFS&#x2F;B)</li>
-<li>在Type 3阶段，主机B在拿到主机A的认证消息之后，会去查询lsass进程里面有没有缓存(Challenge,CIFS&#x2F;B)，如果存在缓存，那么认证失败。</li>
+<li>在Type 1阶段，主机A访问主机B进行SMB认证的时候，将 <em>pszTargetName</em> 设置为CIFS/B</li>
+<li>在Type 2阶段，主机A拿到主机B发送的Challenge挑战值之后，在lsass进程里面缓存(Challenge,CIFS/B)</li>
+<li>在Type 3阶段，主机B在拿到主机A的认证消息之后，会去查询lsass进程里面有没有缓存(Challenge,CIFS/B)，如果存在缓存，那么认证失败。</li>
 </ol>
-<p>因为如果主机A和主机B是不同主机的话，那么lsass进程里面就不会缓存(Challenge,CIFS&#x2F;B)。如果是同一台主机的话，那lsass里面就会缓存(Challenge,CIFS&#x2F;B)，这个时候就会认证失败。</p>
-<h3 id="Hot-Potato（MS16-075）"><a href="#Hot-Potato（MS16-075）" class="headerlink" title="Hot Potato（MS16-075）"></a>Hot Potato（MS16-075）</h3><p><a target="_blank" rel="noopener" href="https://forum.butian.net/share/860">https://forum.butian.net/share/860</a></p>
+<p>因为如果主机A和主机B是不同主机的话，那么lsass进程里面就不会缓存(Challenge,CIFS/B)。如果是同一台主机的话，那lsass里面就会缓存(Challenge,CIFS/B)，这个时候就会认证失败。</p>
+<h3 id="Hot-Potato（MS16-075）"><a class="header-anchor" href="#Hot-Potato（MS16-075）">¶</a>Hot Potato（MS16-075）</h3>
+<p><a target="_blank" rel="noopener" href="https://forum.butian.net/share/860">https://forum.butian.net/share/860</a></p>
 <p>由于<strong>MS08-068修复了smb-&gt;smb的利用方式，但是没有修复http-&gt;smb的利用方式</strong>，所以出现了<a target="_blank" rel="noopener" href="https://foxglovesecurity.com/2016/01/16/hot-potato/">hot potato</a></p>
 <p>这是一个典型的NTLM_RELAY利用链，但是需要等待windows更新，即Windows update 服务，来触发利用链</p>
 <p>按照Relay的一般流程，我们从三方面着手，将思路串起来，达到本地提权的效果。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.本地 NBNS Spoofer ：冒充名称解析，强制系统下载恶意 WAPD 配置</span><br><span class="line">2.伪造 WPAD 代理服务器：部署 malicios WAPD 配置，强制系统进行 NTLM 认证</span><br><span class="line">3.HTTP -&gt; SMB NTLM 中继：将 WAPD NTLM 令牌中继到 SMB 服务以创建提升的进程</span><br></pre></td></tr></table></figure>
-
 <ol>
-<li><p>怎么发起ntlm请求</p>
+<li>
+<p>怎么发起ntlm请求</p>
 <p>发起ntlm请求请求的方式我们最早在<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/193493#h3-15">Windows内网协议学习NTLM篇之发起NTLM请求</a>里面已经说过，就是配合NBNS投毒欺骗和伪造WPAD代理服务器拿到用户的Net-NTML hash，所有的HTTP请求将会被重定向至“<a target="_blank" rel="noopener" href="http://localhost/GETHASHESxxxxx%E2%80%9D%E2%80%9D%EF%BC%8C%E5%85%B6%E4%B8%AD%E7%9A%84xxxxx%E8%A1%A8%E7%A4%BA%E7%9A%84%E6%98%AF%E6%9F%90%E4%BA%9B%E5%94%AF%E4%B8%80%E6%A0%87%E8%AF%86%E7%AC%A6%E3%80%82%E5%B0%86%E4%BC%9A%E5%BD%B1%E5%93%8D%E7%9B%AE%E6%A0%87%E4%B8%BB%E6%9C%BA%E4%B8%AD%E6%89%80%E6%9C%89%E7%9A%84%E7%94%A8%E6%88%B7%EF%BC%8C%E5%8C%85%E6%8B%AC%E7%AE%A1%E7%90%86%E5%91%98%E8%B4%A6%E6%88%B7%E5%92%8C%E7%B3%BB%E7%BB%9F%E8%B4%A6%E6%88%B7%E3%80%82%E6%9B%B4%E5%A4%9A%E5%85%B3%E4%BA%8ENBNS%E5%92%8Cwpad%E7%9A%84%E7%BB%86%E8%8A%82%EF%BC%8C%E5%9C%A8%E4%B9%8B%E5%89%8D%E7%9A%84%E6%96%87%E7%AB%A0%E5%B7%B2%E7%BB%8F%E8%AF%B4%E8%BF%87%E4%BA%86%EF%BC%8C%E8%BF%99%E9%87%8C%E4%B8%8D%E5%86%8D%E8%B5%98%E8%BF%B0%E3%80%82">http://localhost/GETHASHESxxxxx””，其中的xxxxx表示的是某些唯一标识符。将会影响目标主机中所有的用户，包括管理员账户和系统账户。更多关于NBNS和wpad的细节，在之前的文章已经说过了，这里不再赘述。</a></p>
 </li>
-<li><p>拿到ntlm 请求之后要做什么</p>
+<li>
+<p>拿到ntlm 请求之后要做什么</p>
 <p>MS08-068虽然限制了同台主机之间smb到smb的Relay，但是并没有限制从http到smb，我们配置配合NBNS投毒欺骗和伪造WPAD代理服务器拿到的ntlm请求说http的形式，我们可以直接relay 到本机的smb。</p>
 </li>
-<li><p>服务端是否要求签名</p>
+<li>
+<p>服务端是否要求签名</p>
 <p>我们Relay到的服务端协议是smb，除非是域内的域控，不然在工作组环节底下，或者域内的域成员机器，都是不要求签名的。</p>
 </li>
 </ol>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/27760889-613d0e0ff0ef24c3.png" alt="img"></p>
 <ul>
-<li><h3 id="NBNS欺骗："><a href="#NBNS欺骗：" class="headerlink" title="NBNS欺骗："></a>NBNS欺骗：</h3></li>
+<li>
+<h3 id="NBNS欺骗："><a class="header-anchor" href="#NBNS欺骗：">¶</a>NBNS欺骗：</h3>
+</li>
 </ul>
 <p>NBNS 是 Windows 环境中常用的名称解析广播 UDP 协议。</p>
-<p>全称是NetBIOS Name Service<br>NetBIOS 协议进行名称解析的过程如下：</p>
+<p>全称是NetBIOS Name Service<br>
+NetBIOS 协议进行名称解析的过程如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.检查本地 NetBIOS 缓存</span><br><span class="line">2.如果缓存中没有请求的名称且已配置了 WINS 服务器，接下来则会向 WINS 服务器发出请求</span><br><span class="line">3.如果没有配置 WINS 服务器或 WINS 服务器无响应则会向当前子网域发送广播</span><br><span class="line">4.如果发送广播后无任何主机响应则会读取本地的 lmhosts 文件</span><br></pre></td></tr></table></figure>
-
 <p>当我们(或 Windows)执行 DNS 查找时，Windows 查找顺序为</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1.Hosts（C:\Windows\System32\drivers\etc）</span><br><span class="line"></span><br><span class="line">2.DNS (cache / server) </span><br><span class="line"></span><br><span class="line">3.LLMNR</span><br><span class="line"></span><br><span class="line">4.NBNS</span><br></pre></td></tr></table></figure>
-
 <p>NBNS 协议基本上只是询问本地广播域上的所有主机<code>谁知道主机 XXX 的 IP 地址？</code></p>
 <p>这个时候，网络上的任何主机都可以随意响应。</p>
 <ul>
-<li><h3 id="伪造WPAD代理服务器："><a href="#伪造WPAD代理服务器：" class="headerlink" title="伪造WPAD代理服务器："></a>伪造WPAD代理服务器：</h3></li>
+<li>
+<h3 id="伪造WPAD代理服务器："><a class="header-anchor" href="#伪造WPAD代理服务器：">¶</a>伪造WPAD代理服务器：</h3>
+</li>
 </ul>
 <p>wpad全称是<code>Web Proxy Auto-Discovery Protocol</code>，通过让浏览器自动发现代理服务器，定位代理配置文件PAC(在下文也叫做PAC文件或者wpad.dat)，下载编译并运行，最终自动使用代理访问网络。</p>
 <p>它在本地网络上搜索名为wpad的计算机以找到该文件。然后执行以下步骤：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.如果配置了DHCP服务器，则客户端从DHCP服务器中检索wpad.dat文件（如果成功，则执行步骤4）。</span><br><span class="line">2.wpad.corpdomain.com查询被发送到DNS服务器以查找分发Wpad配置的设备。（如果成功，则执行第4步）。</span><br><span class="line">3.发送WPAD的LLMNR或NBNS查询（如果成功，请转到第4步，否则无法使用代理）</span><br><span class="line">4.下载wpad.dat并使用它。</span><br></pre></td></tr></table></figure>
-
 <p>在 Windows 中，Internet Explorer 默认会通过访问 URL：<a target="_blank" rel="noopener" href="http://wpad/wpad.dat">http://wpad/wpad.dat</a> 自动尝试检测网络代理设置配置，它适用于某些 Windows 服务！例如 Windows 更新，但具体如何以及在什么条件下似乎取决于版本。</p>
 <p>当然访问 URL：<a target="_blank" rel="noopener" href="http://wpad/wpad.dat%E4%B8%8D%E4%BC%9A%E5%AD%98%E5%9C%A8%E4%BA%8E%E6%89%80%E6%9C%89%E7%BD%91%E7%BB%9C%E4%B8%8A%EF%BC%8C%E5%9B%A0%E4%B8%BA%E4%B8%BB%E6%9C%BA%E5%90%8D%60wpad%60%E4%B8%8D%E4%B8%80%E5%AE%9A%E5%AD%98%E5%9C%A8%E4%BA%8E">http://wpad/wpad.dat不会存在于所有网络上，因为主机名`wpad`不一定存在于</a> DNS 名称服务器中</p>
 <p>那么，虚假的WPAD代理服务器和本地NBNS欺骗相结合，我们可以使用 本地NBNS 欺骗来欺骗主机名</p>
@@ -371,75 +391,80 @@
 <p>此时返回的wpad.dat设置proxy，使得所有流量都通过127.0.0.1上运行的服务器重定向端口为80</p>
 <p>所有HTTP请求都通过302重定向重定向到 <code>http://localhost/GETHASHESxxxxx</code>，其中xxxxx对应一个唯一标识符。请求<code>http://localhost/GETHASHESxxxxx</code>响应NTLM身份验证的 401 请求</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_9e8de4ae58cc898eb40649f19ec266e9.png" alt="img"></p>
-<h3 id="Rotton-Potato（MS16-075变种）"><a href="#Rotton-Potato（MS16-075变种）" class="headerlink" title="Rotton Potato（MS16-075变种）"></a>Rotton Potato（MS16-075变种）</h3><p><a target="_blank" rel="noopener" href="https://foxglovesecurity.com/2016/09/26/rotten-potato-privilege-escalation-from-service-accounts-to-system/">Rotton Potato</a></p>
+<h3 id="Rotton-Potato（MS16-075变种）"><a class="header-anchor" href="#Rotton-Potato（MS16-075变种）">¶</a>Rotton Potato（MS16-075变种）</h3>
+<p><a target="_blank" rel="noopener" href="https://foxglovesecurity.com/2016/09/26/rotten-potato-privilege-escalation-from-service-accounts-to-system/">Rotton Potato</a></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">通过 DCOM call 来使服务向攻击者监听的端口发起连接并进行 NTLM 认证，需要 SelmpersonatePrivilege 权限。可以立即触发，不需要等待 windows 更新。</span><br><span class="line">影响范围：&lt; win10 1809 和 windows server 2019</span><br><span class="line"></span><br><span class="line">1.通过 NT AUTHORITY/SYSTEM 运行的 RPC 将尝试通过 CoGetInstanceFromIStorage API 调用向我们的本地代理进行身份验证</span><br><span class="line">2.135 端口的 RPC 将用于回复第一个 RPC 正在执行的所有请求充当模板</span><br><span class="line">3.AcceptSecurityContextAPI 调用以在本地模拟 NT AUTHORITY/SYSTEM</span><br></pre></td></tr></table></figure>
-
 <p>优点：不需要等待Windows update 服务即可完成提权</p>
 <p><strong>需要SelmpersonatePrivilege权限</strong></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">以下用户拥有`SeImpersonatePrivilege`权限：</span><br><span class="line"></span><br><span class="line">- 本地管理员账户（不包括管理员组普通账户）和本地服务帐户</span><br><span class="line">- 由SCM启动的服务</span><br><span class="line"></span><br><span class="line">服务账户在Windows权限模型中本身就拥有很高的权限，所以微软不认为这是一个漏洞</span><br></pre></td></tr></table></figure>
-
 <p>具有这个权限的一般是服务账户，IIS、SQL Server具有这个权限，所以可以通过这两个服务账户进行提权，一般获得的webshell就是这个权限</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public static void BootstrapComMarshal()</span><br><span class="line">&#123;</span><br><span class="line">IStorage stg = ComUtils.CreateStorage();</span><br><span class="line">// Use a known local system service COM server, in this cast BITSv1</span><br><span class="line">Guid clsid = new Guid(&quot;4991d34b-80a1-4291-83b6-3328366b9097&quot;);</span><br><span class="line"> </span><br><span class="line">TestClass c = new TestClass(stg, String.Format(&quot;&#123;0&#125;[&#123;1&#125;]&quot;, &quot;127.0.0.1&quot;, 6666)); // ip and port</span><br><span class="line"> </span><br><span class="line">MULTI_QI[] qis = new MULTI_QI[1];</span><br><span class="line"> </span><br><span class="line">qis[0].pIID = ComUtils.IID_IUnknownPtr;</span><br><span class="line">qis[0].pItf = null;</span><br><span class="line">qis[0].hr = 0;</span><br><span class="line"> </span><br><span class="line">CoGetInstanceFromIStorage(null, ref clsid, null, CLSCTX.CLSCTX_LOCAL_SERVER, c, 1,qis);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>这里通过CoGetInstanceFromIStorage告诉COM我们想要一个<code>BITS</code>对象的实例，我们想要从 127.0.0.1端口 6666加载它，注意<code>TestClass</code>实际上是一个IStorage对象的实例</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/27760889-a485414a9693d72e.png" alt="img"></p>
 <p>此时将NTLM认证的协商报文中继给RPC 135端口，目的就是为了获取NTLM Challenge响应报文的模板，需要将其中Challenge字段替换为步骤5中返回的Challenge</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1 使用CoGetInstanceFromIStorageAPI 调用欺骗 RPC 对代理进行身份验证。在此调用中指定了代理 IP/端口。</span><br><span class="line">2 RPC 向代理发送NTLM 协商包。</span><br><span class="line">3 代理依赖的NTLM协商到RPC在端口135，被用作模板。同时，调用AcceptSecurityContext以强制进行本地身份验证。</span><br><span class="line">4&amp;5 得到RPC 135和AcceptSecurityContext的NTLM 挑战包后进行部分替换以匹配本地协商并转发到RPC,也就是到步骤6</span><br><span class="line">7&amp;8 RPC对使用AcceptSecurityContext得到的挑战包进行相应</span><br><span class="line">9 模拟令牌创建进程,实现提权</span><br></pre></td></tr></table></figure>
-
 <p>使用AcceptSecurityContext进行本地认证的流程</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_e9f75615975906bfbd233f22aa883387.png" alt="img"></p>
-<h3 id="Juicy-Potato（对-Rotten-Potato-的完善）"><a href="#Juicy-Potato（对-Rotten-Potato-的完善）" class="headerlink" title="Juicy Potato（对 Rotten Potato 的完善）"></a>Juicy Potato（对 Rotten Potato 的完善）</h3><p>禁用了 BITS（Rotten Potato 用请求的对象）并占用了 6666 端口，但除了 BITS （CLSID 为 {4991d34b-80a1-4291-83b6-3328366b9097}），还有其它的 COM 对象可以选择</p>
-<h3 id="Rogue-Potato（Rotten-x2F-Juicy-的绕过）"><a href="#Rogue-Potato（Rotten-x2F-Juicy-的绕过）" class="headerlink" title="Rogue Potato（Rotten &#x2F; Juicy 的绕过）"></a>Rogue Potato（Rotten &#x2F; Juicy 的绕过）</h3><p>高版本的 Windows DCOM 解析器不允许 OBJREF 中的 DUALSTRINGARRAY 字段指定端口号，既然这样就在一台远程主机上的 135 端口做流量转发，将其转回受害者本机端口，并实现了一个恶意的 RPC OXID 解析器</p>
-<h3 id="SweetPotato"><a href="#SweetPotato" class="headerlink" title="SweetPotato"></a>SweetPotato</h3><p>集成了前面几种土豆触发 NTLM 认证的方式，包括：COM，WinRM，Spoolsv，其中 WInRM 的攻击原理参考：<a target="_blank" rel="noopener" href="https://decoder.cloud/2019/12/06/we-thought-they-were-potatoes-but-they-were-beans/">https://decoder.cloud/2019/12/06/we-thought-they-were-potatoes-but-they-were-beans/</a><br>大致思路就是当 WinRM 在当前系统未启用时，攻击者监听本机 5985 端口，BITS 服务会向 WinRM 5985 发起 NTLM 认证</p>
-<h3 id="PrintSpoofer"><a href="#PrintSpoofer" class="headerlink" title="PrintSpoofer"></a>PrintSpoofer</h3><p>提权的原理就是诱使 system 权限的服务访问我们指定的<strong>命名管道</strong></p>
+<h3 id="Juicy-Potato（对-Rotten-Potato-的完善）"><a class="header-anchor" href="#Juicy-Potato（对-Rotten-Potato-的完善）">¶</a>Juicy Potato（对 Rotten Potato 的完善）</h3>
+<p>禁用了 BITS（Rotten Potato 用请求的对象）并占用了 6666 端口，但除了 BITS （CLSID 为 {4991d34b-80a1-4291-83b6-3328366b9097}），还有其它的 COM 对象可以选择</p>
+<h3 id="Rogue-Potato（Rotten-Juicy-的绕过）"><a class="header-anchor" href="#Rogue-Potato（Rotten-Juicy-的绕过）">¶</a>Rogue Potato（Rotten / Juicy 的绕过）</h3>
+<p>高版本的 Windows DCOM 解析器不允许 OBJREF 中的 DUALSTRINGARRAY 字段指定端口号，既然这样就在一台远程主机上的 135 端口做流量转发，将其转回受害者本机端口，并实现了一个恶意的 RPC OXID 解析器</p>
+<h3 id="SweetPotato"><a class="header-anchor" href="#SweetPotato">¶</a>SweetPotato</h3>
+<p>集成了前面几种土豆触发 NTLM 认证的方式，包括：COM，WinRM，Spoolsv，其中 WInRM 的攻击原理参考：<a target="_blank" rel="noopener" href="https://decoder.cloud/2019/12/06/we-thought-they-were-potatoes-but-they-were-beans/">https://decoder.cloud/2019/12/06/we-thought-they-were-potatoes-but-they-were-beans/</a><br>
+大致思路就是当 WinRM 在当前系统未启用时，攻击者监听本机 5985 端口，BITS 服务会向 WinRM 5985 发起 NTLM 认证</p>
+<h3 id="PrintSpoofer"><a class="header-anchor" href="#PrintSpoofer">¶</a>PrintSpoofer</h3>
+<p>提权的原理就是诱使 system 权限的服务访问我们指定的<strong>命名管道</strong></p>
 <p>而诱使高权限主机访问命名管道的方式就是使用打印机协议 MS-RPRN ：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Windows 的 MS-RPRN 协议用于打印客户机和打印服务器之间的通信，默认情况下启用。协议定义的 RpcRemoteFindFirstPrinterChangeNotificationEx() 调用创建一个远程更改通知对象，该对象监视对打印机对象的更改，并将更改通知发送到打印客户端。</span><br><span class="line">该利用的核心原理是通过打印机漏洞强迫运行Spooler服务的任何主机通过Kerberos或者NTLM向攻击者选择的目标发起身份认证请求,这里可以强迫一个特权进程来访问我们的恶意管道,当我们拥有SecurityImpersonation权限时便可以通过模拟管道安全上下文的方式,来模拟该特权进程,得到该特权进程的模拟令牌,通过将其转化为主令牌的方式最终调用CreateProcessWithToken等方式来以SYSTEM权限运行程序</span><br></pre></td></tr></table></figure>
-
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230228170412491.png" alt="image-20230228170412491"></p>
 <p>这意味着我们可以利用该错误通过<code>MS-RPRN RPC</code>接口强制Windows主机向其他机器进行身份验证,<strong>另外微软表示这个bug是系统设计特点，无需修复。</strong></p>
 <p>但是协议发起的管道连接，只会链接指定并且已经存在的命名管道<code>\\hostname\pipe\spoolss</code>，这个管道由SYSTEM创建，所以我们无法控制这个命名管道。</p>
 <p>那么这里就需要利用UNC路径的小trick：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">UNC路径格式为\\主机名\管道名</span><br><span class="line">UNC路径的性质，如果主机名包含 /，它将通过路径检查，但真正连接的时候会转化为 \ 。那么，如果传递一个 \\127.0.0.1/pipe/foo，检查时会认为 127.0.0.1/pipe/foo 是一个主机名，随后在连接 named pipe 时会对参数做标准化，于是就会连接 \\127.0.0.1\pipe\foo\pipe\spoolss，那么攻击者就可以把主机名改为 \\127.0.0.1/pipe/foo 并注册这个 named pipe 从而生成一个我们可以控制的命名管道</span><br></pre></td></tr></table></figure>
-
-<h3 id="PetitPotam"><a href="#PetitPotam" class="headerlink" title="PetitPotam"></a>PetitPotam</h3><p>和potato家族不同的一个利用方式，但是很像printspoofer，也是利用了一个远程RPC，诱使管理员进程访问我们自定义的命名管道，然后通过SecurityImpersonation权限账户（服务账户）提权到SYSTEM账户</p>
+<h3 id="PetitPotam"><a class="header-anchor" href="#PetitPotam">¶</a>PetitPotam</h3>
+<p>和potato家族不同的一个利用方式，但是很像printspoofer，也是利用了一个远程RPC，诱使管理员进程访问我们自定义的命名管道，然后通过SecurityImpersonation权限账户（服务账户）提权到SYSTEM账户</p>
 <p>更多用域横向渗透中，也可以运用于本地提权（LPE）</p>
 <p>MS-EFSR里面有个函数<code>EfsRpcOpenFileRaw</code></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">long EfsRpcOpenFileRaw(</span><br><span class="line">   [in] handle_t binding_h,</span><br><span class="line">   [out] PEXIMPORT_CONTEXT_HANDLE* hContext,</span><br><span class="line">   [in, string] wchar_t* FileName,</span><br><span class="line">   [in] long Flags</span><br><span class="line"> );</span><br></pre></td></tr></table></figure>
-
 <p>他的作用是打开服务器上的加密对象以进行备份或还原，服务器上的加密对象由FileName参数指定,FileName的类型是UncPath。</p>
 <p>这个函数是实现了一个PRC接口，官方文档指出调用MS-EFSR的方式为通过命名管道<code>\pipe\lsarpc</code>或<code>\pipe\efsrpc</code>两种方法</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">\pipe\lsarpc的服务器接口必须是UUID[c681d488-d850-11d0-8c52-00c04fd90f7e]</span><br><span class="line"></span><br><span class="line">\pipe\efsrpc的服务器接口必须是UUID [df1941c5-fe89-4e79-bf10-463657acf44d]</span><br></pre></td></tr></table></figure>
-
 <p>但是通过<code>efsrpc</code>的方式并不支持,也就是说无法以普通用户的身份来调用该接口的方法,而<code>\pipe\lsarpc</code>则可以,因此在构造过程中我们通常使用<code>\pipe\lsarpc</code>接口</p>
 <ul>
-<li><h3 id="域环境提权"><a href="#域环境提权" class="headerlink" title="域环境提权"></a>域环境提权</h3></li>
+<li>
+<h3 id="域环境提权"><a class="header-anchor" href="#域环境提权">¶</a>域环境提权</h3>
+</li>
 </ul>
 <p>PetitPotam本来是用来进行横向渗透的，相关文章</p>
 <ul>
-<li><h3 id="本地提权"><a href="#本地提权" class="headerlink" title="本地提权"></a>本地提权</h3></li>
+<li>
+<h3 id="本地提权"><a class="header-anchor" href="#本地提权">¶</a>本地提权</h3>
+</li>
 </ul>
 <p>在cirspr的<a target="_blank" rel="noopener" href="https://www.crisprx.top/archives/561">文章</a>中介绍了本地提权的细节</p>
 <p>但是不同点在于是连接了本地<code>\\pipe\lsass</code>命名管道，通过lsass服务来调用RPC接口</p>
 <p>类似于printspoofer,前文我们提到当指定格式为<code>\\IP\C$</code>的时候，lsass.exe服务就会去访问<code>\\IP\pipe\srvsrv</code>,而这个管道我们是无法创建的,因此我们同样需要使用UNC路径的一些<code>trick</code>,如果能够使得<code>lsass.exe</code>访问我们自己创建的恶意管道,在拥有<code>SeImpersonatePrivilege</code>的情况下,便可以模拟管道客户端安全上下文的方式,以<code>lsass.exe</code>所属用户的权限创建进程,而该进程是系统权限(SYSTEM)</p>
 <p>同样可以使用<code>/</code>来分割主机名</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">\\127.0.0.1/pipe/fake\C$\x</span><br><span class="line">最后会连接以下的命名管道</span><br><span class="line">\\127.0.0.1\pipe\fake\PIPE\srvsvc</span><br></pre></td></tr></table></figure>
-
 <p>后续利用步骤就是通过本地服务账户开启的命名管道模拟客户端令牌完成提权</p>
-<h3 id="Ghost-Potato-CVE-2019-1384"><a href="#Ghost-Potato-CVE-2019-1384" class="headerlink" title="Ghost Potato(CVE-2019-1384)"></a>Ghost Potato(CVE-2019-1384)</h3><p><a target="_blank" rel="noopener" href="https://shenaniganslabs.io/2019/11/12/Ghost-Potato.html">https://shenaniganslabs.io/2019/11/12/Ghost-Potato.html</a></p>
-<p>这个漏洞绕过了KB957097补丁里面限制不能Relay回本机的限制。由于在KB957097补丁措施里面这个缓存(Challenge,CIFS&#x2F;B)是有时效性的，这个时间是300秒，也就是说300秒后，缓存(Challenge,cifs&#x2F;B)就会被清空，这个时候即使主机A和主机B是同一台主机，那么由于缓存已经被清除，那么lsass进程里面肯定没有(Challenge,CIFS&#x2F;B)缓存。</p>
+<h3 id="Ghost-Potato-CVE-2019-1384"><a class="header-anchor" href="#Ghost-Potato-CVE-2019-1384">¶</a>Ghost Potato(CVE-2019-1384)</h3>
+<p><a target="_blank" rel="noopener" href="https://shenaniganslabs.io/2019/11/12/Ghost-Potato.html">https://shenaniganslabs.io/2019/11/12/Ghost-Potato.html</a></p>
+<p>这个漏洞绕过了KB957097补丁里面限制不能Relay回本机的限制。由于在KB957097补丁措施里面这个缓存(Challenge,CIFS/B)是有时效性的，这个时间是300秒，也就是说300秒后，缓存(Challenge,cifs/B)就会被清空，这个时候即使主机A和主机B是同一台主机，那么由于缓存已经被清除，那么lsass进程里面肯定没有(Challenge,CIFS/B)缓存。</p>
 <p>shenaniganslabs 放出了漏洞利用poc，基于impacket进行修改，目前只能支持收到http协议请求的情况。该poc在sleep 315秒之后，再发送Type 3认证消息，于是就绕过了KB957097补丁</p>
-<h3 id="JAVA-NTLM-Realy"><a href="#JAVA-NTLM-Realy" class="headerlink" title="JAVA NTLM Realy"></a>JAVA NTLM Realy</h3><p><a target="_blank" rel="noopener" href="https://xlab.tencent.com/cn/2019/03/18/ghidra-from-xxe-to-rce/">https://xlab.tencent.com/cn/2019/03/18/ghidra-from-xxe-to-rce/</a></p>
+<h3 id="JAVA-NTLM-Realy"><a class="header-anchor" href="#JAVA-NTLM-Realy">¶</a>JAVA NTLM Realy</h3>
+<p><a target="_blank" rel="noopener" href="https://xlab.tencent.com/cn/2019/03/18/ghidra-from-xxe-to-rce/">https://xlab.tencent.com/cn/2019/03/18/ghidra-from-xxe-to-rce/</a></p>
 <p><a target="_blank" rel="noopener" href="https://blog.ateam.qianxin.com/post/zhe-shi-yi-pian-bu-yi-yang-de-zhen-shi-shen-tou-ce-shi-an-li-fen-xi-wen-zhang/#41-webdav-xxe">https://blog.ateam.qianxin.com/post/zhe-shi-yi-pian-bu-yi-yang-de-zhen-shi-shen-tou-ce-shi-an-li-fen-xi-wen-zhang/#41-webdav-xxe</a></p>
 <p>Java在使用内置类 <code>sun.net.www.protocol.http.HttpURLConnection</code> 发送HTTP请求遇到状态码为401的HTTP返回头时，会判断该页面要求使用哪种认证方式，若采用的NTLM认证则会自动使用当前用户凭据进行认证。</p>
 <p><strong>值得注意的是，NTLM认证分为两个版本NTLMv1和NTLMv2，在进行NTLMv1类型认证时攻击将获取到的Net-NTLM  Hash直接Relay给受害者的SMB服务即可，但是在使用NTLMv2类型认证时，攻击者在Relay时需要将NTLM认证中Type 2  Message的Negotiate Flags进行修改，将Negotiate Always Sign与Negotiate 0x00004000  两个标志位从设置改为不设置，这其中具体代表的含义为让此次认证被认作在网络上(Relay给本机会被当做是一次本地认证)进行以及将认证中的签名进行去除。</strong></p>
-<h1 id="0x02-Kerberos域认证"><a href="#0x02-Kerberos域认证" class="headerlink" title="0x02 Kerberos域认证"></a>0x02 Kerberos域认证</h1><p>Kerberos的标志是三只狗头，狗头分别代表以下角色：</p>
+<h1>0x02 Kerberos域认证</h1>
+<p>Kerberos的标志是三只狗头，狗头分别代表以下角色：</p>
 <ul>
 <li>Client</li>
 <li>Server</li>
-<li>KDC(Key Distribution Center) &#x3D; DC(Domain Controller)</li>
+<li>KDC(Key Distribution Center) = DC(Domain Controller)</li>
 </ul>
 <p>Kerberos认证协议的基础概念：</p>
-<p>票据（Ticket）：是网络对象互相访问的凭证。 </p>
+<p>票据（Ticket）：是网络对象互相访问的凭证。</p>
 <p>TGT（Ticket Granting Ticket）：入场券，通过入场券能够获得票据，是一种临时凭证的存在。</p>
 <p>KDC负责管理票据、认证票据、分发票据，但是KDC不是一个独立的服务，它由以下服务组成：</p>
 <ul>
@@ -448,34 +473,33 @@
 </ul>
 <p>另外还需要介绍一个类似于本机SAM的一个数据库：AD，全称叫account database，存储所有client的白名单，只有存在于白名单的client才能顺利申请到TGT。</p>
 <p>从物理层面看，AD与KDC均为域控制器(Domain Controller)。</p>
-<h2 id="域认证粗略流程"><a href="#域认证粗略流程" class="headerlink" title="域认证粗略流程"></a>域认证粗略流程</h2><ol>
+<h2 id="域认证粗略流程"><a class="header-anchor" href="#域认证粗略流程">¶</a>域认证粗略流程</h2>
+<ol>
 <li>client向kerberos服务请求，希望获取访问server的权限。 kerberos得到了这个消息，首先得判断client是否是可信赖的， 也就是白名单黑名单的说法。这就是AS服务完成的工作，通过 在AD中存储黑名单和白名单来区分client。成功后，返回AS返 回TGT给client。</li>
 <li>client得到了TGT后，继续向kerberos请求，希望获取访问 server的权限。kerberos又得到了这个消息，这时候通过client 消息中的TGT，判断出了client拥有了这个权限，给了client访问server的权限ST。</li>
 <li>client得到ticket后，终于可以成功访问server。这个ticket只是针对这个server，其他server需要向TGS申请。</li>
 </ol>
-<h3 id="认证第一步："><a href="#认证第一步：" class="headerlink" title="认证第一步："></a>认证第一步：</h3><p>AS_req&amp;AS_rep</p>
-<p>客户端向KDC发送身份信息username&#x2F;host</p>
+<h3 id="认证第一步："><a class="header-anchor" href="#认证第一步：">¶</a>认证第一步：</h3>
+<p>AS_req&amp;AS_rep</p>
+<p>客户端向KDC发送身份信息username/host</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1）username/host</span><br></pre></td></tr></table></figure>
-
 <p>KDC拿到客户端信息在AD中寻找是否在白名单中，如果在则提取用户对应的NTML Hash，并且生成一个随机的字符串Session Key，使用用户名对应的NTML hash加密Session key，并且使用KDC中krbtgt用户的NTML Hash加密Session Key和客户端信息，生成TGT</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#Session Key随机生成</span><br><span class="line">1）client NTML Hash（Session Key）</span><br><span class="line">2）TGT = kdc krbtgt NTML Hash（Session Key，Client info）</span><br></pre></td></tr></table></figure>
-
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20220830203117207.png" alt="image-20220830203117207"></p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20220830203143269.png" alt="image-20220830203143269"></p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20220830203200942.png" alt="image-20220830203200942"></p>
-<h3 id="认证第二步："><a href="#认证第二步：" class="headerlink" title="认证第二步："></a>认证第二步：</h3><p>TGS_req&amp;TGS_rep</p>
+<h3 id="认证第二步："><a class="header-anchor" href="#认证第二步：">¶</a>认证第二步：</h3>
+<p>TGS_req&amp;TGS_rep</p>
 <p>第二部客户端首先需要用自己的NTML Hash解密Session Key，然后用Session Key加密客户端信息和时间戳</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1）TGT = kdc krbtgt NTML Hash（Session Key，Client info）#forward</span><br><span class="line">2）Session Key（Client Info+Timestamp）</span><br><span class="line">3）Client info/Server info</span><br></pre></td></tr></table></figure>
-
 <p>KDC接收到数据后解密TGT，获取Session Key，然后进行校验，验证通过后，生成一个新的Session Key，称为Server Session Key，并且返回一个由服务器端NTML Hash加密的数据作为Ticket</p>
 <p>Server Hash：这个Hash是在AD中服务器计算机的NTLM Hash</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1）Session key（Server Session Key）</span><br><span class="line">2）Ticket = Server Hash（Server Session Key，Client info，end time）</span><br></pre></td></tr></table></figure>
-
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20220830204250695.png" alt="image-20220830204250695"></p>
-<h3 id="认证第三步："><a href="#认证第三步：" class="headerlink" title="认证第三步："></a>认证第三步：</h3><p>AP_req&amp;AP_rep</p>
+<h3 id="认证第三步："><a class="header-anchor" href="#认证第三步：">¶</a>认证第三步：</h3>
+<p>AP_req&amp;AP_rep</p>
 <p>此时客户端拿着ticket，和使用Server Session Key加密的数据去访问服务器</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1）ticket = Server Hash（Server Session Key，Client info，end time） #forward</span><br><span class="line">2）Server Session Key（client info+timestamp）</span><br></pre></td></tr></table></figure>
-
 <p>在第三步里，客户端向服务器请求，需要提供Ticket，Server Session Key加密的客户端信息与时间戳。</p>
 <ul>
 <li>Ticket客户端无法解密</li>
@@ -487,11 +511,13 @@
 <p>微软之后又在第三部中引入了PAC机制，引入PAC机制后，整个认证过程中就多了一个PAC结构体，整体流程如下</p>
 <p>1.用户向KDC发起AS_REQ,请求凭据是用户hash加密的时间戳，KDC使用用户hash进行解密，如果结果正确返回用krbtgt hash加密的TGT票据，<strong>TGT里面包含PAC,PAC包含用户的sid，用户所在的组</strong>。</p>
 <p>2.用户凭借TGT票据向KDC发起针对特定服务的TGS_REQ请求，KDC使用krbtgt hash进行解密，如果结果正确，就返回用服务hash 加密的TGS票据(<strong>这一步不管用户有没有访问服务的权限，只要TGT正确，就返回TGS票据，这也是kerberoating能利用的原因，任何一个用户，只要hash正确，可以请求域内任何一个服务的TGS票据</strong></p>
-<p>3.用户拿着TGS票据去请求服务，服务使用自己的hash解密TGS票据。如果解密正确，<strong>就拿着PAC去KDC那边询问用户有没有访问权限，域控解密PAC。获取用户的sid，以及所在的组，再判断用户是否有访问服务的权限，有访问权限(有些服务并没有验证PAC这一步，这也是白银票据能成功的前提，因为就算拥有用户hash，可以制作TGS，也不能制作PAC，PAC当然也验证不成功，但是有些服务不去验证PAC，这是白银票据成功的前提）</strong>就允许用户访问。</p>
+<p>3.用户拿着TGS票据去请求服务，服务使用自己的hash解密TGS票据。如果解密正确，**就拿着PAC去KDC那边询问用户有没有访问权限，域控解密PAC。获取用户的sid，以及所在的组，再判断用户是否有访问服务的权限，有访问权限(有些服务并没有验证PAC这一步，这也是白银票据能成功的前提，因为就算拥有用户hash，可以制作TGS，也不能制作PAC，PAC当然也验证不成功，但是有些服务不去验证PAC，这是白银票据成功的前提）**就允许用户访问。</p>
 <p>特别说明的是，PAC对于用户和服务全程都是不可见的。只有KDC能制作和查看PAC。</p>
-<h2 id="Pass-The-Ticket（PTT）"><a href="#Pass-The-Ticket（PTT）" class="headerlink" title="Pass The Ticket（PTT）"></a>Pass The Ticket（PTT）</h2><p>讲解 PTT&amp;PTK&amp;PTH</p>
+<h2 id="Pass-The-Ticket（PTT）"><a class="header-anchor" href="#Pass-The-Ticket（PTT）">¶</a>Pass The Ticket（PTT）</h2>
+<p>讲解 PTT&amp;PTK&amp;PTH</p>
 <p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/bonelee/p/15916764.html">https://www.cnblogs.com/bonelee/p/15916764.html</a></p>
-<h3 id="白银票据-Silver-Tickets"><a href="#白银票据-Silver-Tickets" class="headerlink" title="白银票据(Silver Tickets)"></a>白银票据(Silver Tickets)</h3><p><strong>实际上是通过获取Server Hash来伪造验证过程第三步中的TGS</strong></p>
+<h3 id="白银票据-Silver-Tickets"><a class="header-anchor" href="#白银票据-Silver-Tickets">¶</a>白银票据(Silver Tickets)</h3>
+<p><strong>实际上是通过获取Server Hash来伪造验证过程第三步中的TGS</strong></p>
 <p>白银票据特点:</p>
 <ul>
 <li>1.不需要与KDC进行交互</li>
@@ -499,45 +525,46 @@
 </ul>
 <p>在第三步认证中的Ticket的组成:</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Ticket=Server Hash(Server Session Key，Client info，End Time) </span><br></pre></td></tr></table></figure>
-
 <p>所以说只要获取到服务器端的Server Hash，就可以伪造一个ticket，因为服务器并不知道Server Session key是什么</p>
 <p>由于白银票据需要目标服务器的Hash，所以没办法生成对应域内所有服务器的票据，也不能通过TGT申请。因此只能针对服务器 上的某些服务去伪造，伪造的服务类型列表如下:</p>
 <table>
 <thead>
 <tr>
-<th align="left">服务注释</th>
-<th align="left">服务名</th>
+<th style="text-align:left">服务注释</th>
+<th style="text-align:left">服务名</th>
 </tr>
 </thead>
-<tbody><tr>
-<td align="left">WMI</td>
-<td align="left">HOST、RPCSS</td>
+<tbody>
+<tr>
+<td style="text-align:left">WMI</td>
+<td style="text-align:left">HOST、RPCSS</td>
 </tr>
 <tr>
-<td align="left">Powershell Remoteing</td>
-<td align="left">HOST、HTTP</td>
+<td style="text-align:left">Powershell Remoteing</td>
+<td style="text-align:left">HOST、HTTP</td>
 </tr>
 <tr>
-<td align="left">WinRM</td>
-<td align="left">HOST、HTTP</td>
+<td style="text-align:left">WinRM</td>
+<td style="text-align:left">HOST、HTTP</td>
 </tr>
 <tr>
-<td align="left">Scheduled Tasks</td>
-<td align="left">HOST</td>
+<td style="text-align:left">Scheduled Tasks</td>
+<td style="text-align:left">HOST</td>
 </tr>
 <tr>
-<td align="left">LDAP 、DCSync</td>
-<td align="left">LDAP</td>
+<td style="text-align:left">LDAP 、DCSync</td>
+<td style="text-align:left">LDAP</td>
 </tr>
 <tr>
-<td align="left">Windows File Share (CIFS)</td>
-<td align="left">CIFS</td>
+<td style="text-align:left">Windows File Share (CIFS)</td>
+<td style="text-align:left">CIFS</td>
 </tr>
 <tr>
-<td align="left">Windows Remote ServerAdministration Tools</td>
-<td align="left">RPCSS、LDAP、CIFS</td>
+<td style="text-align:left">Windows Remote ServerAdministration Tools</td>
+<td style="text-align:left">RPCSS、LDAP、CIFS</td>
 </tr>
-</tbody></table>
+</tbody>
+</table>
 <p>白银票据(Silver Tickets)防御</p>
 <ul>
 <li>1.尽量保证服务器凭证不被窃取</li>
@@ -546,33 +573,37 @@
 <p>开启方式:</p>
 <p>将注册表中</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">HKEY_LOCAL_MACHINE\SYSTEM \ CurrentControlSet\Control\Lsa\Kerberos\Parameters</span><br></pre></td></tr></table></figure>
-
 <p>中的<code>ValidateKdcPacSignature</code>设置为1。</p>
-<h3 id="黄金票据-Golden-Tickets"><a href="#黄金票据-Golden-Tickets" class="headerlink" title="黄金票据(Golden Tickets)"></a>黄金票据(Golden Tickets)</h3><p><strong>实际上就是通过获取KDC中的krbtgt NTML Hash来伪造验证流程第二部中的TGT</strong></p>
+<h3 id="黄金票据-Golden-Tickets"><a class="header-anchor" href="#黄金票据-Golden-Tickets">¶</a>黄金票据(Golden Tickets)</h3>
+<p><strong>实际上就是通过获取KDC中的krbtgt NTML Hash来伪造验证流程第二部中的TGT</strong></p>
 <p>黄金票据特点:</p>
 <ul>
 <li>1.需要与DC通信</li>
 <li>2.需要krbtgt用户的hash</li>
 </ul>
 <p><strong>PS:这里的krbtgt hash就是之前讲的KDC Hash</strong></p>
-<h2 id="Pass-The-Key（PTK）"><a href="#Pass-The-Key（PTK）" class="headerlink" title="Pass The Key（PTK）"></a>Pass The Key（PTK）</h2><p>为了防御PTH攻击，微软发布了KB2871997补丁，限制了PTH攻击，但是有一个例外，即administrator用户还可以进行PTH，普通用户则无法进行</p>
+<h2 id="Pass-The-Key（PTK）"><a class="header-anchor" href="#Pass-The-Key（PTK）">¶</a>Pass The Key（PTK）</h2>
+<p>为了防御PTH攻击，微软发布了KB2871997补丁，限制了PTH攻击，但是有一个例外，即administrator用户还可以进行PTH，普通用户则无法进行</p>
 <p>在补丁后又出现了新的攻击方式PTK，不传递NTLM hash，而是传递aes256-hmac，可以进行类似于PTH的横向移动</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/8b6f6e5fe9464f6fb2ec57f0ca32f970.png" alt="在这里插入图片描述"></p>
-<h2 id="Pass-The-Certificate（PTC）"><a href="#Pass-The-Certificate（PTC）" class="headerlink" title="Pass The Certificate（PTC）"></a>Pass The Certificate（PTC）</h2><p>默认预认证阶段中使用到的是对称加密方式（DES、RC4、AES128密钥），如果域控内支持 <strong>PKINIT</strong> 协议，那么就可以使用非对称加密方式（证书）进行预认证。于是，一种新的横向技术诞生 —— 证书传递攻击（Pass the Certificate, PTC），如上所述，PTC攻击发生在预认证阶段，攻击者使用证书向 KDC 发起验证，获取对应的 TGT。</p>
+<h2 id="Pass-The-Certificate（PTC）"><a class="header-anchor" href="#Pass-The-Certificate（PTC）">¶</a>Pass The Certificate（PTC）</h2>
+<p>默认预认证阶段中使用到的是对称加密方式（DES、RC4、AES128密钥），如果域控内支持 <strong>PKINIT</strong> 协议，那么就可以使用非对称加密方式（证书）进行预认证。于是，一种新的横向技术诞生 —— 证书传递攻击（Pass the Certificate, PTC），如上所述，PTC攻击发生在预认证阶段，攻击者使用证书向 KDC 发起验证，获取对应的 TGT。</p>
 <p>讲解PTC</p>
 <p><a target="_blank" rel="noopener" href="https://forum.butian.net/share/1941">https://forum.butian.net/share/1941</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.thehacker.recipes/ad/movement/kerberos/pass-the-certificate">https://www.thehacker.recipes/ad/movement/kerberos/pass-the-certificate</a></p>
-<h2 id="MS14-068"><a href="#MS14-068" class="headerlink" title="MS14-068"></a>MS14-068</h2><p>该漏洞针对于PAC（Privileged Attribute Certificate ）</p>
+<h2 id="MS14-068"><a class="header-anchor" href="#MS14-068">¶</a>MS14-068</h2>
+<p>该漏洞针对于PAC（Privileged Attribute Certificate ）</p>
 <p>补丁编号是KB3011780，域里面最严重的漏洞之一，它允许任意用户提升到域管权限</p>
 <p>该漏洞最本质的地方在于<strong>Microsoft Windows Kerberos KDC无法正确检查Kerberos票证请求随附的特权属性证书（PAC）中的有效签名</strong>，这里面的签名就是上面提到的服务检验和以及KDC校验和。导致用户可以自己构造一张PAC。</p>
-<h1 id="0x03-委派"><a href="#0x03-委派" class="headerlink" title="0x03 委派"></a>0x03 委派</h1><p>资料：</p>
+<h1>0x03 委派</h1>
+<p>资料：</p>
 <p><a target="_blank" rel="noopener" href="https://shenaniganslabs.io/2019/01/28/Wagging-the-Dog.html">https://shenaniganslabs.io/2019/01/28/Wagging-the-Dog.html</a></p>
 <p><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/10061">https://xz.aliyun.com/t/10061</a></p>
-<p>在域内可以委派的账户只有<strong>1.机器账户 2.服务账户</strong> 两种，用户账户无法执直接被委派，但是可以通过设置<strong>SPN（server principal name）</strong>来注册为服务账户，从而能够被委派</p>
-<p>和委派一起诞生的是两个TGS_REQ&#x2F;TGS-REP的子协议S4U2SELF&#x2F;S4UPROXY为了实现委派的认证流程</p>
-<h2 id="非约束委派"><a href="#非约束委派" class="headerlink" title="非约束委派"></a>非约束委派</h2><p>非约束委派没有任何限制，可以代表用户访问任何服务，只要用户登录设置了非约束委派的服务器，就会将其可转发的TGT直接保存在服务器上</p>
+<p>在域内可以委派的账户只有<strong>1.机器账户 2.服务账户</strong> 两种，用户账户无法执直接被委派，但是可以通过设置**SPN（server principal name）**来注册为服务账户，从而能够被委派</p>
+<p>和委派一起诞生的是两个TGS_REQ/TGS-REP的子协议S4U2SELF/S4UPROXY为了实现委派的认证流程</p>
+<h2 id="非约束委派"><a class="header-anchor" href="#非约束委派">¶</a>非约束委派</h2>
+<p>非约束委派没有任何限制，可以代表用户访问任何服务，只要用户登录设置了非约束委派的服务器，就会将其可转发的TGT直接保存在服务器上</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">当域用户访问域内某服务时，如果该服务开启了非约束委派，用户会主动将自己已转发的的TGT发送服务，而该服务会将用户的TGT保存在内存以备下次重用，然后服务就可以利用该已转发的TGT以用户的身份访问该用户能访问的服务。非约束委派的安全问题就是如果我们找到配置了非约束委派的主机，并且通过一定手段拿下该主机的权限，我们就可以拿到所有访问过该主机用户的TGT。</span><br></pre></td></tr></table></figure>
-
 <p>配置了非约束委派的用户的userAccountControl属性有个FLAG位 <strong>TrustedForDelegation</strong></p>
 <p>由于非约束委派没有安全性，出现了约束委派和基于资源的约束委派，并且拓展了两个协议</p>
 <ul>
@@ -583,8 +614,10 @@
 <p>1.非约束委派+Spooler打印机服务</p>
 <p>在实战中，被动的非约束委派的利用需要和目标用户交互比较鸡肋。因此可以利用非约束委派+Spooler 打印机服务可以强制指定的主机进行连接。</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/20210815000052-cd0beba6-fd18-1.png" alt="20210815000052-cd0beba6-fd18-1"></p>
-<p>利用原理：利用 Windows 打印系统远程协议 (MS-RPRN) 中的一种旧的但是默认启用的方法，在该方法中，域用户可以使用 MS-RPRN RpcRemoteFindFirstPrinterChangeNotification(Ex) 方法强制任何运行了 Spooler  服务的计算机以通过 Kerberos 或 NTLM 对攻击者选择的目标进行身份验证。<br>POC: <a target="_blank" rel="noopener" href="https://github.com/leechristensen/SpoolSample">https://github.com/leechristensen/SpoolSample</a></p>
-<h2 id="S4U2SELF-协议转换"><a href="#S4U2SELF-协议转换" class="headerlink" title="S4U2SELF(协议转换)"></a>S4U2SELF(协议转换)</h2><p>S4U2SELF协议的目的主要是在用户未使用kerberos认证请求服务时（如NTLM认证，基于表单的认证等方式）与服务器进行认证后，并没有TGT，所以服务器无法获取用户TGT时使用的协议</p>
+<p>利用原理：利用 Windows 打印系统远程协议 (MS-RPRN) 中的一种旧的但是默认启用的方法，在该方法中，域用户可以使用 MS-RPRN RpcRemoteFindFirstPrinterChangeNotification(Ex) 方法强制任何运行了 Spooler  服务的计算机以通过 Kerberos 或 NTLM 对攻击者选择的目标进行身份验证。<br>
+POC: <a target="_blank" rel="noopener" href="https://github.com/leechristensen/SpoolSample">https://github.com/leechristensen/SpoolSample</a></p>
+<h2 id="S4U2SELF-协议转换"><a class="header-anchor" href="#S4U2SELF-协议转换">¶</a>S4U2SELF(协议转换)</h2>
+<p>S4U2SELF协议的目的主要是在用户未使用kerberos认证请求服务时（如NTLM认证，基于表单的认证等方式）与服务器进行认证后，并没有TGT，所以服务器无法获取用户TGT时使用的协议</p>
 <p>所以S4U2self 使得服务可以代表<strong>任意用户</strong>获得针对服务自身的kerberos服务票据。这使得服务可以获得用户的授权( 可转发的用户TGS票据)，然后将其用于后期的认证(主要是后期的s4u2proxy)，这是为了在用户以不使用 Kerberos 的方式对服务进行身份验证的情况下使用。<strong>这里面很重要的一点是服务代表用户获得针对服务自身的kerberos票据这个过程，服务是不需要用户的凭据的（所以可以代表任意用户去获取服务票据）</strong></p>
 <p>进行s4uself请求的前提是服务已经具备kdc认证的可转发的tgt票据</p>
 <p>需要条件：</p>
@@ -593,62 +626,79 @@
 <p>3.服务请求了可转发选项</p>
 <p>则此时获得的TGS票据具备可转发属性</p>
 <p>需要注意的是，如果用户的UserAccountControl字段中设置了<strong>USER_NOT_DELEGATED</strong>位,那么返回的TGS是永远也没法转发的。即当Administrator配置了<strong>敏感账户，不能被委派</strong>，返回的TGS的flag字段没有forwardable</p>
-<h2 id="S4U2PROXY"><a href="#S4U2PROXY" class="headerlink" title="S4U2PROXY"></a>S4U2PROXY</h2><p>s4u2proxy 使得服务1可以使用来自用户的TGS( 在S4U2SELF阶段获得或者由用户连接时提供)，然后用该TGS(放在AddtionTicket里面)向KDC请求访问服务2的TGS，并且代表用户访问服务2，而且只能访问服务2</p>
-<h2 id="约束委派"><a href="#约束委派" class="headerlink" title="约束委派"></a>约束委派</h2><p>为了配置受约束的委派，必须拥有<strong>SeEnableDelegation</strong>特权，该特权很敏感，通常仅授予<strong>域管理员</strong></p>
+<h2 id="S4U2PROXY"><a class="header-anchor" href="#S4U2PROXY">¶</a>S4U2PROXY</h2>
+<p>s4u2proxy 使得服务1可以使用来自用户的TGS( 在S4U2SELF阶段获得或者由用户连接时提供)，然后用该TGS(放在AddtionTicket里面)向KDC请求访问服务2的TGS，并且代表用户访问服务2，而且只能访问服务2</p>
+<h2 id="约束委派"><a class="header-anchor" href="#约束委派">¶</a>约束委派</h2>
+<p>为了配置受约束的委派，必须拥有<strong>SeEnableDelegation</strong>特权，该特权很敏感，通常仅授予<strong>域管理员</strong></p>
 <p>配置了约束委派的用户的userAccountControl 属性有个FLAG位 <strong>TrustedToAuthForDelegation</strong></p>
 <p>约束的资源委派，除了配置<strong>TrustedToAuthForDelegation</strong>之外，还有个地方是存储对哪个spn 进行委派的，位于<strong>msDS-AllowedToDelegateTo</strong></p>
 <p>计算机用户(既JACKSON-PC$) 被配置了约束的委派，那么<code>JACKSON-PC$</code>可以接受任何用户的委派的去请求特定的服务。具体过程是收到用户的请求之后，首先代表用户获得针对服务自身的可转发的kerberos服务票据(S4U2SELF)，拿着这个票据向KDC请求访问特定服务的可转发的TGS(S4U2PROXY)，并且代表用户访问特定服务，而且只能访问该特定服务</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">约束委派的安全问题就是如果我们找到配置了约束委派的服务账号，并且通过一定手段拿下该服务账号。我们就可以利用这个服务账号代表任意用户进行S4U2self获得一个可转发的票据，然后把获取到的票据用于S42proxy(作为AddtionTicket)，从而获取一个可转发的TGS，服务就可以代替任意用户访问另外一个服务(既被配置的约束委派的服务)。</span><br></pre></td></tr></table></figure>
-
 <ul>
-<li><h3 id="攻击场景：后门"><a href="#攻击场景：后门" class="headerlink" title="攻击场景：后门"></a>攻击场景：后门</h3></li>
+<li>
+<h3 id="攻击场景：后门"><a class="header-anchor" href="#攻击场景：后门">¶</a>攻击场景：后门</h3>
+</li>
 </ul>
 <p>约束委派可以作为变种黄金票据，用作后门权限维持。</p>
 <p>1.给<strong>后门账户</strong>[知道密码或是hash就成]注册SPN</p>
 <p>2.然后设置后门账户到域控的约束委派</p>
-<h2 id="基于资源的约束委派"><a href="#基于资源的约束委派" class="headerlink" title="基于资源的约束委派"></a>基于资源的约束委派</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.委派的权限授予给了拥有资源的后端，而不再是前端</span><br><span class="line">2.约束性委派不能跨域进行委派，基于资源的约束性委派可以跨域和林</span><br><span class="line">3.不再需要域管理员权限设置委派，只需拥有在计算机对象上编辑msDS-AllowedToActOnBehaffOtherldentity属性权限也就是将计算机加入域的域用户和机器自身拥有权限</span><br></pre></td></tr></table></figure>
-
+<h2 id="基于资源的约束委派"><a class="header-anchor" href="#基于资源的约束委派">¶</a>基于资源的约束委派</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.委派的权限授予给了拥有资源的后端，而不再是前端</span><br><span class="line">2.约束性委派不能跨域进行委派，基于资源的约束性委派可以跨域和林</span><br><span class="line">3.不再需要域管理员权限设置委派，只需拥有在计算机对象上编辑msDS-AllowedToActOnBehaffOtherldentity属性权限也就是将计算机加入域的域用户和机器自身拥有权限</span><br></pre></td></tr></table></figure>
 <p>从帐户A到帐户B的传统约束委派在<strong>msDS-AllowedToDelegateTo</strong>属性中的帐户A上配置，并定义从A到B的“传出”信任，</p>
 <p>而在<strong>msDS-AllowedToActOnBehalfOfOtherIdentity</strong>属性中的帐户B上配置基于资源的约束委派，并定义从A到B的“传入”信任，见下图</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221006163412356.png" alt="image-20221006163412356"></p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">什么用户能够修改msDS-AllowedToActOnBehalfOfOtherIdentity属性：</span><br><span class="line"></span><br><span class="line">1.mSDS-CreatorSID(将该机器加入域的账户，账户中有一个mSDS-CreatorSID属性，用于标记加入域时使用的用户的SID值，反查就可以知道是谁把机器加入域的了)</span><br><span class="line">2.NT AUTHORITY\SELF(机器账户本身)</span><br><span class="line">3.Account Operator组成员（Domain Admins(域管理员)）</span><br></pre></td></tr></table></figure>
-
 <p>这里基于资源约束委派的s4u2self与约束委派的不同点在于：</p>
 <p>首先无论服务账号的<em>UserAccountControl</em>属性是否被设为<em>TrustedToAuthForDelegation</em>， 服务自身都可以调用S4U2Self为任意用户请求访问自己的服务票据。但是当没有设置时， 通过S4U2Self请求到的TGS将是不可转发的，但是不可转发的TGS可以用于<strong>基于资源的约束委派</strong>。S4U2Proxy会接收这张不可转发的TGS，请求相关服务并最后得到一张可转发的TGS。</p>
 <ul>
-<li><p>但是如果S4U2SELF阶段模拟的用户被设置为对委派敏感，返回的TGS还是不可转发的。（对委派敏感的判断在S4U2SELF阶段，而不是S4U2PROXY阶段）</p>
+<li>
+<p>但是如果S4U2SELF阶段模拟的用户被设置为对委派敏感，返回的TGS还是不可转发的。（对委派敏感的判断在S4U2SELF阶段，而不是S4U2PROXY阶段）</p>
 </li>
-<li><h3 id="相关笔记："><a href="#相关笔记：" class="headerlink" title="相关笔记："></a>相关笔记：</h3></li>
+<li>
+<h3 id="相关笔记："><a class="header-anchor" href="#相关笔记：">¶</a>相关笔记：</h3>
+</li>
 </ul>
 <p><a target="_blank" rel="noopener" href="https://blog.ateam.qianxin.com/post/zhe-shi-yi-pian-bu-yi-yang-de-zhen-shi-shen-tou-ce-shi-an-li-fen-xi-wen-zhang">WEBDAV XXE to 域控</a></p>
 <p><a target="_blank" rel="noopener" href="https://blog.ateam.qianxin.com/post/wei-ruan-bu-ren-de-0day-zhi-yu-nei-ben-di-ti-quan-lan-fan-qie">微软不认的“0day”之域内本地提权-烂番茄（Rotten Tomato）</a></p>
 <p>默认域控的ms-DS-MachineAccountQuota属性设置允许<strong>所有域用户（包括机器账户和服务账户）向一个域添加多达10个计算机帐户</strong>，就是说只要有一个域凭据就可以在域内任意添加机器账户。这个凭据可以是域内的<strong>用户账户、服务账户、机器账户</strong></p>
 <p>注：域控服务器不允许在未加密的链接中创建计算机用户，所以需要获取一个低权限用户的凭证来登录域控的LDAP服务，而不是使用中继，因为使用中继无法获知密钥，从而无法进行和域控的通信</p>
 <p>并且对于域用户添加的机器用户，有权限来设置其msDS-AllowedToActOnBehalfOfOtherIdentity字段，即可以配置基于资源的约束委派，并且机器账户有所需要的SPN，所以满足条件</p>
-<p>并且当一个用户user以用户身份加入一个域时，同样会给其计算机创建一个机器账户user-pc.read.com，此时这个机器账户同样具备配置基于资源的约束委派的条件</p>
+<p>并且当一个用户user以用户身份加入一个域时，<a target="_blank" rel="noopener" href="http://xn--user-pc-4t3kgm23f3tku4bs8k07ihw8ac3k9wuea319bm26jmkozk0e4kh.read.com">同样会给其计算机创建一个机器账户user-pc.read.com</a>，此时这个机器账户同样具备配置基于资源的约束委派的条件</p>
 <ul>
-<li><h3 id="攻击场景：后门-1"><a href="#攻击场景：后门-1" class="headerlink" title="攻击场景：后门"></a>攻击场景：后门</h3></li>
+<li>
+<h3 id="攻击场景：后门-v2"><a class="header-anchor" href="#攻击场景：后门-v2">¶</a>攻击场景：后门</h3>
+</li>
 </ul>
 <p>需要域管理员权限，修改krbtgt或是域控的<code>msDS-AllowedToActOnBehalfOfOtherIdentity</code>属性，加入已知后门账户的SID，即设置后门账户到域控的基于资源的约束委派</p>
 <ul>
-<li><h3 id="攻击场景：横向"><a href="#攻击场景：横向" class="headerlink" title="攻击场景：横向"></a>攻击场景：横向</h3></li>
+<li>
+<h3 id="攻击场景：横向"><a class="header-anchor" href="#攻击场景：横向">¶</a>攻击场景：横向</h3>
+</li>
 </ul>
-<p>A配置了到B的RBCD，打下A就可以打下B。**<code>和约束委派横向利用场景一致</code>**</p>
-<p>某公司有专门加域的域用户A或是其有添加过多台机器入域，获取该账户的权限后，可利用基于资源的约束委派修改机器属性，批量获取机器权限。**<code>mS-DS-CreatorSID</code><strong>（允许所有域用户向一个域添加多达10个计算机帐户，并且用户对其添加的机器账户的msDS-AllowedToActOnBehalfOfOtherIdentity字段有写入权限）<br> 如果我们想拿域内机器A的权限，如果我们又没有机器A的administrators组成员凭据的话还可以看机器A是通过哪个用户加入域的，控制了这个用户A依然可以获取权限。</strong><code>mS-DS-CreatorSID</code>**（通过反查机器用户的mSDS-CreatorSID字段）</p>
+<p>A配置了到B的RBCD，打下A就可以打下B。<strong><code>和约束委派横向利用场景一致</code></strong></p>
+<p>某公司有专门加域的域用户A或是其有添加过多台机器入域，获取该账户的权限后，可利用基于资源的约束委派修改机器属性，批量获取机器权限。<strong><code>mS-DS-CreatorSID</code></strong>（允许所有域用户向一个域添加多达10个计算机帐户，并且用户对其添加的机器账户的msDS-AllowedToActOnBehalfOfOtherIdentity字段有写入权限）<br>
+如果我们想拿域内机器A的权限，如果我们又没有机器A的administrators组成员凭据的话还可以看机器A是通过哪个用户加入域的，控制了这个用户A依然可以获取权限。<strong><code>mS-DS-CreatorSID</code></strong>（通过反查机器用户的mSDS-CreatorSID字段）</p>
 <ul>
-<li><h3 id="攻击场景：使用-mS-DS-CreatorSID"><a href="#攻击场景：使用-mS-DS-CreatorSID" class="headerlink" title="攻击场景：使用 mS-DS-CreatorSID"></a>攻击场景：使用 mS-DS-CreatorSID</h3></li>
+<li>
+<h3 id="攻击场景：使用-mS-DS-CreatorSID"><a class="header-anchor" href="#攻击场景：使用-mS-DS-CreatorSID">¶</a>攻击场景：使用 mS-DS-CreatorSID</h3>
+</li>
 </ul>
 <p>n0thing入职后用工作电脑加入公司域时，域内会创建名为n0thing-pc.redteam.com的计算机账户</p>
-<p>而域用户n0thing则对计算机账户(n0thing-pc.redteam.com)的”msDS-AllowedToActOnBehalfOfOtherIdentity”属性拥有写入权限</p>
+<p>而域用户n0thing则对计算机账户(<a target="_blank" rel="noopener" href="http://n0thing-pc.redteam.com">n0thing-pc.redteam.com</a>)的&quot;msDS-AllowedToActOnBehalfOfOtherIdentity&quot;属性拥有写入权限</p>
 <p>同样一个域用户可能创建多个机器账户，只需查看<strong>mS-DS-CreatorSID</strong>字段来看机器账户的创建账户即可（反查谁创建了这个机器账户）</p>
 <ul>
-<li><h3 id="攻击场景：提权"><a href="#攻击场景：提权" class="headerlink" title="攻击场景：提权"></a>攻击场景：提权</h3></li>
-<li><p>当服务以本地system权限运行时，发起认证请求时是以<strong>机器账户</strong>的身份去认证的，权限较低</p>
+<li>
+<h3 id="攻击场景：提权"><a class="header-anchor" href="#攻击场景：提权">¶</a>攻击场景：提权</h3>
+</li>
+<li>
+<p>当服务以本地system权限运行时，发起认证请求时是以<strong>机器账户</strong>的身份去认证的，权限较低</p>
 </li>
 </ul>
 <p>由于低权限的服务账户和本地SYSTEM账户（<code>SYSTEM</code>、<code>iis apppool\defaultapppool</code>、<code>network service</code>）出网时都是以机器账户的身份出网的，如果获得了机器账户凭据或者将机器账户加入域的账户，那么可以直接连接域控的LDAP服务，然后创建机器账户A-&gt;设置A到自身机器账户的RBCD-&gt;实现本地提权</p>
-<h1 id="0x04-psexec"><a href="#0x04-psexec" class="headerlink" title="0x04 psexec"></a>0x04 psexec</h1><p>psexec关于传递用户票据的思考：<a target="_blank" rel="noopener" href="https://paper.seebug.org/503/">https://paper.seebug.org/503/</a></p>
-<h1 id="0x05-wmiexec"><a href="#0x05-wmiexec" class="headerlink" title="0x05 wmiexec"></a>0x05 wmiexec</h1>
+<h1>0x04 psexec</h1>
+<p>psexec关于传递用户票据的思考：<a target="_blank" rel="noopener" href="https://paper.seebug.org/503/">https://paper.seebug.org/503/</a></p>
+<h1>0x05 wmiexec</h1>
+
     </div>
 
     
@@ -728,7 +778,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8D%E8%AF%8D%E6%89%AB%E7%9B%B2"><span class="nav-number">1.</span> <span class="nav-text">名词扫盲</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Windows-%E8%AE%A4%E8%AF%81%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">Windows 认证流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01-NTLM-Hash%E4%B8%8ENTLM"><span class="nav-number">3.</span> <span class="nav-text">0x01 NTLM Hash与NTLM</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#NTLM%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.1.</span> <span class="nav-text">NTLM协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NTLM-V2%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.2.</span> <span class="nav-text">NTLM V2协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pass-The-Hash%EF%BC%88PTH%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">Pass The Hash（PTH）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NTLM-Realy"><span class="nav-number">3.4.</span> <span class="nav-text">NTLM Realy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Origin-Potato%EF%BC%88MS08-068%EF%BC%89"><span class="nav-number">3.4.1.</span> <span class="nav-text">Origin Potato（MS08-068）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hot-Potato%EF%BC%88MS16-075%EF%BC%89"><span class="nav-number">3.4.2.</span> <span class="nav-text">Hot Potato（MS16-075）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NBNS%E6%AC%BA%E9%AA%97%EF%BC%9A"><span class="nav-number">3.4.3.</span> <span class="nav-text">NBNS欺骗：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%AA%E9%80%A0WPAD%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%9A"><span class="nav-number">3.4.4.</span> <span class="nav-text">伪造WPAD代理服务器：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Rotton-Potato%EF%BC%88MS16-075%E5%8F%98%E7%A7%8D%EF%BC%89"><span class="nav-number">3.4.5.</span> <span class="nav-text">Rotton Potato（MS16-075变种）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Juicy-Potato%EF%BC%88%E5%AF%B9-Rotten-Potato-%E7%9A%84%E5%AE%8C%E5%96%84%EF%BC%89"><span class="nav-number">3.4.6.</span> <span class="nav-text">Juicy Potato（对 Rotten Potato 的完善）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Rogue-Potato%EF%BC%88Rotten-x2F-Juicy-%E7%9A%84%E7%BB%95%E8%BF%87%EF%BC%89"><span class="nav-number">3.4.7.</span> <span class="nav-text">Rogue Potato（Rotten &#x2F; Juicy 的绕过）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SweetPotato"><span class="nav-number">3.4.8.</span> <span class="nav-text">SweetPotato</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PrintSpoofer"><span class="nav-number">3.4.9.</span> <span class="nav-text">PrintSpoofer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PetitPotam"><span class="nav-number">3.4.10.</span> <span class="nav-text">PetitPotam</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%9F%E7%8E%AF%E5%A2%83%E6%8F%90%E6%9D%83"><span class="nav-number">3.4.11.</span> <span class="nav-text">域环境提权</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E6%8F%90%E6%9D%83"><span class="nav-number">3.4.12.</span> <span class="nav-text">本地提权</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Ghost-Potato-CVE-2019-1384"><span class="nav-number">3.4.13.</span> <span class="nav-text">Ghost Potato(CVE-2019-1384)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JAVA-NTLM-Realy"><span class="nav-number">3.4.14.</span> <span class="nav-text">JAVA NTLM Realy</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02-Kerberos%E5%9F%9F%E8%AE%A4%E8%AF%81"><span class="nav-number">4.</span> <span class="nav-text">0x02 Kerberos域认证</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E8%AE%A4%E8%AF%81%E7%B2%97%E7%95%A5%E6%B5%81%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">域认证粗略流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A4%E8%AF%81%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A"><span class="nav-number">4.1.1.</span> <span class="nav-text">认证第一步：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A4%E8%AF%81%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A"><span class="nav-number">4.1.2.</span> <span class="nav-text">认证第二步：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A4%E8%AF%81%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A"><span class="nav-number">4.1.3.</span> <span class="nav-text">认证第三步：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pass-The-Ticket%EF%BC%88PTT%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">Pass The Ticket（PTT）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%99%BD%E9%93%B6%E7%A5%A8%E6%8D%AE-Silver-Tickets"><span class="nav-number">4.2.1.</span> <span class="nav-text">白银票据(Silver Tickets)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE-Golden-Tickets"><span class="nav-number">4.2.2.</span> <span class="nav-text">黄金票据(Golden Tickets)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pass-The-Key%EF%BC%88PTK%EF%BC%89"><span class="nav-number">4.3.</span> <span class="nav-text">Pass The Key（PTK）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pass-The-Certificate%EF%BC%88PTC%EF%BC%89"><span class="nav-number">4.4.</span> <span class="nav-text">Pass The Certificate（PTC）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MS14-068"><span class="nav-number">4.5.</span> <span class="nav-text">MS14-068</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x03-%E5%A7%94%E6%B4%BE"><span class="nav-number">5.</span> <span class="nav-text">0x03 委派</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE"><span class="nav-number">5.1.</span> <span class="nav-text">非约束委派</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#S4U2SELF-%E5%8D%8F%E8%AE%AE%E8%BD%AC%E6%8D%A2"><span class="nav-number">5.2.</span> <span class="nav-text">S4U2SELF(协议转换)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#S4U2PROXY"><span class="nav-number">5.3.</span> <span class="nav-text">S4U2PROXY</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE"><span class="nav-number">5.4.</span> <span class="nav-text">约束委派</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E5%90%8E%E9%97%A8"><span class="nav-number">5.4.1.</span> <span class="nav-text">攻击场景：后门</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E8%B5%84%E6%BA%90%E7%9A%84%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE"><span class="nav-number">5.5.</span> <span class="nav-text">基于资源的约束委派</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0%EF%BC%9A"><span class="nav-number">5.5.1.</span> <span class="nav-text">相关笔记：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E5%90%8E%E9%97%A8-1"><span class="nav-number">5.5.2.</span> <span class="nav-text">攻击场景：后门</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E6%A8%AA%E5%90%91"><span class="nav-number">5.5.3.</span> <span class="nav-text">攻击场景：横向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E4%BD%BF%E7%94%A8-mS-DS-CreatorSID"><span class="nav-number">5.5.4.</span> <span class="nav-text">攻击场景：使用 mS-DS-CreatorSID</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E6%8F%90%E6%9D%83"><span class="nav-number">5.5.5.</span> <span class="nav-text">攻击场景：提权</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x04-psexec"><span class="nav-number">6.</span> <span class="nav-text">0x04 psexec</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x05-wmiexec"><span class="nav-number">7.</span> <span class="nav-text">0x05 wmiexec</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">名词扫盲</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Windows 认证流程</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">0x01 NTLM Hash与NTLM</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#NTLM%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.1.</span> <span class="nav-text">NTLM协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NTLM-V2%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.2.</span> <span class="nav-text">NTLM V2协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pass-The-Hash%EF%BC%88PTH%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">Pass The Hash（PTH）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NTLM-Realy"><span class="nav-number">3.4.</span> <span class="nav-text">NTLM Realy</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Origin-Potato%EF%BC%88MS08-068%EF%BC%89"><span class="nav-number">3.4.1.</span> <span class="nav-text">Origin Potato（MS08-068）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Hot-Potato%EF%BC%88MS16-075%EF%BC%89"><span class="nav-number">3.4.2.</span> <span class="nav-text">Hot Potato（MS16-075）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NBNS%E6%AC%BA%E9%AA%97%EF%BC%9A"><span class="nav-number">3.4.3.</span> <span class="nav-text">NBNS欺骗：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%AA%E9%80%A0WPAD%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8%EF%BC%9A"><span class="nav-number">3.4.4.</span> <span class="nav-text">伪造WPAD代理服务器：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Rotton-Potato%EF%BC%88MS16-075%E5%8F%98%E7%A7%8D%EF%BC%89"><span class="nav-number">3.4.5.</span> <span class="nav-text">Rotton Potato（MS16-075变种）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Juicy-Potato%EF%BC%88%E5%AF%B9-Rotten-Potato-%E7%9A%84%E5%AE%8C%E5%96%84%EF%BC%89"><span class="nav-number">3.4.6.</span> <span class="nav-text">Juicy Potato（对 Rotten Potato 的完善）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Rogue-Potato%EF%BC%88Rotten-Juicy-%E7%9A%84%E7%BB%95%E8%BF%87%EF%BC%89"><span class="nav-number">3.4.7.</span> <span class="nav-text">Rogue Potato（Rotten &#x2F; Juicy 的绕过）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SweetPotato"><span class="nav-number">3.4.8.</span> <span class="nav-text">SweetPotato</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PrintSpoofer"><span class="nav-number">3.4.9.</span> <span class="nav-text">PrintSpoofer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PetitPotam"><span class="nav-number">3.4.10.</span> <span class="nav-text">PetitPotam</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%9F%E7%8E%AF%E5%A2%83%E6%8F%90%E6%9D%83"><span class="nav-number">3.4.11.</span> <span class="nav-text">域环境提权</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E6%8F%90%E6%9D%83"><span class="nav-number">3.4.12.</span> <span class="nav-text">本地提权</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Ghost-Potato-CVE-2019-1384"><span class="nav-number">3.4.13.</span> <span class="nav-text">Ghost Potato(CVE-2019-1384)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#JAVA-NTLM-Realy"><span class="nav-number">3.4.14.</span> <span class="nav-text">JAVA NTLM Realy</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">0x02 Kerberos域认证</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E8%AE%A4%E8%AF%81%E7%B2%97%E7%95%A5%E6%B5%81%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">域认证粗略流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A4%E8%AF%81%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A"><span class="nav-number">4.1.1.</span> <span class="nav-text">认证第一步：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A4%E8%AF%81%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A"><span class="nav-number">4.1.2.</span> <span class="nav-text">认证第二步：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%A4%E8%AF%81%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A"><span class="nav-number">4.1.3.</span> <span class="nav-text">认证第三步：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pass-The-Ticket%EF%BC%88PTT%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">Pass The Ticket（PTT）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%99%BD%E9%93%B6%E7%A5%A8%E6%8D%AE-Silver-Tickets"><span class="nav-number">4.2.1.</span> <span class="nav-text">白银票据(Silver Tickets)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%BB%84%E9%87%91%E7%A5%A8%E6%8D%AE-Golden-Tickets"><span class="nav-number">4.2.2.</span> <span class="nav-text">黄金票据(Golden Tickets)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pass-The-Key%EF%BC%88PTK%EF%BC%89"><span class="nav-number">4.3.</span> <span class="nav-text">Pass The Key（PTK）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pass-The-Certificate%EF%BC%88PTC%EF%BC%89"><span class="nav-number">4.4.</span> <span class="nav-text">Pass The Certificate（PTC）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MS14-068"><span class="nav-number">4.5.</span> <span class="nav-text">MS14-068</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">5.</span> <span class="nav-text">0x03 委派</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE"><span class="nav-number">5.1.</span> <span class="nav-text">非约束委派</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#S4U2SELF-%E5%8D%8F%E8%AE%AE%E8%BD%AC%E6%8D%A2"><span class="nav-number">5.2.</span> <span class="nav-text">S4U2SELF(协议转换)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#S4U2PROXY"><span class="nav-number">5.3.</span> <span class="nav-text">S4U2PROXY</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE"><span class="nav-number">5.4.</span> <span class="nav-text">约束委派</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E5%90%8E%E9%97%A8"><span class="nav-number">5.4.1.</span> <span class="nav-text">攻击场景：后门</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E8%B5%84%E6%BA%90%E7%9A%84%E7%BA%A6%E6%9D%9F%E5%A7%94%E6%B4%BE"><span class="nav-number">5.5.</span> <span class="nav-text">基于资源的约束委派</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E7%AC%94%E8%AE%B0%EF%BC%9A"><span class="nav-number">5.5.1.</span> <span class="nav-text">相关笔记：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E5%90%8E%E9%97%A8-v2"><span class="nav-number">5.5.2.</span> <span class="nav-text">攻击场景：后门</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E6%A8%AA%E5%90%91"><span class="nav-number">5.5.3.</span> <span class="nav-text">攻击场景：横向</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E4%BD%BF%E7%94%A8-mS-DS-CreatorSID"><span class="nav-number">5.5.4.</span> <span class="nav-text">攻击场景：使用 mS-DS-CreatorSID</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E5%9C%BA%E6%99%AF%EF%BC%9A%E6%8F%90%E6%9D%83"><span class="nav-number">5.5.5.</span> <span class="nav-text">攻击场景：提权</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">6.</span> <span class="nav-text">0x04 psexec</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">7.</span> <span class="nav-text">0x05 wmiexec</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

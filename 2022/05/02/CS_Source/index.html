@@ -197,11 +197,11 @@
               </span>
               <span class="post-meta-item-text">In</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Game/" itemprop="url" rel="index"><span itemprop="name">Game</span></a>
+                  <a href="/categories/Windows/" itemprop="url" rel="index"><span itemprop="name">Windows</span></a>
                 </span>
                   , 
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/Windows/" itemprop="url" rel="index"><span itemprop="name">Windows</span></a>
+                  <a href="/categories/Game/" itemprop="url" rel="index"><span itemprop="name">Game</span></a>
                 </span>
             </span>
 
@@ -220,41 +220,43 @@
 <p>工具：CE7.4</p>
 <p>目标：Counter-Strike:Source(Steam)</p>
 <span id="more"></span>
-
-<h1 id="CE定位关键信息基址"><a href="#CE定位关键信息基址" class="headerlink" title="CE定位关键信息基址"></a>CE定位关键信息基址</h1><p>使用CE获得FOV，人物坐标，准星坐标等关键信息基地址</p>
-<h2 id="FOV视场角"><a href="#FOV视场角" class="headerlink" title="FOV视场角"></a>FOV视场角</h2><p>通过狙击镜右键的变焦操作，寻找储存fov视角数值的内存地址</p>
+<h1>CE定位关键信息基址</h1>
+<p>使用CE获得FOV，人物坐标，准星坐标等关键信息基地址</p>
+<h2 id="FOV视场角"><a class="header-anchor" href="#FOV视场角">¶</a>FOV视场角</h2>
+<p>通过狙击镜右键的变焦操作，寻找储存fov视角数值的内存地址</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/fov.png" alt="fov"></p>
 <p>由于分辨率的修改，gov视角的角度也随着变化</p>
 <p>这里使用4:3的分辨率，可知fov角度为90度，而这里的74猜测为垂直视场角</p>
 <p>这列使用第一块中的偏移，绿色为基地址，可以直接寻址获得</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">client.dll+506848   90  //fov</span><br><span class="line">client.dll+50684C   74  //fov_y</span><br></pre></td></tr></table></figure>
-
-<h2 id="寻找自己的坐标"><a href="#寻找自己的坐标" class="headerlink" title="寻找自己的坐标"></a>寻找自己的坐标</h2><p>一般来说坐标是以x，y，z的方式来存储的，那么首先可以来寻找z轴，只需要跳跃来判断，然后一般都是连续存储，所以找到z轴之后就可以找到x，y</p>
+<h2 id="寻找自己的坐标"><a class="header-anchor" href="#寻找自己的坐标">¶</a>寻找自己的坐标</h2>
+<p>一般来说坐标是以x，y，z的方式来存储的，那么首先可以来寻找z轴，只需要跳跃来判断，然后一般都是连续存储，所以找到z轴之后就可以找到x，y</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519142821105.png" alt="image-20220519142821105"></p>
 <p>最后找到的比较多的重复值，那么选第一个看一下，这里由于之前设置的数为4byte整数，显示比较奇怪，转换为folat就可以看到明显是坐标</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519142918454.png" alt="image-20220519142918454"></p>
 <p>然后按4byte偏移的方式寻找到对应的x，y坐标，即z坐标地址-4得到y坐标地址，再-4得到x坐标地址</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">client.dll+4FCB04   //x</span><br><span class="line">client.dll+4FCB08   //y</span><br><span class="line">client.dll+4FCB0C   //z</span><br></pre></td></tr></table></figure>
-
-<h2 id="寻找准星坐标"><a href="#寻找准星坐标" class="headerlink" title="寻找准星坐标"></a>寻找准星坐标</h2><p>通常fps游戏准星向上移动时，y轴坐标会减小，向下移动y轴坐标会增加</p>
+<h2 id="寻找准星坐标"><a class="header-anchor" href="#寻找准星坐标">¶</a>寻找准星坐标</h2>
+<p>通常fps游戏准星向上移动时，y轴坐标会减小，向下移动y轴坐标会增加</p>
 <p>找到y轴坐标后，+4得到x轴坐标</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519144248514.png" alt="image-20220519144248514"></p>
 <p>绿色的都是基地址，同样取第一个作为y坐标，然后+4获得x坐标</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519144326616.png" alt="image-20220519144326616"></p>
 <p>最终基地址为</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">client.dll+49D504 //y</span><br><span class="line">client.dll+49D508 //x</span><br></pre></td></tr></table></figure>
-
-<h2 id="找到单个bot坐标"><a href="#找到单个bot坐标" class="headerlink" title="找到单个bot坐标"></a>找到单个bot坐标</h2><p>使用bot_add增加一个bot</p>
-<p>然后用bot_stop 0&#x2F;1来控制bot行动 然后不停检索变动的坐标值</p>
+<h2 id="找到单个bot坐标"><a class="header-anchor" href="#找到单个bot坐标">¶</a>找到单个bot坐标</h2>
+<p>使用bot_add增加一个bot</p>
+<p>然后用bot_stop 0/1来控制bot行动 然后不停检索变动的坐标值</p>
 <p>最终基地址为</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">server.dll+54DD24 //x</span><br><span class="line">server.dll+54DD28 //y</span><br><span class="line">server.dll+54DD2C //z</span><br></pre></td></tr></table></figure>
-
 <p>但这只是一个bot的位置信息，下面获得bot个数</p>
-<h2 id="找到bot个数"><a href="#找到bot个数" class="headerlink" title="找到bot个数"></a>找到bot个数</h2><p>使用bot_add不断增加bot个数并精确查找人数，最后找到基地址</p>
+<h2 id="找到bot个数"><a class="header-anchor" href="#找到bot个数">¶</a>找到bot个数</h2>
+<p>使用bot_add不断增加bot个数并精确查找人数，最后找到基地址</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">server.dll+58BA08 //bot个数</span><br></pre></td></tr></table></figure>
-
-<h2 id="找到bot血量"><a href="#找到bot血量" class="headerlink" title="找到bot血量"></a>找到bot血量</h2><p>找bot血量时出了点问题。没找到</p>
-<h2 id="找到bot坐标数组偏移"><a href="#找到bot坐标数组偏移" class="headerlink" title="找到bot坐标数组偏移"></a>找到bot坐标数组偏移</h2><p>每个bot都有自己的结构体，前面我们找到了单个bot坐标基地址，那么如果有多个bot的情况下，就需要找到所有bot的坐标，那么多添加三个bot</p>
+<h2 id="找到bot血量"><a class="header-anchor" href="#找到bot血量">¶</a>找到bot血量</h2>
+<p>找bot血量时出了点问题。没找到</p>
+<h2 id="找到bot坐标数组偏移"><a class="header-anchor" href="#找到bot坐标数组偏移">¶</a>找到bot坐标数组偏移</h2>
+<p>每个bot都有自己的结构体，前面我们找到了单个bot坐标基地址，那么如果有多个bot的情况下，就需要找到所有bot的坐标，那么多添加三个bot</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519163740590.png" alt="image-20220519163740590"></p>
 <p>然后由于前面找到了第一个bot坐标的基地址，那么在第一个bot的x坐标地址处选择-&gt;找到哪个地方修改了这段数据</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519163855140.png" alt="image-20220519163855140"></p>
@@ -264,17 +266,20 @@
 <p>然后2213DD24就是前面找到的单个bot的地址的x坐标</p>
 <p>偏移量表示为</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">server.dll+54DD24</span><br></pre></td></tr></table></figure>
-
 <p>那么可知此时每个bot的结构体偏移量为24h</p>
 <p>首个bot的结构体从server.dll+54DD24开始</p>
 <p>然后剩下的每+24h为下一个结构体偏移，并且x，y，z坐标从结构体开始按4byte的方式连续存储</p>
-<h2 id="编写脚本动态获取这些数据"><a href="#编写脚本动态获取这些数据" class="headerlink" title="编写脚本动态获取这些数据"></a>编写脚本动态获取这些数据</h2><p>d，lx，ld，lu，这几个都是输出32位的<br> hd，hx，hu 这几个都是输出16位数据的<br> hhd，hhx，hhu，这几个都是输出8位的<br> lld，ll，llu，llx，这几个都是输出64位的</p>
+<h2 id="编写脚本动态获取这些数据"><a class="header-anchor" href="#编写脚本动态获取这些数据">¶</a>编写脚本动态获取这些数据</h2>
+<p>d，lx，ld，lu，这几个都是输出32位的<br>
+hd，hx，hu 这几个都是输出16位数据的<br>
+hhd，hhx，hhu，这几个都是输出8位的<br>
+lld，ll，llu，llx，这几个都是输出64位的</p>
 <p>使用函数来读取内存</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">BOOL ReadProcessMemory(</span><br><span class="line">  [in]  HANDLE  hProcess,</span><br><span class="line">  [in]  LPCVOID lpBaseAddress,</span><br><span class="line">  [out] LPVOID  lpBuffer,</span><br><span class="line">  [in]  SIZE_T  nSize,</span><br><span class="line">  [out] SIZE_T  *lpNumberOfBytesRead</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
-
 <p>偏移地址使用查找到的dll模块地址加上相应的偏移</p>
 <p>这里dll模块的句柄实际上就是dll模块的地址，可以直接转换为地址使用</p>
-<h2 id="GDI绘图透视"><a href="#GDI绘图透视" class="headerlink" title="GDI绘图透视"></a>GDI绘图透视</h2><p>那么就根据前面获取的自己的坐标和bot的坐标，还有fov角度和鼠标准星角度，进行计算，最后获得敌人相对于屏幕的坐标，然后基于坐标在屏幕实画框即可</p>
+<h2 id="GDI绘图透视"><a class="header-anchor" href="#GDI绘图透视">¶</a>GDI绘图透视</h2>
+<p>那么就根据前面获取的自己的坐标和bot的坐标，还有fov角度和鼠标准星角度，进行计算，最后获得敌人相对于屏幕的坐标，然后基于坐标在屏幕实画框即可</p>
 <p>这里使用GDI绘图的方式，首先理解GDI坐标系，和一般的坐标有所不同</p>
 <p>GDI坐标系：</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220519202810945.png" alt="image-20220519202810945"></p>
@@ -361,7 +366,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CE%E5%AE%9A%E4%BD%8D%E5%85%B3%E9%94%AE%E4%BF%A1%E6%81%AF%E5%9F%BA%E5%9D%80"><span class="nav-number">1.</span> <span class="nav-text">CE定位关键信息基址</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#FOV%E8%A7%86%E5%9C%BA%E8%A7%92"><span class="nav-number">1.1.</span> <span class="nav-text">FOV视场角</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BB%E6%89%BE%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9D%90%E6%A0%87"><span class="nav-number">1.2.</span> <span class="nav-text">寻找自己的坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BB%E6%89%BE%E5%87%86%E6%98%9F%E5%9D%90%E6%A0%87"><span class="nav-number">1.3.</span> <span class="nav-text">寻找准星坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0%E5%8D%95%E4%B8%AAbot%E5%9D%90%E6%A0%87"><span class="nav-number">1.4.</span> <span class="nav-text">找到单个bot坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E4%B8%AA%E6%95%B0"><span class="nav-number">1.5.</span> <span class="nav-text">找到bot个数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E8%A1%80%E9%87%8F"><span class="nav-number">1.6.</span> <span class="nav-text">找到bot血量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E5%9D%90%E6%A0%87%E6%95%B0%E7%BB%84%E5%81%8F%E7%A7%BB"><span class="nav-number">1.7.</span> <span class="nav-text">找到bot坐标数组偏移</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E8%84%9A%E6%9C%AC%E5%8A%A8%E6%80%81%E8%8E%B7%E5%8F%96%E8%BF%99%E4%BA%9B%E6%95%B0%E6%8D%AE"><span class="nav-number">1.8.</span> <span class="nav-text">编写脚本动态获取这些数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GDI%E7%BB%98%E5%9B%BE%E9%80%8F%E8%A7%86"><span class="nav-number">1.9.</span> <span class="nav-text">GDI绘图透视</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">CE定位关键信息基址</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#FOV%E8%A7%86%E5%9C%BA%E8%A7%92"><span class="nav-number">1.1.</span> <span class="nav-text">FOV视场角</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BB%E6%89%BE%E8%87%AA%E5%B7%B1%E7%9A%84%E5%9D%90%E6%A0%87"><span class="nav-number">1.2.</span> <span class="nav-text">寻找自己的坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BB%E6%89%BE%E5%87%86%E6%98%9F%E5%9D%90%E6%A0%87"><span class="nav-number">1.3.</span> <span class="nav-text">寻找准星坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0%E5%8D%95%E4%B8%AAbot%E5%9D%90%E6%A0%87"><span class="nav-number">1.4.</span> <span class="nav-text">找到单个bot坐标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E4%B8%AA%E6%95%B0"><span class="nav-number">1.5.</span> <span class="nav-text">找到bot个数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E8%A1%80%E9%87%8F"><span class="nav-number">1.6.</span> <span class="nav-text">找到bot血量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%BE%E5%88%B0bot%E5%9D%90%E6%A0%87%E6%95%B0%E7%BB%84%E5%81%8F%E7%A7%BB"><span class="nav-number">1.7.</span> <span class="nav-text">找到bot坐标数组偏移</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E5%86%99%E8%84%9A%E6%9C%AC%E5%8A%A8%E6%80%81%E8%8E%B7%E5%8F%96%E8%BF%99%E4%BA%9B%E6%95%B0%E6%8D%AE"><span class="nav-number">1.8.</span> <span class="nav-text">编写脚本动态获取这些数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GDI%E7%BB%98%E5%9B%BE%E9%80%8F%E8%A7%86"><span class="nav-number">1.9.</span> <span class="nav-text">GDI绘图透视</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

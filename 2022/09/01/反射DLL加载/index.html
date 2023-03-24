@@ -215,13 +215,13 @@
       
         <p>对于反射DLL注入的学习</p>
 <span id="more"></span>
-
-<h1 id="基本的反射dll项目"><a href="#基本的反射dll项目" class="headerlink" title="基本的反射dll项目"></a>基本的反射dll项目</h1><h2 id="ReflectiveDLLInjection"><a href="#ReflectiveDLLInjection" class="headerlink" title="ReflectiveDLLInjection"></a>ReflectiveDLLInjection</h2><p>可以说是整个反射dll技术的开山之作，之后的很多项目都是基于此项目的思想进行改进的，通过学习这个项目就可以明白反射dll加载的原理</p>
+<h1>基本的反射dll项目</h1>
+<h2 id="ReflectiveDLLInjection"><a class="header-anchor" href="#ReflectiveDLLInjection">¶</a>ReflectiveDLLInjection</h2>
+<p>可以说是整个反射dll技术的开山之作，之后的很多项目都是基于此项目的思想进行改进的，通过学习这个项目就可以明白反射dll加载的原理</p>
 <p><a target="_blank" rel="noopener" href="https://github.com/stephenfewer/ReflectiveDLLInjection">https://github.com/stephenfewer/ReflectiveDLLInjection</a></p>
 <p>实现原理为自实现了一个DLL文件，其中导出了一个函数ReflectiveLoader，这个函数做的事情就是自己读取本身全部数据，然后模仿loadlibrary的操作，将自身DLL反射加载到程序当中，所以注入程序只需将其数据写入到指定进程的内存当中，然后定位ReflectiveLoader函数地址，创建远线程运行这个函数，这个函数将会完成之后的的反射DLL自加载操作，加载完成之后便进入DLLMain函数进行正常运行，恶意代码可以写入DLLMain函数，并且支持传参操作，通过lpReserved传参</p>
 <p>流程：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1.Open target process with RWX permissions and allocate memory large enough for the DLL.</span><br><span class="line">2.Copy the DLL into the allocated memory space.</span><br><span class="line">3.Calculate the memory offset within the DLL to the export used for doing reflective loading.</span><br><span class="line">4.Call CreateRemoteThread (or an equivalent undocumented API function like RtlCreateUserThread) to start execution in the remote process, using the offset address of the reflective loader function as the entry point.</span><br><span class="line">5.The reflective loader function finds the Process Environment Block (PEB) of the target process using the appropriate CPU register, and uses that to find the address in memory of kernel32.dll and any other required libraries.</span><br><span class="line">6.Parse the exports directory of kernel32 to find the memory addresses of required API functions such as LoadLibraryA, GetProcAddress, and VirtualAlloc.</span><br><span class="line">7.Use these functions to then properly load the DLL (itself) into memory and call its entry point, DllMain.</span><br></pre></td></tr></table></figure>
-
 <p>基于此项目，有如下二开项目</p>
 <ul>
 <li><a target="_blank" rel="noopener" href="https://github.com/alfarom256/StinkyLoader">StinkyLoader</a></li>
@@ -229,10 +229,12 @@
 <li><a target="_blank" rel="noopener" href="https://github.com/mgeeky/ElusiveMice/">ElusiveMice</a></li>
 <li><a target="_blank" rel="noopener" href="https://github.com/SecIdiot/TitanLdr">TitanLdr</a></li>
 </ul>
-<h3 id="关于此项目的缺点"><a href="#关于此项目的缺点" class="headerlink" title="关于此项目的缺点"></a>关于此项目的缺点</h3><p><a target="_blank" rel="noopener" href="https://bruteratel.com/research/feature-update/2021/06/01/PE-Reflection-Long-Live-The-King/">PE Reflection: The King is Dead, Long Live the King</a></p>
+<h3 id="关于此项目的缺点"><a class="header-anchor" href="#关于此项目的缺点">¶</a>关于此项目的缺点</h3>
+<p><a target="_blank" rel="noopener" href="https://bruteratel.com/research/feature-update/2021/06/01/PE-Reflection-Long-Live-The-King/">PE Reflection: The King is Dead, Long Live the King</a></p>
 <p>该文指出了最基本ReflectiveDLLInjection中存在的问题，其中导出函数ReflectiveLoader，在重新申请内存时，使用rwx权限重新申请一块地址空间写入dll数据，存在被检测到的风险</p>
 <p>提出的解决方案就是，对于pe中的不同段分配时使用不同的内存地址权限，而不是全部使用rwx</p>
-<h2 id="MemoryModule"><a href="#MemoryModule" class="headerlink" title="MemoryModule"></a>MemoryModule</h2><p><a target="_blank" rel="noopener" href="https://github.com/fancycode/MemoryModule">https://github.com/fancycode/MemoryModule</a></p>
+<h2 id="MemoryModule"><a class="header-anchor" href="#MemoryModule">¶</a>MemoryModule</h2>
+<p><a target="_blank" rel="noopener" href="https://github.com/fancycode/MemoryModule">https://github.com/fancycode/MemoryModule</a></p>
 <p>实现原理为模拟loadlibrary的操作，但是支持将读到内存中的DLL文件加载到程序当中，目前看来，注入的DLL是一个完全自定义的DLL，注入操作都实现在其.h和.c文件当中</p>
 <p>使用方法：</p>
 <ol>
@@ -245,13 +247,17 @@
 </ol>
 <p>所以实际上就是通过编写一个具有导出函数的dll文件，通过内存加载后，获取其相应导出函数，然后加载即可</p>
 <p>这里想到的利用方式就是在自己实现的木马程序当中，通过远程访问dll数据读取到内存，之后进行一些解密操作，反射加载到当前程序当中， 然后调用导出函数实现一些功能</p>
-<h2 id="StinkyLoader"><a href="#StinkyLoader" class="headerlink" title="StinkyLoader"></a>StinkyLoader</h2><p><a target="_blank" rel="noopener" href="https://github.com/alfarom256/StinkyLoader">https://github.com/alfarom256/StinkyLoader</a></p>
-<h2 id="Kaynldr"><a href="#Kaynldr" class="headerlink" title="Kaynldr"></a>Kaynldr</h2><p><a target="_blank" rel="noopener" href="https://github.com/Cracked5pider/KaynLdr">https://github.com/Cracked5pider/KaynLdr</a></p>
+<h2 id="StinkyLoader"><a class="header-anchor" href="#StinkyLoader">¶</a>StinkyLoader</h2>
+<p><a target="_blank" rel="noopener" href="https://github.com/alfarom256/StinkyLoader">https://github.com/alfarom256/StinkyLoader</a></p>
+<h2 id="Kaynldr"><a class="header-anchor" href="#Kaynldr">¶</a>Kaynldr</h2>
+<p><a target="_blank" rel="noopener" href="https://github.com/Cracked5pider/KaynLdr">https://github.com/Cracked5pider/KaynLdr</a></p>
 <p>具有的特点：</p>
 <ul>
 <li>Erases the DOS and NT header  （申请新内存时，不复制DOS头和NT头到新地址中，只复制section过去）</li>
-<li>Library&#x2F;Api used:<ul>
-<li>ntdll.dll<ul>
+<li>Library/Api used:
+<ul>
+<li>ntdll.dll
+<ul>
 <li>LdrLoadDll  （解析导入表时导入对于库时使用）</li>
 <li>NtAllocateVirtualMemory  （申请内存）</li>
 <li>NtProtectVirtualMemory  （改变内存保护）</li>
@@ -265,7 +271,6 @@
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221025174245253.png" alt="image-20221025174245253"></p>
 <p>首先获取当前加载dll的基地址，这里使用汇编实现在util.s中</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">global KaynCaller                ;导出函数KaynCaller</span><br><span class="line"></span><br><span class="line">section .text</span><br><span class="line"></span><br><span class="line">   KaynCaller:</span><br><span class="line">       call pop                  ;此命令为了将下一条指令的地址入栈</span><br><span class="line">       pop:</span><br><span class="line">       pop rcx                   ;取出当前指令地址到rcx               </span><br><span class="line">   loop:                         ;循环查找pe文件头</span><br><span class="line">       xor rbx, rbx              ;rbx=0</span><br><span class="line">       mov ebx, 0x5A4D           ;dos头4d5a存入ebx</span><br><span class="line">       dec rcx                   ;rcx自减</span><br><span class="line">       cmp bx,  word ds:[ rcx ]  ;判断是否找到</span><br><span class="line">       jne loop                  ;不相等则重新循环</span><br><span class="line">       xor rax, rax              ;rax=0</span><br><span class="line">       mov ax,  [ rcx + 0x3C ]   ;取e_lfanew字段，即pe头偏移</span><br><span class="line">       add rax, rcx              ;此时rax指向pe头</span><br><span class="line">       xor rbx, rbx              ;rbx=0</span><br><span class="line">       add bx,  0x4550           ;pe头PE</span><br><span class="line">       cmp bx,  word ds:[ rax ]  ;判断是否等于PE</span><br><span class="line">       jne loop                  ;不满足则继续循环</span><br><span class="line">       mov rax, rcx              ;rax返回寻找到的pe基地址</span><br><span class="line">   ret</span><br></pre></td></tr></table></figure>
-
 <p>然后通过teb-ldr链获取ntdll基地址，然后解析导出表获取使用到的api的地址</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221025203342158.png" alt="image-20221025203342158"></p>
 <p>然后是解析节表，依次分配到新申请的内存中，此时内存权限为RW</p>
@@ -278,14 +283,18 @@
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20221026112509717.png" alt="image-20221026112509717"></p>
 <p>其中的构建dll的make文档</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">MAKEFLAGS += -s</span><br><span class="line"></span><br><span class="line">COMPILER_x86 		= i686-w64-mingw32-gcc</span><br><span class="line">COMPILER_x64 		= x86_64-w64-mingw32-gcc</span><br><span class="line"></span><br><span class="line">CFLAGS 				= -s -w -Wall -Wextra -masm=intel -shared -fPIC -e DllMain -Os -fno-asynchronous-unwind-tables</span><br><span class="line"></span><br><span class="line">INCLUDE				= -I include</span><br><span class="line">SOURCE 				= $(wildcard src/*.c)</span><br><span class="line"></span><br><span class="line">x64:</span><br><span class="line">	nasm -f win64 src/Util.s -o src/Util.o</span><br><span class="line">	$(COMPILER_x64) src/*.o $(INCLUDE) $(SOURCE) $(CFLAGS) -o ../bin/KaynLdr.x64.dll -lntdll -luser32 -DWIN_X64</span><br><span class="line">	rm src/*.o</span><br></pre></td></tr></table></figure>
-
-<h2 id="ElusiveMice"><a href="#ElusiveMice" class="headerlink" title="ElusiveMice"></a>ElusiveMice</h2><p><a target="_blank" rel="noopener" href="https://github.com/mgeeky/ElusiveMice/">https://github.com/mgeeky/ElusiveMice/</a></p>
-<h2 id="TitanLdr"><a href="#TitanLdr" class="headerlink" title="TitanLdr"></a>TitanLdr</h2><p><a target="_blank" rel="noopener" href="https://github.com/SecIdiot/TitanLdr">https://github.com/SecIdiot/TitanLdr</a></p>
-<h1 id="修补反射dll，使其成为shellcode"><a href="#修补反射dll，使其成为shellcode" class="headerlink" title="修补反射dll，使其成为shellcode"></a>修补反射dll，使其成为shellcode</h1><h2 id="sRDI"><a href="#sRDI" class="headerlink" title="sRDI"></a>sRDI</h2><p>项目地址：<a target="_blank" rel="noopener" href="https://github.com/monoxgas/sRDI">https://github.com/monoxgas/sRDI</a></p>
+<h2 id="ElusiveMice"><a class="header-anchor" href="#ElusiveMice">¶</a>ElusiveMice</h2>
+<p><a target="_blank" rel="noopener" href="https://github.com/mgeeky/ElusiveMice/">https://github.com/mgeeky/ElusiveMice/</a></p>
+<h2 id="TitanLdr"><a class="header-anchor" href="#TitanLdr">¶</a>TitanLdr</h2>
+<p><a target="_blank" rel="noopener" href="https://github.com/SecIdiot/TitanLdr">https://github.com/SecIdiot/TitanLdr</a></p>
+<h1>修补反射dll，使其成为shellcode</h1>
+<h2 id="sRDI"><a class="header-anchor" href="#sRDI">¶</a>sRDI</h2>
+<p>项目地址：<a target="_blank" rel="noopener" href="https://github.com/monoxgas/sRDI">https://github.com/monoxgas/sRDI</a></p>
 <p>此项目基于一篇文章</p>
 <p><a target="_blank" rel="noopener" href="https://disman.tl/2015/01/30/an-improved-reflective-dll-injection-technique.html">https://disman.tl/2015/01/30/an-improved-reflective-dll-injection-technique.html</a></p>
 <p>这篇文章项目地址：<a target="_blank" rel="noopener" href="https://github.com/dismantl/ImprovedReflectiveDLLInjection%EF%BC%88%E6%AD%A4%E9%A1%B9%E7%9B%AE%E6%98%AF%E5%9F%BA%E4%BA%8Estephenfewer%E7%9A%84%E9%A1%B9%E7%9B%AE%EF%BC%8C%E5%A2%9E%E5%8A%A0%E4%BA%86%E4%B8%80%E6%AE%B5%E5%BC%95%E5%AF%BC%E7%9A%84shellcode%EF%BC%89">https://github.com/dismantl/ImprovedReflectiveDLLInjection（此项目是基于stephenfewer的项目，增加了一段引导的shellcode）</a></p>
-<h2 id="donut"><a href="#donut" class="headerlink" title="donut"></a>donut</h2><p>项目地址：<a target="_blank" rel="noopener" href="https://github.com/TheWover/donut">https://github.com/TheWover/donut</a></p>
+<h2 id="donut"><a class="header-anchor" href="#donut">¶</a>donut</h2>
+<p>项目地址：<a target="_blank" rel="noopener" href="https://github.com/TheWover/donut">https://github.com/TheWover/donut</a></p>
 
     </div>
 
@@ -366,7 +375,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%9A%84%E5%8F%8D%E5%B0%84dll%E9%A1%B9%E7%9B%AE"><span class="nav-number">1.</span> <span class="nav-text">基本的反射dll项目</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ReflectiveDLLInjection"><span class="nav-number">1.1.</span> <span class="nav-text">ReflectiveDLLInjection</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%AD%A4%E9%A1%B9%E7%9B%AE%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">1.1.1.</span> <span class="nav-text">关于此项目的缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MemoryModule"><span class="nav-number">1.2.</span> <span class="nav-text">MemoryModule</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#StinkyLoader"><span class="nav-number">1.3.</span> <span class="nav-text">StinkyLoader</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kaynldr"><span class="nav-number">1.4.</span> <span class="nav-text">Kaynldr</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ElusiveMice"><span class="nav-number">1.5.</span> <span class="nav-text">ElusiveMice</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TitanLdr"><span class="nav-number">1.6.</span> <span class="nav-text">TitanLdr</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BF%AE%E8%A1%A5%E5%8F%8D%E5%B0%84dll%EF%BC%8C%E4%BD%BF%E5%85%B6%E6%88%90%E4%B8%BAshellcode"><span class="nav-number">2.</span> <span class="nav-text">修补反射dll，使其成为shellcode</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sRDI"><span class="nav-number">2.1.</span> <span class="nav-text">sRDI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#donut"><span class="nav-number">2.2.</span> <span class="nav-text">donut</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">基本的反射dll项目</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ReflectiveDLLInjection"><span class="nav-number">1.1.</span> <span class="nav-text">ReflectiveDLLInjection</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E%E6%AD%A4%E9%A1%B9%E7%9B%AE%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">1.1.1.</span> <span class="nav-text">关于此项目的缺点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MemoryModule"><span class="nav-number">1.2.</span> <span class="nav-text">MemoryModule</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#StinkyLoader"><span class="nav-number">1.3.</span> <span class="nav-text">StinkyLoader</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kaynldr"><span class="nav-number">1.4.</span> <span class="nav-text">Kaynldr</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ElusiveMice"><span class="nav-number">1.5.</span> <span class="nav-text">ElusiveMice</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TitanLdr"><span class="nav-number">1.6.</span> <span class="nav-text">TitanLdr</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">修补反射dll，使其成为shellcode</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#sRDI"><span class="nav-number">2.1.</span> <span class="nav-text">sRDI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#donut"><span class="nav-number">2.2.</span> <span class="nav-text">donut</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

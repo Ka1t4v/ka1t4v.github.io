@@ -198,7 +198,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="Component-Object-Model（COM）"><a href="#Component-Object-Model（COM）" class="headerlink" title="Component Object Model（COM）"></a>Component Object Model（COM）</h1><p>在一些横向移动或提权时会利用一些COM组件，对其进行学习</p>
+          <h1>Component Object Model（COM）</h1>
+<p>在一些横向移动或提权时会利用一些COM组件，对其进行学习</p>
           <!--noindex-->
           <!--/noindex-->
         
@@ -267,7 +268,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="Windows的访问控制模型"><a href="#Windows的访问控制模型" class="headerlink" title="Windows的访问控制模型"></a>Windows的访问控制模型</h1>
+          <h1>Windows的访问控制模型</h1>
           <!--noindex-->
           <!--/noindex-->
         
@@ -336,7 +337,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>NTLM和Kerberos协议学习  </p>
+          <p>NTLM和Kerberos协议学习</p>
           <!--noindex-->
           <!--/noindex-->
         
@@ -624,7 +625,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="同源策略（Same-origin-policy）"><a href="#同源策略（Same-origin-policy）" class="headerlink" title="同源策略（Same origin policy）"></a>同源策略（Same origin policy）</h2><p>端口，协议，域名 三者相同缺一不可</p>
+          <h2 id="同源策略（Same-origin-policy）"><a class="header-anchor" href="#同源策略（Same-origin-policy）">¶</a>同源策略（Same origin policy）</h2>
+<p>端口，协议，域名 三者相同缺一不可</p>
           <!--noindex-->
           <!--/noindex-->
         
@@ -693,8 +695,9 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="0x00-前言"><a href="#0x00-前言" class="headerlink" title="0x00 前言"></a>0x00 前言</h1><p>为什么使用syscall直接调用内核函数？</p>
-<p>现在很多AV&#x2F;EDR会基于对用户模式的一些API进行hook，从而检测敏感的操作，比如运行线程，申请内存，以及读写内存，所以直接使用syscall，可以绕过此类检测，从而增强免杀能力</p>
+          <h1>0x00 前言</h1>
+<p>为什么使用syscall直接调用内核函数？</p>
+<p>现在很多AV/EDR会基于对用户模式的一些API进行hook，从而检测敏感的操作，比如运行线程，申请内存，以及读写内存，所以直接使用syscall，可以绕过此类检测，从而增强免杀能力</p>
           <!--noindex-->
           <!--/noindex-->
         
@@ -763,8 +766,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="TEB"><a href="#TEB" class="headerlink" title="TEB"></a>TEB</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">TEB(Thread Environment Block，线程环境块)</span><br><span class="line">线程环境块中存放着进程中所有线程的各种信息</span><br></pre></td></tr></table></figure>
-
+          <h1>TEB</h1>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">TEB(Thread Environment Block，线程环境块)</span><br><span class="line">线程环境块中存放着进程中所有线程的各种信息</span><br></pre></td></tr></table></figure>
 <p>TEB不在系统内核空间中，而是应用层的一个结构，全程为Thread environment block即线程环境块，结构中包括着系统频繁使用的一些与线程相关的数据。进程中的每个线程（系统线程除外）都有一个自己的TEB</p>
           <!--noindex-->
           <!--/noindex-->
@@ -837,7 +840,6 @@
           <p>C2Profile提供了很好地操作beacon的方法，C2Profile不仅仅可以自定义beacon的通信属性(例如uri，header等等)，还可以对beacon进行操作，从而实现免杀的目的</p>
 <p>我们可以在启动cs的teamserver时指定所使用的c2profile文件</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nohup ./teamserver [IP] [password] [/path/to/my.profile] &amp;</span><br></pre></td></tr></table></figure>
-
 <p>Malleable c2 profile主要用来定制流量规则，及Beacon的一些特征。根据目标机器存在的网络环境，主机存在的通信软件。可以仿造其中的通信软件的特征，进行流量的加密混淆</p>
           <!--noindex-->
           <!--/noindex-->

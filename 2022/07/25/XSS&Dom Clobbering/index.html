@@ -208,9 +208,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>DOM 最初是在没有任何标准化的情况下诞生和实现的，这导致了许多特殊的行为，但是为了保持兼容性，很多浏览器仍然支持异常的 DOM </p>
+        <p>DOM 最初是在没有任何标准化的情况下诞生和实现的，这导致了许多特殊的行为，但是为了保持兼容性，很多浏览器仍然支持异常的 DOM</p>
 <span id="more"></span>
-
 <p>DOM 的旧版本（即DOM Level 0 &amp; 1）仅提供了有限的通过 JavaScript 引用元素的方式，一些经常使用的元素具有专用的集合（例如<code>document.forms</code>），而其他元素可以通过<code>Window</code>和<code>Document</code>对象上的<code>name</code>属性和<code>id</code>属性来引用，</p>
 <p>显然，支持这些引用方式会引起混淆，即使较新的规范试图解决此问题，但是为了向后兼容，大多数行为都不能轻易更改。并且，浏览器之间没有共识，因此每个浏览器可能遵循不同的规范（甚至根本没有标准）。显然，缺乏标准化意味着确保DOM的安全是一项重大挑战。</p>
 <p>由于非标准化的 DOM 行为，浏览器有时可能会向各种 DOM 元素添加 name &amp; id 属性，作为对文档或全局对象的属性引用，但是，这会导致覆盖掉 document原有的属性或全局变量，或者劫持一些变量的内容，而且不同的浏览器还有不同的解析方式，所以本文的内容如果没有特别标注，均默认在 <strong>Chrome 80.0.3987.116</strong> 版本上进行。</p>
@@ -221,31 +220,28 @@
 <p>可以看到经过红框中的修改操作，这时document.cookie获得的已经不是正常的cookie了，而是一个name等于cookie的标签，成功覆盖了正常的cookie</p>
 <p>那么测试一下可以修改哪些系统变量</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">id</span>=<span class="string">&#x27;x&#x27;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">name</span>=<span class="string">&#x27;y&#x27;</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript"><span class="variable language_">console</span>.<span class="title function_">log</span>(x);</span></span><br><span class="line"><span class="language-javascript"><span class="variable language_">console</span>.<span class="title function_">log</span>(y);</span></span><br><span class="line"><span class="language-javascript"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">document</span>.<span class="property">x</span>);</span></span><br><span class="line"><span class="language-javascript"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">document</span>.<span class="property">y</span>);</span></span><br><span class="line"><span class="language-javascript"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">window</span>.<span class="property">x</span>);</span></span><br><span class="line"><span class="language-javascript"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="variable language_">window</span>.<span class="property">y</span>);</span></span><br><span class="line"><span class="language-javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
 <p>​    输出结果为</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220504153806752.png" alt="image-20220504153806752"></p>
 <p>可以看到只有id标签无法覆盖document对象，那么覆盖document对象时只需要用name标签即可</p>
 <p>但两层调用时只要第一层是name标签，第二层为id标签同样可以覆盖document对象</p>
 <figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    </span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">name</span>=<span class="string">&#x27;body&#x27;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">id</span>=<span class="string">&#x27;appendChild&#x27;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">form</span>&gt;</span></span><br><span class="line">    </span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
-
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220504154533725.png" alt="image-20220504154533725"></p>
-<h2 id="Attack-Method"><a href="#Attack-Method" class="headerlink" title="Attack Method"></a>Attack Method</h2><p>既然我们可以通过这种方式去创建或者覆盖 document 或者 window 对象的某些值，但是看起来我们举的例子只是利用标签创建或者覆盖最终得到的也是标签，是一个<code>HTMLElment</code>对象，而不是一个字符串</p>
-<h3 id="toString-NaN"><a href="#toString-NaN" class="headerlink" title="toString"></a>toString</h3><p>所以我们可以通过以下代码来进行 fuzz 得到可以通过<code>toString</code>方法将其转换成字符串类型的标签：</p>
+<h2 id="Attack-Method"><a class="header-anchor" href="#Attack-Method">¶</a>Attack Method</h2>
+<p>既然我们可以通过这种方式去创建或者覆盖 document 或者 window 对象的某些值，但是看起来我们举的例子只是利用标签创建或者覆盖最终得到的也是标签，是一个<code>HTMLElment</code>对象，而不是一个字符串</p>
+<h3 id="toString"><a class="header-anchor" href="#toString">¶</a>toString</h3>
+<p>所以我们可以通过以下代码来进行 fuzz 得到可以通过<code>toString</code>方法将其转换成字符串类型的标签：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Object.getOwnPropertyNames(window)</span><br><span class="line">.filter(p =&gt; p.match(/Element$/))</span><br><span class="line">.map(p =&gt; window[p])</span><br><span class="line">.filter(p =&gt; p &amp;&amp; p.prototype &amp;&amp; p.prototype.toString !== Object.prototype.toString)</span><br></pre></td></tr></table></figure>
-
 <p>我们可以得到两种标签对象：<code>HTMLAreaElement (&lt;area&gt;)</code>和 <code>HTMLAnchorElement (&lt;a&gt;)</code>，这两个标签对象我们都可以利用<code>href</code>属性来进行字符串转换。</p>
 <p>使用a标签</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&lt;html&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">&lt;a id=&#x27;x&#x27; href=&#x27;hello:hello&#x27;&gt;</span><br><span class="line"></span><br><span class="line">&lt;script&gt;</span><br><span class="line">alert(window.x)</span><br><span class="line">&lt;/script&gt;</span><br><span class="line"></span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
-
 <p>输出</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220504161839431.png" alt="image-20220504161839431"></p>
 <p><strong>测试后a标签只能覆盖window对象 无法覆盖document对象</strong></p>
-<h3 id="两层调用"><a href="#两层调用" class="headerlink" title="两层调用"></a>两层调用</h3><p>使用以下语法</p>
+<h3 id="两层调用"><a class="header-anchor" href="#两层调用">¶</a>两层调用</h3>
+<p>使用以下语法</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;div id=&#x27;x&#x27;&gt;</span><br><span class="line">  &lt;a id=&#x27;x&#x27; name=&#x27;y&#x27; href=&#x27;hrello:hasaki&#x27;&gt;&lt;/a&gt;</span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure>
-
 <p>即可实现x.y的调用</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&lt;html&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line"></span><br><span class="line">&lt;div id=&#x27;x&#x27;&gt;</span><br><span class="line">  &lt;a id=&#x27;x&#x27; name=&#x27;y&#x27; href=&#x27;hrello:hasaki&#x27;&gt;&lt;/a&gt;</span><br><span class="line">&lt;/div&gt;</span><br><span class="line">&lt;script&gt;</span><br><span class="line">alert(window.x.y)</span><br><span class="line">&lt;/script&gt;</span><br><span class="line"></span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
-
 <p>输出</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220504162344296.png" alt="image-20220504162344296"></p>
 
@@ -328,7 +324,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Attack-Method"><span class="nav-number">1.</span> <span class="nav-text">Attack Method</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#toString-NaN"><span class="nav-number">1.1.</span> <span class="nav-text">toString</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%A4%E5%B1%82%E8%B0%83%E7%94%A8"><span class="nav-number">1.2.</span> <span class="nav-text">两层调用</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Attack-Method"><span class="nav-number">1.</span> <span class="nav-text">Attack Method</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#toString"><span class="nav-number">1.1.</span> <span class="nav-text">toString</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%A4%E5%B1%82%E8%B0%83%E7%94%A8"><span class="nav-number">1.2.</span> <span class="nav-text">两层调用</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

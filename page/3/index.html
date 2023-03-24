@@ -198,7 +198,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="Commons-Beanutils"><a href="#Commons-Beanutils" class="headerlink" title="Commons-Beanutils"></a>Commons-Beanutils</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">PriorityQueue#readObject()</span><br><span class="line"> -&gt; PriorityQueue#heapify() </span><br><span class="line">  -&gt; PriorityQueue#siftDown()</span><br><span class="line">   -&gt; PriorityQueue#siftDownUsingComparator()</span><br><span class="line">    -&gt; BeanComparator#compare()</span><br><span class="line">     -&gt; PropertyUtils#getProperty()</span><br><span class="line">      -&gt; TemplatesImpl#getOutputProperties()</span><br><span class="line">       -&gt; arbitrary bytecode load</span><br></pre></td></tr></table></figure>
+          <h1>Commons-Beanutils</h1>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">PriorityQueue#readObject()</span><br><span class="line"> -&gt; PriorityQueue#heapify() </span><br><span class="line">  -&gt; PriorityQueue#siftDown()</span><br><span class="line">   -&gt; PriorityQueue#siftDownUsingComparator()</span><br><span class="line">    -&gt; BeanComparator#compare()</span><br><span class="line">     -&gt; PropertyUtils#getProperty()</span><br><span class="line">      -&gt; TemplatesImpl#getOutputProperties()</span><br><span class="line">       -&gt; arbitrary bytecode load</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <!--/noindex-->
         
@@ -271,7 +272,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="0x01环境配置"><a href="#0x01环境配置" class="headerlink" title="0x01环境配置"></a>0x01环境配置</h1><p>复现最近比较热的Spring beans RCE（CVE-2022-22965）</p>
+          <h1>0x01环境配置</h1>
+<p>复现最近比较热的Spring beans RCE（CVE-2022-22965）</p>
 <p>jdk:17</p>
 <p>tomcat:8.0.49</p>
           <!--noindex-->
@@ -342,8 +344,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="CC7链分析"><a href="#CC7链分析" class="headerlink" title="CC7链分析"></a>CC7链分析</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">gadget chain：</span><br><span class="line">Hashtable#readObject()</span><br><span class="line"> -&gt;Hashtable#reconstitutionPut()</span><br><span class="line">   -&gt;LazyMap#equals()</span><br><span class="line">   -&gt;AbstractMapDecorator#equals()</span><br><span class="line">     -&gt;HashMap#equals()</span><br><span class="line">     -&gt;AbstractMap#equals()</span><br><span class="line">       -&gt;LazyMap#get()</span><br><span class="line">         -&gt;Transformer#transform()</span><br></pre></td></tr></table></figure>
-
+          <h1>CC7链分析</h1>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">gadget chain：</span><br><span class="line">Hashtable#readObject()</span><br><span class="line"> -&gt;Hashtable#reconstitutionPut()</span><br><span class="line">   -&gt;LazyMap#equals()</span><br><span class="line">   -&gt;AbstractMapDecorator#equals()</span><br><span class="line">     -&gt;HashMap#equals()</span><br><span class="line">     -&gt;AbstractMap#equals()</span><br><span class="line">       -&gt;LazyMap#get()</span><br><span class="line">         -&gt;Transformer#transform()</span><br></pre></td></tr></table></figure>
 <p>相比于cc6cc5，cc7链又发现了另一个新的source入口</p>
           <!--noindex-->
           <!--/noindex-->
@@ -413,7 +415,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="CC6链分析"><a href="#CC6链分析" class="headerlink" title="CC6链分析"></a>CC6链分析</h1><p>为了解决在java版本大于等于8u71时<strong>AnnotationInvocationHandler</strong>类的修改而无法再使用这个类，于是引出了一个新的类</p>
+          <h1>CC6链分析</h1>
+<p>为了解决在java版本大于等于8u71时<strong>AnnotationInvocationHandler</strong>类的修改而无法再使用这个类，于是引出了一个新的类</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">org.apache.commons.collections.keyvalue.TiedMapEntry</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <!--/noindex-->
@@ -483,7 +486,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="CC5链分析"><a href="#CC5链分析" class="headerlink" title="CC5链分析"></a>CC5链分析</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Gadget chain:</span><br><span class="line">BadAttributeValueExpException#readObject()</span><br><span class="line"> -&gt;TiedMapEntry#toString()</span><br><span class="line">  -&gt;TiedMapEntry#getValue()</span><br><span class="line">   -&gt;LazyMap#get()</span><br><span class="line">    -&gt;Transformer#transform()</span><br></pre></td></tr></table></figure>
+          <h1>CC5链分析</h1>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Gadget chain:</span><br><span class="line">BadAttributeValueExpException#readObject()</span><br><span class="line"> -&gt;TiedMapEntry#toString()</span><br><span class="line">  -&gt;TiedMapEntry#getValue()</span><br><span class="line">   -&gt;LazyMap#get()</span><br><span class="line">    -&gt;Transformer#transform()</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <!--/noindex-->
         
@@ -552,7 +556,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="CC3链分析"><a href="#CC3链分析" class="headerlink" title="CC3链分析"></a>CC3链分析</h1><p><strong>字节码加载</strong></p>
+          <h1>CC3链分析</h1>
+<p><strong>字节码加载</strong></p>
 <p>cc3链引入了TemplatesImpl来加载字节码这个概念</p>
           <!--noindex-->
           <!--/noindex-->
@@ -622,7 +627,9 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="CC1链分析"><a href="#CC1链分析" class="headerlink" title="CC1链分析"></a>CC1链分析</h1><h2 id="0x01-环境"><a href="#0x01-环境" class="headerlink" title="0x01 环境"></a>0x01 环境</h2><ul>
+          <h1>CC1链分析</h1>
+<h2 id="0x01-环境"><a class="header-anchor" href="#0x01-环境">¶</a>0x01 环境</h2>
+<ul>
 <li>jdk&lt;8u71</li>
 <li>commons-collections ：3.2.1</li>
 </ul>
@@ -694,7 +701,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="0x01原理分析"><a href="#0x01原理分析" class="headerlink" title="0x01原理分析"></a>0x01原理分析</h1><p><strong>com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl</strong>这个类中定义了一个内部类<strong>TransletClassLoader</strong> </p>
+          <h1>0x01原理分析</h1>
+<p><strong>com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl</strong>这个类中定义了一个内部类<strong>TransletClassLoader</strong></p>
 <p>这个类里重写了 <strong>defineClass</strong> 方法，并且这里没有<strong>显式地声明其定义域</strong>。</p>
           <!--noindex-->
           <!--/noindex-->
@@ -764,7 +772,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="原理分析"><a href="#原理分析" class="headerlink" title="原理分析"></a>原理分析</h1><p>codebase是一个地址，告诉Java虚拟机我们应该从哪个地方去搜索类，有点像我们日常用的 CLASSPATH，但CLASSPATH是本地路径，而codebase通常是远程URL，比如http、ftp等。 如果我们指定 codebase&#x3D;<a target="_blank" rel="noopener" href="http://example.com/">http://example.com/</a> ，然后加载 Example 类，则 Java虚拟机会下载这个文件 <a target="_blank" rel="noopener" href="http://example.com/Example.class">http://example.com/Example.class</a> ，并作为 Example类的字节码。 </p>
+          <h1>原理分析</h1>
+<p>codebase是一个地址，告诉Java虚拟机我们应该从哪个地方去搜索类，有点像我们日常用的 CLASSPATH，但CLASSPATH是本地路径，而codebase通常是远程URL，比如http、ftp等。 如果我们指定 codebase=<a target="_blank" rel="noopener" href="http://example.com/">http://example.com/</a> ，然后加载 Example 类，则 Java虚拟机会下载这个文件 <a target="_blank" rel="noopener" href="http://example.com/Example.class">http://example.com/Example.class</a> ，并作为 Example类的字节码。</p>
           <!--noindex-->
           <!--/noindex-->
         
@@ -833,7 +842,8 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="HTTP-Request-Splitting"><a href="#HTTP-Request-Splitting" class="headerlink" title="HTTP Request Splitting"></a>HTTP Request Splitting</h1><p>影响版本：node.js&lt;&#x3D;8</p>
+          <h1>HTTP Request Splitting</h1>
+<p>影响版本：node.js&lt;=8</p>
           <!--noindex-->
           <!--/noindex-->
         

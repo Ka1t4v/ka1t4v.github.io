@@ -16,12 +16,12 @@
     var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="LDAPLDAP(Lightweight Directory Access  Protocol)是轻量级目录访问协议。以信息目录的形式存在，在该目录中可只定义一次用户和组，而在多台机器和多个应用程序间共享它们。LDAP与数据库最大区别在于，数据库以“表格-字段-值”的形是来存储数据，而LDAP以树状形方式访问存储在LDAP目录中的信息。">
+  <meta name="description" content="¶LDAP LDAP(Lightweight Directory Access  Protocol)是轻量级目录访问协议。以信息目录的形式存在，在该目录中可只定义一次用户和组，而在多台机器和多个应用程序间共享它们。LDAP与数据库最大区别在于，数据库以“表格-字段-值”的形是来存储数据，而LDAP以树状形方式访问存储在LDAP目录中的信息。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LDAP注入">
 <meta property="og:url" content="https://ka1t4v.github.io/2022/07/02/LDAP%E6%B3%A8%E5%85%A5/index.html">
 <meta property="og:site_name" content="Ka1t4v">
-<meta property="og:description" content="LDAPLDAP(Lightweight Directory Access  Protocol)是轻量级目录访问协议。以信息目录的形式存在，在该目录中可只定义一次用户和组，而在多台机器和多个应用程序间共享它们。LDAP与数据库最大区别在于，数据库以“表格-字段-值”的形是来存储数据，而LDAP以树状形方式访问存储在LDAP目录中的信息。">
+<meta property="og:description" content="¶LDAP LDAP(Lightweight Directory Access  Protocol)是轻量级目录访问协议。以信息目录的形式存在，在该目录中可只定义一次用户和组，而在多台机器和多个应用程序间共享它们。LDAP与数据库最大区别在于，数据库以“表格-字段-值”的形是来存储数据，而LDAP以树状形方式访问存储在LDAP目录中的信息。">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220702182950043.png">
 <meta property="article:published_time" content="2022-07-02T10:16:01.000Z">
@@ -204,79 +204,83 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="LDAP"><a href="#LDAP" class="headerlink" title="LDAP"></a>LDAP</h2><p>LDAP(Lightweight Directory Access  Protocol)是轻量级目录访问协议。以信息目录的形式存在，在该目录中可只定义一次用户和组，而在多台机器和多个应用程序间共享它们。LDAP与数据库最大区别在于，数据库以“表格-字段-值”的形是来存储数据，而LDAP以树状形方式访问存储在LDAP目录中的信息。</p>
+        <h2 id="LDAP"><a class="header-anchor" href="#LDAP">¶</a>LDAP</h2>
+<p>LDAP(Lightweight Directory Access  Protocol)是轻量级目录访问协议。以信息目录的形式存在，在该目录中可只定义一次用户和组，而在多台机器和多个应用程序间共享它们。LDAP与数据库最大区别在于，数据库以“表格-字段-值”的形是来存储数据，而LDAP以树状形方式访问存储在LDAP目录中的信息。</p>
 <span id="more"></span>
-
-<h2 id="LDAP目录结构"><a href="#LDAP目录结构" class="headerlink" title="LDAP目录结构"></a>LDAP目录结构</h2><p>LDAP目录以树状的层次结构来存储数据。其结果如下图所示：</p>
+<h2 id="LDAP目录结构"><a class="header-anchor" href="#LDAP目录结构">¶</a>LDAP目录结构</h2>
+<p>LDAP目录以树状的层次结构来存储数据。其结果如下图所示：</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220702182950043.png" alt="image-20220702182950043"></p>
 <p>dn标志一条记录，描述一条数据的详细路径（比如：人、组织、IP地址等）</p>
 <p>dc表示一条记录所属区域，相当于数据库（比如：中国、美国、韩国等）</p>
 <p>ou表示一条记录所属组织（比如：省份、部门、行业等）</p>
 <p>cn表示一条记录的名字，相当于数据库中的主键即需要查找的目标</p>
-<h2 id="LDAP-Statement-Syntax"><a href="#LDAP-Statement-Syntax" class="headerlink" title="LDAP Statement Syntax"></a>LDAP Statement Syntax</h2><ul>
-<li><p><code>(cn=John*)</code> matches entries where the common name starts with <code>John</code> (<code>*</code> matches any character)</p>
+<h2 id="LDAP-Statement-Syntax"><a class="header-anchor" href="#LDAP-Statement-Syntax">¶</a>LDAP Statement Syntax</h2>
+<ul>
+<li>
+<p><code>(cn=John*)</code> matches entries where the common name starts with <code>John</code> (<code>*</code> matches any character)</p>
 </li>
-<li><p><code>(!(cn=*Doe))</code> matches entries where the common name doesn’t end with <code>Doe</code> (<code>!</code> is logical NOT)</p>
+<li>
+<p><code>(!(cn=*Doe))</code> matches entries where the common name doesn’t end with <code>Doe</code> (<code>!</code> is logical NOT)</p>
 </li>
-<li><p><code>(&amp;(cn=J*)(cn=*Doe))</code> matches entries where the common name starts with <code>J</code> and ends with <code>Doe</code> (<code>&amp;</code> is logical AND)</p>
+<li>
+<p><code>(&amp;(cn=J*)(cn=*Doe))</code> matches entries where the common name starts with <code>J</code> and ends with <code>Doe</code> (<code>&amp;</code> is logical AND)</p>
 </li>
-<li><p><code>(&amp;(|(cn=John*)(cn=Jane*))(cn=*Doe))</code> matches entries where the common name starts with <code>John</code> or <code>Jane</code> and ends with <code>Doe</code> (<code>|</code> is logical OR)</p>
+<li>
+<p><code>(&amp;(|(cn=John*)(cn=Jane*))(cn=*Doe))</code> matches entries where the common name starts with <code>John</code> or <code>Jane</code> and ends with <code>Doe</code> (<code>|</code> is logical OR)</p>
 </li>
-<li><p>&#x3D;（等于）</p>
+<li>
+<p>=（等于）</p>
 </li>
-<li><p>&amp;（逻辑与）</p>
+<li>
+<p>&amp;（逻辑与）</p>
 </li>
-<li><p>|（逻辑或）</p>
+<li>
+<p>|（逻辑或）</p>
 </li>
-<li><p>!（逻辑非）</p>
+<li>
+<p>!（逻辑非）</p>
 </li>
-<li><p>*（通配符）</p>
+<li>
+<p>*（通配符）</p>
 </li>
 </ul>
 <p>官方语法文档参考<a target="_blank" rel="noopener" href="https://datatracker.ietf.org/doc/html/rfc4515">RFC_4515</a></p>
-<h2 id="How-LDAP-Injection-Works"><a href="#How-LDAP-Injection-Works" class="headerlink" title="How LDAP Injection Works"></a>How LDAP Injection Works</h2><p>While LDAP injections come in many shapes and sizes, here are two typical approaches:</p>
+<h2 id="How-LDAP-Injection-Works"><a class="header-anchor" href="#How-LDAP-Injection-Works">¶</a>How LDAP Injection Works</h2>
+<p>While LDAP injections come in many shapes and sizes, here are two typical approaches:</p>
 <ul>
 <li>Authentication bypass: Directory services are commonly used for user authentication and authorization, so the most basic LDAP injection attacks attempt to bypass password checking. Take the following vulnerable JavaScript code that directly assembles a simple LDAP filter from user inputs stored in the variables <code>enteredUser</code> and <code>enteredPwd</code>:</li>
 </ul>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">filterContent = &quot;(&amp;(userID=&quot; + enteredUser + &quot;)(password=&quot; + enteredPwd + &quot;))&quot;</span><br></pre></td></tr></table></figure>
-
 <p>可以构造恶意的enterdUser，绕过登陆验证</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">enteredUser = *)(userID=*))(|(userID=*</span><br><span class="line">enteredPwd = anything</span><br></pre></td></tr></table></figure>
-
 <p>结合起来就是</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(&amp;(userID=*)(userID=*))(|(userID=*)(password=anything))</span><br></pre></td></tr></table></figure>
-
 <p>也可以直接使用通配符，直接绕过登录验证</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">enteredUser = *</span><br><span class="line">enteredPwd = *</span><br></pre></td></tr></table></figure>
-
 <ul>
 <li>Information disclosure: If a vulnerable application uses LDAP filters to provision shared resources, for example printers, an attacker performing recon might inject LDAP filter code to list all resources in the organization’s directory. Let’s say the following filter intended to list printers and scanners is assembled in an unsafe way:</li>
 </ul>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(|(resType=printer)(resType=scanner))</span><br></pre></td></tr></table></figure>
-
 <p>攻击者可以结合或来显示其他信息，假设还存在userID信息，那么就可以直接全部显示</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(|(resType=printer)(userID=*))(resType=scanner))</span><br></pre></td></tr></table></figure>
-
 <p>并且LDAP具有的特性是，只处理第一个完整的过滤语句，之后的都会忽略</p>
-<h2 id="Blind-LDAP-Injection"><a href="#Blind-LDAP-Injection" class="headerlink" title="Blind LDAP Injection"></a>Blind LDAP Injection</h2><p>和Sql盲注大体上一样，可以利用通配符结合字典来爆破某个具体的存储字段</p>
+<h2 id="Blind-LDAP-Injection"><a class="header-anchor" href="#Blind-LDAP-Injection">¶</a>Blind LDAP Injection</h2>
+<p>和Sql盲注大体上一样，可以利用通配符结合字典来爆破某个具体的存储字段</p>
 <ul>
 <li>用户名探测</li>
 </ul>
 <p>可以使用如下语句来判断一个用户名是否存在，如果存在返回结果为真</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(&amp;(userID=John Doe)(department=*))(objectClass=user))</span><br></pre></td></tr></table></figure>
-
 <ul>
 <li>字段爆破</li>
 </ul>
 <p>可以使用如下方法通过已知字符串+通配符的方式，如果字符串正确，则会返回结果为真，那么就可以通过爆破的方式来按顺序获得字符</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(&amp;(userID=John Doe)(department=a*))(objectClass=user))</span><br></pre></td></tr></table></figure>
-
 <ul>
 <li>爆破时的字符串缩减</li>
 </ul>
 <p>可以使用如下测试方法来测试一个字段中是否存在x字符，如果不存在则返回假，那么在字典中删除x就可以提高爆破效率</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(&amp;(userID=John Doe)(department=*x*))(objectClass=user))</span><br></pre></td></tr></table></figure>
-
 <p>Reference：</p>
 <p><a target="_blank" rel="noopener" href="https://www.invicti.com/blog/web-security/ldap-injection-how-to-prevent/">https://www.invicti.com/blog/web-security/ldap-injection-how-to-prevent/</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.freebuf.com/company-information/189869.html">https://www.freebuf.com/company-information/189869.html</a></p>

