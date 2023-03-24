@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Component Object Model（COM）在一些横向移动或提权时会利用一些COM组件，对其进行学习">
+<meta property="og:type" content="article">
+<meta property="og:title" content="COM组件学习">
+<meta property="og:url" content="https://ka1t4v.github.io/2023/03/24/COM%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="Component Object Model（COM）在一些横向移动或提权时会利用一些COM组件，对其进行学习">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320144235468.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320144335853.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320144653963.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230319215634227.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320014332630.png">
+<meta property="article:published_time" content="2023-03-24T10:46:25.000Z">
+<meta property="article:modified_time" content="2023-03-24T12:16:03.573Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320144235468.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2023/03/24/COM%E5%AD%A6%E4%B9%A0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>COM组件学习 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2023/03/24/COM%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          COM组件学习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-03-24 18:46:25" itemprop="dateCreated datePublished" datetime="2023-03-24T18:46:25+08:00">2023-03-24</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Windows/" itemprop="url" rel="index"><span itemprop="name">Windows</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Component-Object-Model（COM）"><a href="#Component-Object-Model（COM）" class="headerlink" title="Component Object Model（COM）"></a>Component Object Model（COM）</h1><p>在一些横向移动或提权时会利用一些COM组件，对其进行学习</p>
+<span id="more"></span>
+
+<p>几点基本概念：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">1.在设计层面，COM模型分为`接口`与`实现`</span><br><span class="line">例如计划任务示例代码中的`ITaskService`</span><br><span class="line"></span><br><span class="line">2.区分COM组件的唯一标识为`Guid`，分别为针对接口的`IID（Interface IDentifier）`与针对类的`CLSID（CLaSs IDentifier）`</span><br><span class="line">例如`CLSID_TaskScheduler`定义为`0F87369F-A4E5-4CFC-BD3E-73E6154572DD`</span><br><span class="line"></span><br><span class="line">3.COM组件需要在注册表内进行注册才可进行调用。通常情况下，系统预定义组件注册于`HKEY_LOCAL_MACHINE\SOFTWARE\Classes`，用户组件注册于`HKEY_CURRENT_USER\SOFTWARE\Classes`。`HKEY_CLASSES_ROOT`为二者合并后的视图，在系统服务角度等同于`HKEY_LOCAL_MACHINE\SOFTWARE\Classes`</span><br><span class="line">例如计划任务组件的注册信息注册于`HKEY_CLASSES_ROOT\CLSID\&#123;0f87369f-a4e5-4cfc-bd3e-73e6154572dd&#125;`</span><br><span class="line"></span><br><span class="line">4.Windows最小的可独立运行单元是进程，最小的可复用的代码单元为类库，所以COM同样存在`进程内（In-Process）`与`进程外（Out-Of-Process）`两种实现方式。多数情况下，进程外COM组件为一个exe，进程内COM组件为一个dll</span><br><span class="line">例如计划任务的COM对象为进程内组件，由`taskschd.dll`实现</span><br><span class="line"></span><br><span class="line">5.为方便COM组件调用，可以通过`ProgId（Programmatic IDentifier）`为`CLSID`指定别名</span><br><span class="line">例如计划任务组件的ProgId为`Schedule.Service.1`</span><br><span class="line"></span><br><span class="line">6.客户端调用`CoCreateInstance`、`CoCreateInstanceEx`、`CoGetClassObject`等函数时，将创建具有指定`CLSID`的对象实例，这个过程称为`激活（Activation）`</span><br><span class="line">例如微软示例代码中的`CoCreateInstance(CLSID_TaskScheduler,....)`</span><br><span class="line"></span><br><span class="line">7.COM采用`工厂模式(class factory)`对调用方与实现方进行解耦，包括进程内外COM组件激活、通信、转换，`IUnknown::QueryInterface`和`IClassFactory`始终贯穿其中</span><br><span class="line">例如微软示例代码中的一大堆`QueryInterface`</span><br></pre></td></tr></table></figure>
+
+<p>需要介绍一下CLSID(Class Identifier)，中文翻译为：“全局唯一标识符”</p>
+<p><strong>CLSID</strong>是指Windows系统对于不同的应用程序，文件类型，OLE对象，特殊文件夹以及各种系统组件分配的一个唯一表示它的ID代码，用于对其身份的标识和与其他对象进行区分。</p>
+<p>也就是说CLSID就是对象的身份证号，而当一个应用程序想要调用某个对象时，也是通过CLSID来寻找对象的。每一个COM对象有其对应的CLSID，调用COM对象也是通过CLSID来指定调用的</p>
+<p><strong>IID</strong>为接口标识符，代表com组件中的某个函数接口</p>
+<p><strong>ProgID</strong>可以理解为是CLSID的字符串别名，更便于人类理解，但是不确保唯一性，可能重复，只有uuid类型的数据才能保证不重复</p>
+<p>powershell可以从CLSID或ProgID来创建一个com对象实例</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">//通过CLSID</span><br><span class="line"><span class="variable">$com</span> =[<span class="type">activator</span>]::CreateInstance([<span class="type">type</span>]::GetTypeFromCLSID(<span class="string">&quot;CLSID&quot;</span>))</span><br><span class="line">//通过ProgID</span><br><span class="line"><span class="variable">$com</span> =[<span class="type">activator</span>]::CreateInstance([<span class="type">type</span>]::GetTypeFromProgID(<span class="string">&quot;ProgID&quot;</span>))</span><br></pre></td></tr></table></figure>
+
+<p>powershell中对于com组件的一些操作</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">//枚举com组件ProgID</span><br><span class="line"><span class="built_in">gwmi</span> Win32_COMSetting | ? &#123;<span class="variable">$_</span>.progid &#125; | <span class="built_in">sort</span> | <span class="built_in">ft</span> ProgId,Caption,InprocServer32</span><br><span class="line"></span><br><span class="line">//枚举DCOM组件</span><br><span class="line"><span class="built_in">Get-CimInstance</span> <span class="literal">-class</span> Win32_DCOMApplication | <span class="built_in">select</span> appid,name</span><br><span class="line"></span><br><span class="line">//查看某个COM组件的属性，方法等</span><br><span class="line"><span class="variable">$com</span> =[<span class="type">activator</span>]::CreateInstance([<span class="type">type</span>]::GetTypeFromCLSID(<span class="string">&quot;CLSID&quot;</span>))</span><br><span class="line"><span class="variable">$com</span> | <span class="built_in">Get-Member</span></span><br></pre></td></tr></table></figure>
+
+<p>com调用需要的值</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.CLSID</span><br><span class="line">2.IID</span><br><span class="line">3.虚函数表</span><br><span class="line">4.方法签名</span><br></pre></td></tr></table></figure>
+
+<h2 id="COM利用"><a href="#COM利用" class="headerlink" title="COM利用"></a>COM利用</h2><p>很多系统功能和服务都是基于com的，那么其中就有一些com具备一些执行命令或者自动提权的特性，就可以被利用来进行恶意行为</p>
+<h2 id="COM劫持"><a href="#COM劫持" class="headerlink" title="COM劫持"></a>COM劫持</h2><p>COM组件搜索过程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.HKCU\Software\Classes\CLSID</span><br><span class="line">2.HKCR\CLSID</span><br><span class="line">3.HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\ShellCompatibility\Objects\</span><br></pre></td></tr></table></figure>
+
+<p>根据这个搜索过程，就可以进行类似dll劫持的com劫持</p>
+<h2 id="COM调用"><a href="#COM调用" class="headerlink" title="COM调用"></a>COM调用</h2><h3 id="powershell"><a href="#powershell" class="headerlink" title="powershell:"></a>powershell:</h3><p>这里利用<strong>MMC20.Application</strong>的<strong>ExecuteShellCommand</strong>来执行命令</p>
+<p>MMC20.Application支持COM和DCOM</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$com</span> =[<span class="type">activator</span>]::CreateInstance([<span class="type">type</span>]::GetTypeFromProgID(<span class="string">&quot;MMC20.Application&quot;</span>))</span><br><span class="line"><span class="variable">$com</span>.Document.ActiveView.ExecuteShellCommand(<span class="string">&#x27;cmd.exe&#x27;</span>,<span class="variable">$null</span>,<span class="string">&quot;/c calc.exe&quot;</span>,<span class="string">&quot;Minimized&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="c-："><a href="#c-：" class="headerlink" title="c#："></a>c#：</h3><p>以<strong>shellwindows</strong>为例</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> CLSID = <span class="string">&quot;9BA05972-F6A8-11CF-A442-00A0C90A8F39&quot;</span>;</span><br><span class="line">Type ComType = Type.GetTypeFromCLSID(<span class="keyword">new</span> Guid(CLSID), ComputerName);</span><br><span class="line"><span class="built_in">object</span> RemoteComObject = Activator.CreateInstance(ComType);</span><br><span class="line"><span class="built_in">object</span> Item = RemoteComObject.GetType().InvokeMember(<span class="string">&quot;Item&quot;</span>, BindingFlags.InvokeMethod, <span class="literal">null</span>, RemoteComObject, <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; &#125;);</span><br><span class="line"><span class="built_in">object</span> Document = Item.GetType().InvokeMember(<span class="string">&quot;Document&quot;</span>, BindingFlags.GetProperty, <span class="literal">null</span>, Item, <span class="literal">null</span>);</span><br><span class="line"><span class="built_in">object</span> Application = Document.GetType().InvokeMember(<span class="string">&quot;Application&quot;</span>, BindingFlags.GetProperty, <span class="literal">null</span>, Document, <span class="literal">null</span>);</span><br><span class="line">Application.GetType().InvokeMember(<span class="string">&quot;ShellExecute&quot;</span>, BindingFlags.InvokeMethod, <span class="literal">null</span>, Application, <span class="keyword">new</span> <span class="built_in">object</span>[] &#123; BaseCommand, Parameters + <span class="string">&quot; &quot;</span> + Command, Directory, <span class="literal">null</span>, <span class="number">0</span> &#125;);</span><br></pre></td></tr></table></figure>
+
+<h3 id="c-：-1"><a href="#c-：-1" class="headerlink" title="c++："></a>c++：</h3><p>实现思路</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">1.初始化com组件(CoInitializeEx)</span><br><span class="line">2.初始化com安全属性(CoInitializeSecurity)</span><br><span class="line">3.获取com组件的接口(CLSIDFromProgID)</span><br><span class="line">4.创建实例(CreateInstance)</span><br><span class="line">5.填写com组件参数</span><br><span class="line">6.清理释放(Release + CoUninitialize)</span><br></pre></td></tr></table></figure>
+
+<p>并且使用C++时需要通过指定COM对象的IDL文件，并将其转化为对应的c++格式的头文件</p>
+<p>这里使用prchauto.dll中的<strong>ProcessChain</strong>类中的IProcessChain接口，其中有CommandLine方法可以进行命令执行</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320144235468.png" alt="image-20230320144235468"></p>
+<p>需要将ProcessChainLib的IDL文件导出</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320144335853.png" alt="image-20230320144335853"></p>
+<p>然后通过vs对idl文件进行编译，获得头文件</p>
+<p>然后将头文件导入</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320144653963.png" alt="image-20230320144653963"></p>
+<p>main.cpp</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;Windows.h&gt;</span><br><span class="line">#include &quot;prchauto_h.h&quot;</span><br><span class="line">#include &lt;objbase.h&gt;</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#include &lt;strsafe.h&gt;</span><br><span class="line"></span><br><span class="line">//定义com组件使用的bool值，其实质是一个二short类型。</span><br><span class="line">typedef short VARIANT_BOOL;</span><br><span class="line">#define VARIANT_TRUE ((VARIANT_BOOL)-1)</span><br><span class="line">#define VARIANT_FALSE ((VARIANT_BOOL)0)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">#define CLSID_ProcessChain L&quot;&#123;E430E93D-09A9-4DC5-80E3-CBB2FB9AF28E&#125;&quot;</span><br><span class="line">#define IID_IProcessChain  L&quot;&#123;79ED9CB4-3A01-4ABA-AD3C-A985EE298B20&#125;&quot;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">int main(int argc, TCHAR* argv[])</span><br><span class="line">&#123;</span><br><span class="line">	HRESULT hr = 0;</span><br><span class="line">	CLSID clsidIProcessChain = &#123; 0 &#125;;</span><br><span class="line">	IID iidIProcessChain = &#123; 0 &#125;;</span><br><span class="line">	IProcessChain* ProcessChain = NULL;</span><br><span class="line">	BOOL bRet = FALSE;</span><br><span class="line"></span><br><span class="line">	CoInitialize(NULL);//初始化com环境</span><br><span class="line"></span><br><span class="line">	CLSIDFromString(CLSID_ProcessChain, &amp;clsidIProcessChain);</span><br><span class="line">	IIDFromString(IID_IProcessChain, &amp;iidIProcessChain);</span><br><span class="line">	//创建接口</span><br><span class="line">	hr = CoCreateInstance(clsidIProcessChain, NULL, CLSCTX_INPROC_SERVER, iidIProcessChain, (LPVOID*)&amp;ProcessChain);</span><br><span class="line"></span><br><span class="line">	TCHAR cmd[] = L&quot;C:\\WINDOWS\\system32\\calc.exe&quot;;</span><br><span class="line">	VARIANT_BOOL b = VARIANT_TRUE;</span><br><span class="line">	//设置参数</span><br><span class="line">	ProcessChain-&gt;put_CommandLine((BSTR)cmd);</span><br><span class="line">	//调用方法</span><br><span class="line">	hr = ProcessChain-&gt;Start(&amp;b);</span><br><span class="line"></span><br><span class="line">	//释放</span><br><span class="line">	CoUninitialize();</span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="DCOM"><a href="#DCOM" class="headerlink" title="DCOM"></a>DCOM</h1><p>com是在计算机本地的实现，DCOM是COM的进一步扩展，DCOM通过远程过程调用(RPC)将com的功能在远程计算机上实现，可以将DCOM理解为通过RPC实现的COM</p>
+<p>支持DCOM的一些组件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Methods                     APPID</span><br><span class="line">MMC20.Application           7e0423cd-1119-0928-900c-e6d4a52a0715</span><br><span class="line">ShellWindows                9BA05972-F6A8-11CF-A442-00A0C90A8F39</span><br><span class="line">ShellBrowserWindow          C08AFD90-F2A1-11D1-8455-00A0C91F3880</span><br></pre></td></tr></table></figure>
+
+<p>远程调用：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$com</span> =[<span class="type">activator</span>]::CreateInstance([<span class="type">type</span>]::GetTypeFromProgID(<span class="string">&quot;MMC20.Application&quot;</span>,<span class="string">&quot;192.168.1.11&quot;</span>)) </span><br><span class="line"><span class="variable">$com</span>.Document.ActiveView.ExecuteShellCommand(<span class="string">&#x27;cmd.exe&#x27;</span>,<span class="variable">$null</span>,<span class="string">&quot;/c calc.exe&quot;</span>,<span class="string">&quot;Minimized&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>报错：</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230319215634227.png" alt="image-20230319215634227"></p>
+<p>这是因为调用时没有自动将对应主机的凭据传递过去，网上找到一种<a target="_blank" rel="noopener" href="https://blog.csdn.net/cssxn/article/details/112365938">解决方案</a>，使用runas</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">runas /netonly /user:desktop-rum1lhm\administrator powershell</span><br></pre></td></tr></table></figure>
+
+<p>此时使用远程的用户品凭据创建powershell，运行命令时会自动传递凭据，从而成功执行</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/image-20230320014332630.png" alt="image-20230320014332630"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/02/05/Windows%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6%E6%A8%A1%E5%9E%8B&UAC/" rel="prev" title="UACbypass">
+      <i class="fa fa-chevron-left"></i> UACbypass
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Component-Object-Model%EF%BC%88COM%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">Component Object Model（COM）</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#COM%E5%88%A9%E7%94%A8"><span class="nav-number">1.1.</span> <span class="nav-text">COM利用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#COM%E5%8A%AB%E6%8C%81"><span class="nav-number">1.2.</span> <span class="nav-text">COM劫持</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#COM%E8%B0%83%E7%94%A8"><span class="nav-number">1.3.</span> <span class="nav-text">COM调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#powershell"><span class="nav-number">1.3.1.</span> <span class="nav-text">powershell:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#c-%EF%BC%9A"><span class="nav-number">1.3.2.</span> <span class="nav-text">c#：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#c-%EF%BC%9A-1"><span class="nav-number">1.3.3.</span> <span class="nav-text">c++：</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#DCOM"><span class="nav-number">2.</span> <span class="nav-text">DCOM</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
