@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="根据两篇文章开始学习，是BRC4 作者进行的一些基础研究，学习免杀思路，由于是英文文章，会对部分内容进行中英对照翻译的方式进行学习记录，避免理解误差，两篇文章分别为： Proxying DLL Loads To Hide From ETWTI Stack Tracing 自定义堆栈调用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于堆栈跟踪规避的免杀学习（一）">
+<meta property="og:url" content="https://ka1t4v.github.io/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="根据两篇文章开始学习，是BRC4 作者进行的一些基础研究，学习免杀思路，由于是英文文章，会对部分内容进行中英对照翻译的方式进行学习记录，避免理解误差，两篇文章分别为： Proxying DLL Loads To Hide From ETWTI Stack Tracing 自定义堆栈调用">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.github.io/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/assets/LLB1.png">
+<meta property="og:image" content="https://ka1t4v.github.io/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/assets/cleanSlate.png">
+<meta property="og:image" content="https://ka1t4v.github.io/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/assets/image-20230328203202628.png">
+<meta property="og:image" content="https://ka1t4v.github.io/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/assets/image-20230328203530942.png">
+<meta property="article:published_time" content="2023-03-28T10:16:01.000Z">
+<meta property="article:modified_time" content="2023-03-28T15:46:46.756Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.github.io/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/assets/LLB1.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>基于堆栈跟踪规避的免杀学习（一） | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于堆栈跟踪规避的免杀学习（一）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-03-28 18:16:01" itemprop="dateCreated datePublished" datetime="2023-03-28T18:16:01+08:00">2023-03-28</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ReadTeam/" itemprop="url" rel="index"><span itemprop="name">ReadTeam</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>根据两篇文章开始学习，是BRC4 作者进行的一些基础研究，学习免杀思路，由于是英文文章，会对部分内容进行中英对照翻译的方式进行学习记录，避免理解误差，两篇文章分别为：</p>
+<p><a target="_blank" rel="noopener" href="https://0xdarkvortex.dev/proxying-dll-loads-for-hiding-etwti-stack-tracing/">Proxying DLL Loads To Hide From ETWTI Stack Tracing</a></p>
+<p><a target="_blank" rel="noopener" href="https://0xdarkvortex.dev/hiding-in-plainsight/">自定义堆栈调用</a></p>
+<span id="more"></span>
+<h2 id="0x01-代理-DLL-加载以隐藏-ETWTI-堆栈跟踪"><a class="header-anchor" href="#0x01-代理-DLL-加载以隐藏-ETWTI-堆栈跟踪">¶</a>0x01 代理 DLL 加载以隐藏 ETWTI 堆栈跟踪</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">What Is A Stack?</span><br><span class="line">The simplest way to describe a ‘Stack’ in computer science, is a temporary memory space where local variables and function arguments are stored with non-executable permissions. This stack can contain several information about a thread and the function in which it is being executed. Whenever your process executes a new thread, a new stack is created. Stack grows from bottom to top and works in linear fashion, which means it follows the Last In, First Out principal. The ‘RSP’ (x64) or ‘ESP’ (x86) stores the current stack pointer of the thread. Each new default stack size for a thread in windows is of 1 Megabyte unless explicitly changed by the developer during the creation of the thread. This means, if the developer does not calculate and increase the stack size while coding, the stack might end up hitting the stack boundary (alternative known as stack canary) and raise an exception. Usually, it is the task of the _chkstk routine within msvcrt.dll to probe the stack, and raise an exception if more stack is required. Thus if you write a position independent shellcode which requires a large stack (as everything in PIC is stored on stack), your shellcode will crash raising an exception since your PIC will not be linked to the _chkstk routine within msvcrt.dll. When your thread starts, your thread might contain execution of several functions and usage of various different types of variables. Unlike heap, which needs to be allocated and freed manually, we dont have to manually calculate the stack. When the compiler (mingw gcc or clang) compiles the C/C++ code, it auto calculates the stack required and adds the required instruction in the code. Thus when your thread is run, it will first allocate the ‘x’ size on stack from the reserved stack of 1 MB. Take the below example for this instance:</span><br></pre></td></tr></table></figure>
+<p>什么是堆栈？</p>
+<p>在计算机科学中描述“堆栈”的最简单方法是一个临时内存空间，局部变量和函数参数以不可执行的权限存储在该空间中。 该堆栈可以包含有关<strong>线程</strong>及其正在执行的函数的多个信息。 <strong>每当您的进程执行新线程时，都会创建一个新堆栈</strong>。 栈从下往上增长并以线性方式工作，这意味着它遵循<strong>后进先出原则</strong>。 <code>RSP（x64）</code>或<code>ESP（x86）</code>存储线程的当前堆栈指针。 Windows 中线程的每个新默认堆栈大小为 1 兆字节，除非开发人员在创建线程期间明确更改。 这意味着，如果开发人员在编码时不计算和增加堆栈大小，堆栈可能最终会触及堆栈边界（称为stack canary的替代方案）并引发异常。 通常，msvcrt.dll 中的 <code>_chkstk</code> 例程的任务是探测堆栈，并在需要更多堆栈时引发异常。 因此，如果您编写一个需要大堆栈的位置独立 shellcode（因为 PIC 中的所有内容都存储在堆栈中），您的 shellcode 将崩溃并引发异常，因为您的 PIC 将不会链接到 msvcrt.dll 中的 <code>_chkstk</code> 例程。 当您的线程启动时，您的线程可能包含多个函数的执行和各种不同类型变量的使用。 <strong>不像堆(heap)需要手动分配和释放，我们不用手动计算栈(stack)</strong>。 当编译器（mingw gcc 或 clang）编译 C/C++ 代码时，它会自动计算所需的堆栈并在代码中添加所需的指令。 因此，当你的线程运行时，它将首先从 1 MB 的保留堆栈中分配“x”大小的栈空间。 以下面的例子为例：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">samplefunction</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">char</span> test[<span class="number">8192</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">In the above function, we are simply creating a variable of 8192 bytes, but this will not be stored within the PE as it will unnecessarily end up eating space on disk. Thus such variables are optimized by compilers and converted to instructions such as:</span><br></pre></td></tr></table></figure>
+<p>在上面的函数中，我们只是创建了一个 8192 字节的变量，但它不会存储在 PE 中，因为它最终会不必要地占用磁盘空间。因此，此类变量由编译器优化并转换为指令，例如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sub rsp, 0x2000</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">The above assembly code subtracts 0x2000 bytes (8192 decimal) from stack which will be utilized by the function during runtime. In short, if your code needs to clean up some stack space, it will add bytes to stack, whereas if it requires some stack space, it will subtract from the stack. Each function’s stack within the thread will be converted to a block which is called as stack frame. Stack frames provide a clear and concise view of which function was last called, from which area in memory, how much stack is being used by that frame, what are the variables stored in the frame and where the current function needs to return to. Everytime your function calls another function, your current function’s address is pushed to stack, so that when the next function calls ‘ret’ or return, it returns to the current function’s address to continue execution. Once your current function returns to the previous function, the stack frame of the current function gets destroyed, not completely though, it can still be accessed, but mostly ends up being overwritten by the next function which gets called. To explain it like I would to a 5 year old, it would go like this:</span><br></pre></td></tr></table></figure>
+<p>上面的汇编代码从堆栈中减去 0x2000 字节（十进制 8192），函数将在运行时使用这些字节。 简而言之，如果您的代码需要清理一些堆栈空间，它将向堆栈添加字节，而如果它需要一些堆栈空间，它将从堆栈中减去。 线程中的每个函数的堆栈将被转换为一个称为堆栈帧的块。 堆栈帧提供了一个清晰简洁的视图，可以了解上次调用哪个函数、从内存中的哪个区域、该帧使用了多少堆栈、存储在帧中的变量是什么以及当前函数需要返回到哪里。 每次你的函数调用另一个函数时，你当前函数的地址被压入堆栈，这样当下一个函数调用<code>ret</code>或<code>return</code>时，它返回到当前函数的地址继续执行。 一旦当前函数返回到前一个函数，当前函数的堆栈帧就会被破坏，虽然不完全，但仍然可以访问它，但大多数情况下最终会被调用的下一个函数覆盖。 简单来说，它会是这样的：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">func3</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">char</span> test[<span class="number">2048</span>];</span><br><span class="line">    <span class="comment">// do something</span></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">func2</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">char</span> test[<span class="number">4096</span>];</span><br><span class="line">    <span class="built_in">func3</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">func1</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">char</span> test[<span class="number">8192</span>];</span><br><span class="line">    <span class="built_in">func2</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>将上面的代码转换成汇编代码如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">func3:</span><br><span class="line">    sub rsp, <span class="number">0x800</span></span><br><span class="line">    ; <span class="keyword">do</span> something</span><br><span class="line">    add rsp, <span class="number">0x800</span></span><br><span class="line">    ret</span><br><span class="line">func2:</span><br><span class="line">    sub rsp, <span class="number">0x1000</span></span><br><span class="line">    call func3</span><br><span class="line">    add rsp, <span class="number">0x1000</span></span><br><span class="line">    ret</span><br><span class="line">func1:</span><br><span class="line">    sub rsp, <span class="number">0x2000</span></span><br><span class="line">    call func2</span><br><span class="line">    add rsp, <span class="number">0x2000</span></span><br><span class="line">    ret</span><br></pre></td></tr></table></figure>
+<p>因此，每个堆栈帧（ stack frame）将包含分配给变量的字节数、前一个函数压入堆栈的返回地址和当前函数的局部变量信息</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Wheres THE ‘D’ in EDR here?</span><br><span class="line">The technique for detection is extremely smart here. Some EDRs use userland hooks, whereas some use ETW to capture the stack telemetry. For example, say you want to execute your shellcode without module stomping. So, you allocate some memory via VirtualAlloc or the relative NTAPI NtAllocateVirtualMemory, then copy your shellcode and execute it. Now your shellcode might have its own dependencies and it might call LoadLibraryA or LdrLoadDll to load a dll from disk into memory. If your EDR uses userland hooks, they might have already hooked LoadLibrary and LdrLoadDll, in which case they can check the return address pushed to stack by your RX shellcode region. This is specific to some EDRs like Sentinel One, Crowdstrike etc. which will instantly kill your payload. Other EDRs like Microsoft Defender ATP (MDATP), Elastic, FortiEDR will use ETW or kernel callbacks to check where the LoadLibrary call originated from. The stack trace will provide a complete stack frame of return address and all the functions from where the call to LoadLibrary started. In short, if you execute a DLL Sideload which executes your shellcode which called LoadLibrary, it would look like this:</span><br></pre></td></tr></table></figure>
+<p>EDR 中的“D”在哪里？(即如何进行恶意行为监测的)</p>
+<p>这里的检测技术非常聪明。 一些 EDR 使用用户态hook，而另一些使用 ETW 来捕获堆栈遥测数据。 例如，假设你想在没有模块踩踏（module stomping）的情况下执行你的 shellcode。 因此，通过 <code>VirtualAlloc</code> 或相关的 NTAPI <code>NtAllocateVirtualMemory</code> 分配一些内存，然后复制您的 shellcode 并执行它。 现在你的 shellcode 可能有自己的依赖关系，它可能会调用 <code>LoadLibraryA</code> 或 <code>LdrLoadDll</code> 将 dll 从磁盘加载到内存中。 如果您的 EDR 使用用户态挂钩，它们可能已经挂钩了 <code>LoadLibrary</code> 和 <code>LdrLoadDll</code>，在这种情况下，它们可以检查由你的 RX 权限的shellcode区域推送到堆栈的返回地址。 这是特定于某些 EDR，例如 Sentinel One、Crowdstrike 等，它们会立即杀死您的有效负载。 Microsoft Defender ATP (MDATP)、Elastic、FortiEDR 等其他 EDR 将使用 ETW 或内核回调来检查 <code>LoadLibrary</code> 调用的来源。 堆栈跟踪将提供返回地址的完整堆栈框架以及对 LoadLibrary 的调用开始的所有函数。 简而言之，如果您执行一个 DLL的侧加载，它会执行您调用 LoadLibrary 的 shellcode，它看起来像这样：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">|-----------Top Of The Stack-----------|</span><br><span class="line">|                                      |</span><br><span class="line">|                                      |</span><br><span class="line">|--------------------------------------|</span><br><span class="line">|------Stack Frame of LoadLibrary------|</span><br><span class="line">|     Return address of RX on disk     |</span><br><span class="line">|                                      |</span><br><span class="line">|----------Stack Frame of RX-----------|  &lt;- Detection (An unbacked RX region should never call LoadLibraryA)</span><br><span class="line">|     Return address of PE on disk     |</span><br><span class="line">|                                      |</span><br><span class="line">|-----------Stack Frame of PE----------|</span><br><span class="line">| Return address of RtlUserThreadStart |</span><br><span class="line">|                                      |</span><br><span class="line">|---------Bottom Of The Stack----------|</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">This means any EDR which hooks LoadLibrary in usermode or via kernel callbacks/ETW, can check the last return address region or where the call came from. In the v1.1 release of BRc4, I started using the RtlRegisterWait API which can request a worker thread in thread pool to execute LoadLibraryA in a seperate thread to load the library. Once the library is loaded, we can extract its base address by simply walking the PEB (Process Environment Block). Nighthawk later adopted this technique to RtlQueueWorkItem API which is the main NTAPI behind QueueUserWorkItem which can also queue a request to a worker thread to load a library with a clean stack. However this was researched by Proofpoint sometime last year in their blog, and lately Joe Desimone from Elastic also posted a tweet about the RtlRegisterWait API being used by BRc4. This meant sooner or later, detections would come around it and there were need of more such APIs which can be used for further evasion. Thus I decided to spend some time reversing some undocumented APIs from ntdll and found atleast 27 different callbacks which, with a little tweaking and hacking can be exploited to load our DLL with a clean stack.</span><br></pre></td></tr></table></figure>
+<p>这意味着任何在用户模式或通过内核回调/ETW 挂钩 LoadLibrary 的 EDR 都可以检查最后的返回地址区域或调用来自何处。 在 BRc4 的 v1.1 版本中，<strong>开始使用 <code>RtlRegisterWait</code> API，它可以请求线程池中的工作线程在单独的线程中执行 <code>LoadLibraryA</code> 以加载库。 加载库后，我们可以通过简单地遍历 PEB（进程环境块）来提取其基地址。</strong> Nighthawk 后来将这种技术应用于 <code>RtlQueueWorkItem</code> API，它是 <code>QueueUserWorkItem</code> 背后的主要 NTAPI，它还可以将请求排队到工作线程以加载具有干净堆栈的库。 然而，Proofpoint 去年某个时候在他们的博客中对此进行了研究，最近来自 Elastic 的 Joe Desimone 也发布了一条关于 BRc4 使用的 RtlRegisterWait API 的推文。 这意味着迟早会检测到它，并且需要更多可用于进一步逃避的此类 API。 因此，我决定花一些时间从 ntdll 中逆向一些未记录的 API，并发现至少 27 个不同的回调，通过一些调整和黑客攻击，可以利用这些回调来加载我们的 DLL 和干净的堆栈。</p>
+<p>个人理解：上述说到的使用<code>RtlRegisterWait</code> API的方法，通过让另一个线程来加载我们的dll，此时会在那个干净的线程中出现加载dll留下的堆栈空间记录，而不会在我们的线程当中，此时我们线程的调用栈就不会出现一些可疑的加载dll的堆栈记录了</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Windows Callbacks: Allow Us To Introduce Ourselves</span><br><span class="line">Callback functions are pointers to a function which can be passed on to other functions to be executed inside them. Microsoft provides an insane amount of callbacks for software developers to execute code via other functions. A lot of these functions can be found in this github repository which have been exploited quite widely since the past two years. However there is a major issue with all those callbacks. When you execute a callback, you dont want the callback to be in the same thread as of your caller thread. Which means, you dont want stack trace to follow a trail like: LoadLibrary returns to -&gt; Callback Function returns to -&gt; RX region. In order to have a clean stack, we need to make sure our LoadLibrary executes in a seperate thread independent of our RX region, and if we use callbacks, we need the callbacks to be able to pass proper parameters to LoadLibraryA. Most callbacks in Windows, either dont have parameters, or dont forward the parameters ‘as is’ to our target function ‘LoadLibrary’. Take an example of the below code:</span><br></pre></td></tr></table></figure>
+<p>Windows 回调：让我们自我介绍</p>
+<p>回调函数是指向一个函数的指针，该函数可以传递给其他函数以在它们内部执行。 Microsoft 为软件开发人员提供了大量的回调，以通过其他函数执行代码。 许多这些函数都可以在这个 <a target="_blank" rel="noopener" href="https://github.com/aahmad097/AlternativeShellcodeExec">github 存储库</a>中找到，这些函数在过去两年中得到了相当广泛的利用。 然而，所有这些回调都存在一个主要问题。 当您执行回调时，您不希望回调与调用者线程位于同一线程中。 这意味着，您不希望堆栈跟踪遵循如下轨迹：LoadLibrary 返回到 -&gt; 回调函数 返回到 -&gt; RX 区域。 为了拥有一个干净的堆栈，我们需要确保我们的 LoadLibrary 在独立于我们的 RX 区域的单独线程中执行，并且如果我们使用回调，我们需要回调能够将适当的参数传递给 LoadLibraryA。 Windows 中的大多数回调要么没有参数，要么不将参数“按原样”转发到我们的目标函数“LoadLibrary”。 以下面的代码为例：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    CHAR *libName = <span class="string">&quot;wininet.dll&quot;</span>;</span><br><span class="line"></span><br><span class="line">    PTP_WORK WorkReturn = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="built_in">TpAllocWork</span>(&amp;WorkReturn, LoadLibraryA, libName, <span class="literal">NULL</span>); <span class="comment">// pass `LoadLibraryA` as a callback to TpAllocWork</span></span><br><span class="line">    <span class="built_in">TpPostWork</span>(WorkReturn);                                <span class="comment">// request Allocated Worker Thread Execution</span></span><br><span class="line">    <span class="built_in">TpReleaseWork</span>(WorkReturn);                             <span class="comment">// worker thread cleanup</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">WaitForSingleObject</span>((HANDLE)<span class="number">-1</span>, <span class="number">1000</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hWininet: %p\n&quot;</span>, <span class="built_in">GetModuleHandleA</span>(libName)); <span class="comment">//check if library is loaded</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>将上面的代码进行编译运行，它会崩溃，为什么？我们首先来看TpAllocWork函数的定义</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">NTSTATUS NTAPI <span class="title">TpAllocWork</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    PTP_WORK* ptpWrk,</span></span></span><br><span class="line"><span class="params"><span class="function">    PTP_WORK_CALLBACK pfnwkCallback,</span></span></span><br><span class="line"><span class="params"><span class="function">    PVOID OptionalArg,</span></span></span><br><span class="line"><span class="params"><span class="function">    PTP_CALLBACK_ENVIRON CallbackEnvironment</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>函数的第二个参数，也就是我们传入的回调函数，要求格式是<code>PTP_WORK_CALLBACK</code>，而这个格式的函数定义如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">VOID CALLBACK <span class="title">WorkCallback</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    PTP_CALLBACK_INSTANCE Instance,</span></span></span><br><span class="line"><span class="params"><span class="function">    PVOID Context,</span></span></span><br><span class="line"><span class="params"><span class="function">    PTP_WORK Work</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>那么现在来解释一下为什么会崩溃，由于<code>TpAllocWork</code>函数的第三个参数<code>PVOID OptionalArg</code>会被传递给<code>WorkCallback</code>回调函数的第二个参数<code>PVOID Context</code>，由于我们此时的回调函数传入的是<code>LoadLibraryA</code>，而<code>LoadLibraryA</code>并没有第二个参数，所以由于传入的参数和<code>LoadLibraryA</code>所读取的参数位置不一致，就会报错。</p>
+<p>细说的话在x64环境下参数的传递是<code>RCX</code>，<code>RDX</code>，<code>R8</code>，<code>R9</code>这个顺序入寄存器的，而<code>TpAllocWork</code>将参数传入了<code>RDX</code>寄存器，<code>LoadLibraryA</code>会从<code>RCX</code>寄存器取，此时取不到从而会崩溃，如下图所示</p>
+<p><img src="assets/LLB1.png" alt="img"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">So this indeed created a clean stack like: LoadLibraryA returns to -&gt; TpPostWork returns to -&gt; RtlUserThreadStart, but our argument for LoadLibrary gets sent as the second argument, whereas the first argument is a pointer to a TP_CALLBACK_INSTANCE structure sent by the TpPostWork API. After a bit more reversing, I found that this structure is dynamically generated by the TppWorkPost (NOT TpPostWork), which as expected is an internal function of ntdll.dll and nothing much can be done without having the debug symbols for this API.</span><br></pre></td></tr></table></figure>
+<p>所以这确实创建了一个干净的堆栈，如：LoadLibraryA 返回到 -&gt; TpPostWork 返回到 -&gt; RtlUserThreadStart，但是我们的 LoadLibrary 参数作为第二个参数发送，而第一个参数是指向由 TpPostWork API 发送的 TP_CALLBACK_INSTANCE 结构的指针。 经过更多的逆向，我发现这个结构是由 <code>TppWorkPost</code>（不是 <code>TpPostWork</code>）动态生成的，正如预期的那样，它是 <code>ntdll.dll</code> 的内部函数，如果没有这个 API 的调试符号，什么也做不了。</p>
+<p>也有方法来解决上面这个问题，就是将我们的<code>LoadLibrary</code>函数封装到回调函数当中，在回调函数中调用<code>LoadLibrary</code> ，即我们写一个符合<code>PTP_WORK_CALLBACK</code>格式的回调函数</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">VOID CALLBACK <span class="title">WorkCallback</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">  _Inout_     PTP_CALLBACK_INSTANCE Instance,</span></span></span><br><span class="line"><span class="params"><span class="function">  _Inout_opt_ PVOID                 Context,</span></span></span><br><span class="line"><span class="params"><span class="function">  _Inout_     PTP_WORK              Work</span></span></span><br><span class="line"><span class="params"><span class="function">)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">LoadLibraryA</span>(Context);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    CHAR *libName = <span class="string">&quot;wininet.dll&quot;</span>;</span><br><span class="line"></span><br><span class="line">    PTP_WORK WorkReturn = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="built_in">TpAllocWork</span>(&amp;WorkReturn, WorkerCallback, libName, <span class="literal">NULL</span>); <span class="comment">// pass `LoadLibraryA` as a callback to TpAllocWork</span></span><br><span class="line">    <span class="built_in">TpPostWork</span>(WorkReturn);                                <span class="comment">// request Allocated Worker Thread Execution</span></span><br><span class="line">    <span class="built_in">TpReleaseWork</span>(WorkReturn);                             <span class="comment">// worker thread cleanup</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">WaitForSingleObject</span>((HANDLE)<span class="number">-1</span>, <span class="number">1000</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hWininet: %p\n&quot;</span>, <span class="built_in">GetModuleHandleA</span>(libName)); <span class="comment">//check if library is loaded</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">However this means, the callback will be in our RX region and the stack would become: LoadLibraryA returns to -&gt; Callback in RX Region returns to -&gt; RtlUserThreadStart -&gt; TpPostWork which is not good as we ended up doing the same thing we were trying to avoid. The reason for this is stack frame. Because when we call LoadLibraryA from our Callback in RX Region, we end up pushing the return address of the Callback in RX Region on stack which ends up becoming a part of the stack frame. However, what if we manipulate the stack to NOT PUSH THE RETURN ADDRESS? Sure, we will have to write a few lines in assembly, but this should solve our issue entirely and we can have a direct call from TpPostWork to LoadLibrary without having the intricacies in between.</span><br></pre></td></tr></table></figure>
+<p>然而这意味着，回调将在我们的 RX 区域中，堆栈将变为： LoadLibraryA 返回到 -&gt; RX区域中的回调 返回到 -&gt; RtlUserThreadStart -&gt; TpPostWork 这样并不好，因为我们避免的就是堆栈中出现我们的RX区域，而此时堆栈中出现了。 原因是堆栈帧。 因为当我们从 RX 区域中的回调调用 LoadLibraryA 时，我们最终会将 RX 区域中回调的返回地址压入堆栈，最终成为堆栈帧的一部分。 但是，如果我们操纵堆栈不压入返回地址呢？ 当然，我们将不得不在汇编中编写几行代码，但这应该可以完全解决我们的问题，并且我们可以直接从 TpPostWork 调用 LoadLibrary，而无需在两者之间进行复杂的操作。</p>
+<p>C代码如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NTSTATUS</span> <span class="params">(NTAPI* TPALLOCWORK)</span><span class="params">(PTP_WORK* ptpWrk, PTP_WORK_CALLBACK pfnwkCallback, PVOID OptionalArg, PTP_CALLBACK_ENVIRON CallbackEnvironment)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">VOID</span> <span class="params">(NTAPI* TPPOSTWORK)</span><span class="params">(PTP_WORK)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">VOID</span> <span class="params">(NTAPI* TPRELEASEWORK)</span><span class="params">(PTP_WORK)</span></span>;</span><br><span class="line"></span><br><span class="line">FARPROC pLoadLibraryA;</span><br><span class="line"></span><br><span class="line"><span class="function">UINT_PTR <span class="title">getLoadLibraryA</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (UINT_PTR)pLoadLibraryA;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">extern</span> VOID CALLBACK <span class="title">WorkCallback</span><span class="params">(PTP_CALLBACK_INSTANCE Instance, PVOID Context, PTP_WORK Work)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    pLoadLibraryA = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;kernel32&quot;</span>), <span class="string">&quot;LoadLibraryA&quot;</span>);</span><br><span class="line">    FARPROC pTpAllocWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpAllocWork&quot;</span>);</span><br><span class="line">    FARPROC pTpPostWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpPostWork&quot;</span>);</span><br><span class="line">    FARPROC pTpReleaseWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpReleaseWork&quot;</span>);</span><br><span class="line"></span><br><span class="line">    CHAR *libName = <span class="string">&quot;wininet.dll&quot;</span>;</span><br><span class="line">    PTP_WORK WorkReturn = <span class="literal">NULL</span>;</span><br><span class="line">    ((TPALLOCWORK)pTpAllocWork)(&amp;WorkReturn, (PTP_WORK_CALLBACK)WorkCallback, libName, <span class="literal">NULL</span>);</span><br><span class="line">    ((TPPOSTWORK)pTpPostWork)(WorkReturn);</span><br><span class="line">    ((TPRELEASEWORK)pTpReleaseWork)(WorkReturn);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">WaitForSingleObject</span>((HANDLE)<span class="number">-1</span>, <span class="number">0x1000</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hWininet: %p\n&quot;</span>, <span class="built_in">GetModuleHandleA</span>(libName));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>ASM 代码：通过操作堆栈帧将 <code>WorkCallback</code> 重新路由到 <code>LoadLibrary</code></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">section .text</span><br><span class="line"></span><br><span class="line">extern getLoadLibraryA</span><br><span class="line"></span><br><span class="line">global WorkCallback</span><br><span class="line"></span><br><span class="line">WorkCallback:</span><br><span class="line">    mov rcx, rdx</span><br><span class="line">    xor rdx, rdx</span><br><span class="line">    call getLoadLibraryA</span><br><span class="line">    jmp rax</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Now if you compile both of them together, our TpPostWork calls WorkCallback, but WorkCallback does not call LoadLibraryA, it instead jumps to its pointer. WorkCallback simply moves the library name in the RDX register to RCX, erases RDX, gets the address of LoadLibraryA from an adhoc function and then jumps to LoadLibraryA which ends up rearranging the whole stack frame without adding our return address. This ends up making the stack frame look like this:</span><br></pre></td></tr></table></figure>
+<p>现在，如果将它们一起编译，我们的 <code>TpPostWork</code> 会调用 <code>WorkCallback</code>，但 <code>WorkCallback</code> 不会调用 <code>LoadLibraryA</code>，而是跳转到其指针。 <code>WorkCallback</code> 只是将 RDX 寄存器中的库名称移动到 RCX，擦除 RDX，从一个临时函数获取 <code>LoadLibraryA</code> 的地址，然后跳转到 <code>LoadLibraryA</code>，最终重新排列整个堆栈帧而不添加我们的返回地址。 这最终使堆栈框架看起来像这样：</p>
+<p><img src="assets/cleanSlate.png" alt="img"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">The stack is clear as crystal with no signs of anything malevolent. After finding this technique, I started hunting similar other APIs which can be manipulated, and found that with just a little bit of similar tweaks, you can actually implement proxy DLL loads with 27 other Callbacks residing in kernel32, kernelbase and ntdll. I will leave it out as an exercise for the readers of this blog to figure that out. For the users of Brute Ratel, you will find these updates in the next release v1.5. That would be all for this blog and the full code can be found in my github repository.</span><br></pre></td></tr></table></figure>
+<p>堆栈像水晶一样清晰，没有任何恶意迹象。 找到这项技术后，我开始寻找可以操作的其他类似 API，并发现只需进行一些类似的调整，您实际上可以使用位于 kernel32、kernelbase 和 ntdll 中的 27 个其他回调来实现代理 DLL 加载。 我将把它作为练习留给本博客的读者来弄清楚。 对于 Brute Ratel 的用户，您将在下一版本 v1.5 中找到这些更新。 这就是这个博客的全部内容，完整的代码可以在我的 <a target="_blank" rel="noopener" href="https://github.com/paranoidninja/Proxy-DLL-Loads">github 存储库</a>中找到。</p>
+<h2 id="0x02-分析"><a class="header-anchor" href="#0x02-分析">¶</a>0x02 分析</h2>
+<p>那么我们根据上述的两种情况，分别编译并动态调试一下，看一下堆栈的情况</p>
+<ul>
+<li>一般情况下</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function">VOID CALLBACK <span class="title">WorkCallback</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">  _Inout_     PTP_CALLBACK_INSTANCE Instance,</span></span></span><br><span class="line"><span class="params"><span class="function">  _Inout_opt_ PVOID                 Context,</span></span></span><br><span class="line"><span class="params"><span class="function">  _Inout_     PTP_WORK              Work</span></span></span><br><span class="line"><span class="params"><span class="function">)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">LoadLibraryA</span>(Context);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    CHAR *libName = <span class="string">&quot;wininet.dll&quot;</span>;</span><br><span class="line"></span><br><span class="line">    PTP_WORK WorkReturn = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="built_in">TpAllocWork</span>(&amp;WorkReturn, WorkerCallback, libName, <span class="literal">NULL</span>); <span class="comment">// pass `LoadLibraryA` as a callback to TpAllocWork</span></span><br><span class="line">    <span class="built_in">TpPostWork</span>(WorkReturn);                                <span class="comment">// request Allocated Worker Thread Execution</span></span><br><span class="line">    <span class="built_in">TpReleaseWork</span>(WorkReturn);                             <span class="comment">// worker thread cleanup</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">WaitForSingleObject</span>((HANDLE)<span class="number">-1</span>, <span class="number">1000</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hWininet: %p\n&quot;</span>, <span class="built_in">GetModuleHandleA</span>(libName)); <span class="comment">//check if library is loaded</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="assets/image-20230328203202628.png" alt="image-20230328203202628"></p>
+<p>可以看到堆栈中有我们自定义程序的地址，这是由于VOID CALLBACK WorkCallback是在我们的代码地址上下文中定义的，所以回调函数触发时返回地址会指向这里</p>
+<ul>
+<li>使用代理 DLL 加载技术修补后</li>
+</ul>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NTSTATUS</span> <span class="params">(NTAPI* TPALLOCWORK)</span><span class="params">(PTP_WORK* ptpWrk, PTP_WORK_CALLBACK pfnwkCallback, PVOID OptionalArg, PTP_CALLBACK_ENVIRON CallbackEnvironment)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">VOID</span> <span class="params">(NTAPI* TPPOSTWORK)</span><span class="params">(PTP_WORK)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">VOID</span> <span class="params">(NTAPI* TPRELEASEWORK)</span><span class="params">(PTP_WORK)</span></span>;</span><br><span class="line"></span><br><span class="line">FARPROC pLoadLibraryA;</span><br><span class="line"></span><br><span class="line"><span class="function">UINT_PTR <span class="title">getLoadLibraryA</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (UINT_PTR)pLoadLibraryA;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">extern</span> VOID CALLBACK <span class="title">WorkCallback</span><span class="params">(PTP_CALLBACK_INSTANCE Instance, PVOID Context, PTP_WORK Work)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    pLoadLibraryA = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;kernel32&quot;</span>), <span class="string">&quot;LoadLibraryA&quot;</span>);</span><br><span class="line">    FARPROC pTpAllocWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpAllocWork&quot;</span>);</span><br><span class="line">    FARPROC pTpPostWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpPostWork&quot;</span>);</span><br><span class="line">    FARPROC pTpReleaseWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpReleaseWork&quot;</span>);</span><br><span class="line"></span><br><span class="line">    CHAR *libName = <span class="string">&quot;wininet.dll&quot;</span>;</span><br><span class="line">    PTP_WORK WorkReturn = <span class="literal">NULL</span>;</span><br><span class="line">    ((TPALLOCWORK)pTpAllocWork)(&amp;WorkReturn, (PTP_WORK_CALLBACK)WorkCallback, libName, <span class="literal">NULL</span>);</span><br><span class="line">    ((TPPOSTWORK)pTpPostWork)(WorkReturn);</span><br><span class="line">    ((TPRELEASEWORK)pTpReleaseWork)(WorkReturn);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">WaitForSingleObject</span>((HANDLE)<span class="number">-1</span>, <span class="number">0x1000</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;hWininet: %p\n&quot;</span>, <span class="built_in">GetModuleHandleA</span>(libName));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">section .text</span><br><span class="line"></span><br><span class="line">extern getLoadLibraryA</span><br><span class="line"></span><br><span class="line">global WorkCallback</span><br><span class="line"></span><br><span class="line">WorkCallback:</span><br><span class="line">    mov rcx, rdx</span><br><span class="line">    xor rdx, rdx</span><br><span class="line">    call getLoadLibraryA</span><br><span class="line">    jmp rax</span><br></pre></td></tr></table></figure>
+<p><img src="assets/image-20230328203530942.png" alt="image-20230328203530942"></p>
+<p>可以看到此时函数的调用栈没有任何其他的地址空间指针，大体看来能够避免堆栈记录的原因还是在于使用jmp进行getLoadLibraryA的调用，而不是之前的call，避免在堆栈中传入我们程序内部地址，从而绕过基于堆栈的检测</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/03/24/COM%E5%AD%A6%E4%B9%A0/" rel="prev" title="COM组件学习">
+      <i class="fa fa-chevron-left"></i> COM组件学习
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01-%E4%BB%A3%E7%90%86-DLL-%E5%8A%A0%E8%BD%BD%E4%BB%A5%E9%9A%90%E8%97%8F-ETWTI-%E5%A0%86%E6%A0%88%E8%B7%9F%E8%B8%AA"><span class="nav-number">1.</span> <span class="nav-text">0x01 代理 DLL 加载以隐藏 ETWTI 堆栈跟踪</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02-%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">0x02 分析</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
