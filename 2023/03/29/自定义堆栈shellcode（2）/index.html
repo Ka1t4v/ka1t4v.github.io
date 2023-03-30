@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="对第二篇文章进行学习，介绍了如何基于自定义堆栈开发shellcode，并解释了这个方案为什么优于indirect syscall">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于堆栈跟踪规避的免杀学习（二）">
+<meta property="og:url" content="https://ka1t4v.github.io/2023/03/29/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%882%EF%BC%89/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="对第二篇文章进行学习，介绍了如何基于自定义堆栈开发shellcode，并解释了这个方案为什么优于indirect syscall">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/rtlprotectheap.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/TppStack_1.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/TppStack_0.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/finalStack.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/stacktrace.png">
+<meta property="article:published_time" content="2023-03-29T05:16:01.000Z">
+<meta property="article:modified_time" content="2023-03-30T13:09:52.756Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/rtlprotectheap.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2023/03/29/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%882%EF%BC%89/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>基于堆栈跟踪规避的免杀学习（二） | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2023/03/29/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%882%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          基于堆栈跟踪规避的免杀学习（二）
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-03-29 13:16:01" itemprop="dateCreated datePublished" datetime="2023-03-29T13:16:01+08:00">2023-03-29</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ReadTeam/" itemprop="url" rel="index"><span itemprop="name">ReadTeam</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>对第二篇文章进行学习，介绍了如何基于自定义堆栈开发shellcode，并解释了这个方案为什么优于indirect syscall</p>
+<span id="more"></span>
+<p><a target="_blank" rel="noopener" href="https://0xdarkvortex.dev/hiding-in-plainsight/">自定义堆栈调用</a></p>
+<h2 id="Indirect-Syscall-is-Dead-Long-Live-Custom-Call-Stacks"><a class="header-anchor" href="#Indirect-Syscall-is-Dead-Long-Live-Custom-Call-Stacks">¶</a>Indirect Syscall is Dead! Long Live Custom Call Stacks</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">This is the second part of the blog I wrote 3 days back on proxying DLL loads to hide suspicious stack traces leading to a user allocated RX region. I won’t be going in depth on how stack works, because I already covered that in the previous blog which can be accessed from the above link. We previously saw that we can manipulate the call and jmp instructions to request windows callbacks into calling LoadLibrary API call. However, stack tracing detections go far beyond just hunting DLL loads. When you inject a reflective DLL into local or remote process, you have to call API calls such as VirtualAllocEx/VirtualProtectEx which indirectly calls NtAllocateVirtualMemory/NtProtectVirtualMemory. However, when you check the call stack of the legitimate API calls, you will notice that WINAPIs like VirtualAlloc/VirtualProtect are mostly called by non-windows DLL functions. Majority of windows DLLs will call NtAllocateVirtualMemory/NtProtectVirtualMemory directly. Below is a quick example of the callstack for NtProtectVirtualMemory when you call RtlAllocateHeap.</span><br></pre></td></tr></table></figure>
+<p>根据之前的文章可以通过操纵 call 和 jmp 指令来请求windows回调来调用 LoadLibrary API 。 然而，堆栈跟踪检测远不止是寻找 DLL 加载。 当您将反射 DLL 注入本地或远程进程时，必须进行一些内存分配API的调用，例如间接调用 NtAllocateVirtualMemory/NtProtectVirtualMemory 的 VirtualAllocEx/VirtualProtectEx。 然而，当你查看合法API调用的调用堆栈时，你会发现像VirtualAlloc/VirtualProtect这样的WINAPI大多被非windows DLL函数调用。 大多数 Windows DLL 将直接调用 NtAllocateVirtualMemory/NtProtectVirtualMemory。 下面是调用 RtlAllocateHeap 时 NtProtectVirtualMemory 的调用堆栈的示例。</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/rtlprotectheap.png" alt="img"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">This means that since ntdll.dll is not dependent on any other DLL, all functions in ntdll which require playing around with permissions for memory regions will call the NTAPIs directly. Thus, it means that if we are able to reroute our NtAllocateVirtualMemory call via a clean stack from ntdll.dll itself, we wont have to worry about detections at all. Most red teams rely on indirect syscalls to avoid detections. In case of indirect syscalls, you simply jump to the address of syscall instruction after carefully creating the stack, but the issue here is that indirect syscalls will only change the return address for the syscall instruction in ntdll.dll. Return Address in this case is the location where the syscall instruction needs to return to, after the syscall is complete. But the rest of the stack below the return address will still be suspicious as they emerge out from the RX region. If an EDR checks the full stack of the NTAPI, it can easily identify that the return address eventually reaches back to the user allocated RX region. This means, a return address to ntdll.dll region, but stack originating from RX region is a 100% anomaly with zero chances of being a false positive. This is an easy win for EDRs who utilize ETW for syscall tracing in the kernel.</span><br><span class="line"></span><br><span class="line">Thus in order to evade this, I spent some time reversing several ntdll.dll functions and found that with a little bit of assembly knowledge and how windows callbacks work, we should be able to manipulate the callback into calling any NTAPI function. For this blog, we will take an example of NtAllocateVirtualMemory and we will pick the code from our part I blog and modify it. We will take an example of the same API TpAllocWork which can execute a call back function. But instead of passing on a pointer to a string like we did in the case of Dll Proxying, we will pass on a pointer to a structure this time. We will also avoid any global variables this time by making sure all the necessary information goes within the struct as we cannot have global variables when we write our shellcodes. The definition of NtAllocateVirtualMemory as per msdn is:</span><br></pre></td></tr></table></figure>
+<p>这意味着由于 ntdll.dll 不依赖于任何其他 DLL，因此 ntdll 中所有需要使用内存区域权限的函数将直接调用 NTAPI。 因此，这意味着如果我们能够通过来自 ntdll.dll 本身的干净堆栈重新路由我们的 NtAllocateVirtualMemory 调用，我们根本不必担心检测。 大多数红队依靠<code>indirect syscalls</code>技术来避免检测。只需在构造堆栈后通过jmp跳转到系统调用指令的地址。但是存在的问题是间接系统调用只会更改 ntdll.dll 中系统调用指令的返回地址。 返回地址就是系统调用完成后，系统调用指令需要返回的位置。 但返回地址下方的其余堆栈地址仍然是可疑的，如果出现了我们分配的 RX 区域的话。 如果 EDR 检查 NTAPI 的完整堆栈，它可以轻松识别返回地址最终返回到用户分配的 RX 区域。 这意味着，到 ntdll.dll 区域的返回地址，但源自 RX 区域的堆栈是 100% 异常，误报的可能性为零。 对于在内核中使用 ETW 进行系统调用跟踪的 EDR 来说，这是一个轻松的胜利。</p>
+<p>因此，为了避免这种情况，我花了一些时间逆向几个 ntdll.dll 函数，发现只要有一点汇编知识和 Windows 回调的工作原理，我们应该能够操纵回调调用任何 NTAPI 函数。 对于这个博客，我们将以 NtAllocateVirtualMemory 为例，我们将从我的博客部分中挑选代码并对其进行修改。 我们还是 API TpAllocWork 函数为例，来执行回调函数。 但是这次我们将传递一个指向结构的指针，而不是像我们在 Dll 代理的情况下那样传递一个指向字符串的指针。 这次我们还将通过确保所有必要的信息都在结构中来避免任何全局变量，因为我们在编写 shellcode 时不能有全局变量。 根据 msdn 的 NtAllocateVirtualMemory 的定义是：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__kernel_entry NTSYSCALLAPI NTSTATUS <span class="title">NtAllocateVirtualMemory</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">  [in]      HANDLE    ProcessHandle,</span></span></span><br><span class="line"><span class="params"><span class="function">  [in, out] PVOID     *BaseAddress,</span></span></span><br><span class="line"><span class="params"><span class="function">  [in]      ULONG_PTR ZeroBits,</span></span></span><br><span class="line"><span class="params"><span class="function">  [in, out] PSIZE_T   RegionSize,</span></span></span><br><span class="line"><span class="params"><span class="function">  [in]      ULONG     AllocationType,</span></span></span><br><span class="line"><span class="params"><span class="function">  [in]      ULONG     Protect</span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">This means, we need to pass on a pointer for NtAllocateVirtualMemory and its arguments inside a structure to the callback so that our callback can extract these information from the structure and execute it. We will ignore the arguments which stay static such as ULONG_PTR ZeroBits which is always zero and ULONG AllocationType which is always MEM_RESERVE|MEM_COMMIT which in hex is 0x3000. Thus adding in the remaining arguments, the structure will look like this:</span><br></pre></td></tr></table></figure>
+<p>这意味着，我们需要将 NtAllocateVirtualMemory 的指针以及其在结构中的参数传递给回调，以便我们的回调可以从结构中提取这些信息并执行它。 我们将忽略保持静态的参数，例如始终为零的 ULONG_PTR ZeroBits 和始终为 MEM_RESERVE|MEM_COMMIT 的 ULONG AllocationType，十六进制为 0x3000。 因此添加剩余的参数，结构将如下所示：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">_NTALLOCATEVIRTUALMEMORY_ARGS</span> &#123;</span><br><span class="line">    UINT_PTR pNtAllocateVirtualMemory;   <span class="comment">// pointer to NtAllocateVirtualMemory - rax</span></span><br><span class="line">    HANDLE hProcess;                     <span class="comment">// HANDLE ProcessHandle - rcx</span></span><br><span class="line">    PVOID* address;                      <span class="comment">// PVOID *BaseAddress - rdx; ULONG_PTR ZeroBits - 0 - r8</span></span><br><span class="line">    PSIZE_T size;                        <span class="comment">// PSIZE_T RegionSize - r9; ULONG AllocationType - MEM_RESERVE|MEM_COMMIT = 3000 - stack pointer</span></span><br><span class="line">    ULONG permissions;                   <span class="comment">// ULONG Protect - PAGE_EXECUTE_READ - 0x20 - stack pointer</span></span><br><span class="line">&#125; NTALLOCATEVIRTUALMEMORY_ARGS, *PNTALLOCATEVIRTUALMEMORY_ARGS;</span><br></pre></td></tr></table></figure>
+<p>然后，我们将使用所需的参数初始化结构并将其以指针的形式传给 TpAllocWork 函数，并调用我们用汇编编写的函数 WorkCallback</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">NTSTATUS</span> <span class="params">(NTAPI* TPALLOCWORK)</span><span class="params">(PTP_WORK* ptpWrk, PTP_WORK_CALLBACK pfnwkCallback, PVOID OptionalArg, PTP_CALLBACK_ENVIRON CallbackEnvironment)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">VOID</span> <span class="params">(NTAPI* TPPOSTWORK)</span><span class="params">(PTP_WORK)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">VOID</span> <span class="params">(NTAPI* TPRELEASEWORK)</span><span class="params">(PTP_WORK)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> <span class="title class_">_NTALLOCATEVIRTUALMEMORY_ARGS</span> &#123;</span><br><span class="line">    UINT_PTR pNtAllocateVirtualMemory;   <span class="comment">// pointer to NtAllocateVirtualMemory - rax</span></span><br><span class="line">    HANDLE hProcess;                     <span class="comment">// HANDLE ProcessHandle - rcx</span></span><br><span class="line">    PVOID* address;                      <span class="comment">// PVOID *BaseAddress - rdx; ULONG_PTR ZeroBits - 0 - r8</span></span><br><span class="line">    PSIZE_T size;                        <span class="comment">// PSIZE_T RegionSize - r9; ULONG AllocationType - MEM_RESERVE|MEM_COMMIT = 3000 - stack pointer</span></span><br><span class="line">    ULONG permissions;                   <span class="comment">// ULONG Protect - PAGE_EXECUTE_READ - 0x20 - stack pointer</span></span><br><span class="line">&#125; NTALLOCATEVIRTUALMEMORY_ARGS, *PNTALLOCATEVIRTUALMEMORY_ARGS;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">extern</span> VOID CALLBACK <span class="title">WorkCallback</span><span class="params">(PTP_CALLBACK_INSTANCE Instance, PVOID Context, PTP_WORK Work)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    LPVOID allocatedAddress = <span class="literal">NULL</span>;</span><br><span class="line">    SIZE_T allocatedsize = <span class="number">0x1000</span>;</span><br><span class="line"></span><br><span class="line">    NTALLOCATEVIRTUALMEMORY_ARGS ntAllocateVirtualMemoryArgs = &#123; <span class="number">0</span> &#125;;</span><br><span class="line">    ntAllocateVirtualMemoryArgs.pNtAllocateVirtualMemory = (UINT_PTR) <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;NtAllocateVirtualMemory&quot;</span>);</span><br><span class="line">    ntAllocateVirtualMemoryArgs.hProcess = (HANDLE)<span class="number">-1</span>;</span><br><span class="line">    ntAllocateVirtualMemoryArgs.address = &amp;allocatedAddress;</span><br><span class="line">    ntAllocateVirtualMemoryArgs.size = &amp;allocatedsize;</span><br><span class="line">    ntAllocateVirtualMemoryArgs.permissions = PAGE_EXECUTE_READ;</span><br><span class="line"></span><br><span class="line">    FARPROC pTpAllocWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpAllocWork&quot;</span>);</span><br><span class="line">    FARPROC pTpPostWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpPostWork&quot;</span>);</span><br><span class="line">    FARPROC pTpReleaseWork = <span class="built_in">GetProcAddress</span>(<span class="built_in">GetModuleHandleA</span>(<span class="string">&quot;ntdll&quot;</span>), <span class="string">&quot;TpReleaseWork&quot;</span>);</span><br><span class="line"></span><br><span class="line">    PTP_WORK WorkReturn = <span class="literal">NULL</span>;</span><br><span class="line">    ((TPALLOCWORK)pTpAllocWork)(&amp;WorkReturn, (PTP_WORK_CALLBACK)WorkCallback, &amp;ntAllocateVirtualMemoryArgs, <span class="literal">NULL</span>);</span><br><span class="line">    ((TPPOSTWORK)pTpPostWork)(WorkReturn);</span><br><span class="line">    ((TPRELEASEWORK)pTpReleaseWork)(WorkReturn);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">WaitForSingleObject</span>((HANDLE)<span class="number">-1</span>, <span class="number">0x1000</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;allocatedAddress: %p\n&quot;</span>, allocatedAddress);</span><br><span class="line">    <span class="built_in">getchar</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Now this is where things get interesting. In case of DLL proxy, we executed LoadLibrary with only one argument i.e. the name of the DLL to load which is passed on to the RCX register. But in the case of NtAllocateVirtualMemory, we have a total of 6 arguments. This means the first four arguments go into the fastcall registers i.e. RCX, RDX, R8 and R9. However, the remaining two arguments will have to be pushed to stack after allocating some homing space for our 4 registers. Make note that our top of the stack currently contains the return value for an internal NTAPI function TppWorkpExecuteCallback at 0ffset 0x130. This is how the callstack looks like when the callback function WorkCallback is called.</span><br></pre></td></tr></table></figure>
+<p>现在这就是事情变得有趣的地方。 在 DLL 代理的情况下，我们仅使用一个参数执行 LoadLibrary，即要加载的 DLL 的名称，该名称将传递到 RCX 寄存器。 但是对于 NtAllocateVirtualMemory，我们总共有 6 个参数。 这意味着前四个参数进入快速调用寄存器，即 RCX、RDX、R8 和 R9。 但是，在为我们的 4 个寄存器分配一些归位空间后，必须将剩余的两个参数压入堆栈。 请注意，我们的堆栈顶部当前包含内部 NTAPI 函数 TppWorkpExecuteCallback 的返回值，位于 0ffset 0x130。 这是调用回调函数 WorkCallback 时调用堆栈的样子</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/TppStack_1.png" alt="img"></p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/TppStack_0.png" alt="img"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Now heres the catch. If you modify the top of the stack where the return address lies, add the homing space for the 4 registers and add arguments to it, the whole stack frame will go for a toss and mess up stack unwinding. Thus we have to modify the stack without changing the stack frame itself, but by only changing the values within the stack frame. Each stack frame starts and ends at the blue line shown in the image above. Our stack frame for TppWorkpExecuteCallback has enough space within itself to hold 6 arguments. So our next step is to extract the data from our NTALLOCATEVIRTUALMEMORY_ARGS structure and move it to the respective registers and stack. When we call TpAllocWork, we pass on the pointer to NTALLOCATEVIRTUALMEMORY_ARGS structure to the WorkCallback function, this means our pointer to the structure should be in the RDX register now. Each value in our structure is of 8 bytes (for x64, for x86 it would be 4 bytes). So, we will extract these QWORD values from the structure and move it to RCX, RDX, R8, R9 and the remaining values on stack after adjusting the homing space. The calling convention for x64 functions in windows as per the msdn documentation would be:</span><br></pre></td></tr></table></figure>
+<p>现在重点来了。 如果修改返回地址所在的栈顶，为 4 个寄存器添加归位空间并向其添加参数，则整个栈帧将进行折腾并弄乱堆栈展开。 因此，我们必须在不更改堆栈框架本身的情况下修改堆栈，而只需更改堆栈框架内的值。 每个堆栈帧都在上图中显示的蓝线处开始和结束。 我们的 TppWorkpExecuteCallback 堆栈框架本身有足够的空间来容纳 6 个参数。 所以我们的下一步是从我们的 NTALLOCATEVIRTUALMEMORY_ARGS 结构中提取数据并将其移动到相应的寄存器和堆栈。 当我们调用 TpAllocWork 时，我们将指向 NTALLOCATEVIRTUALMEMORY_ARGS 结构的指针传递给 WorkCallback 函数，这意味着我们指向该结构的指针现在应该在 RDX 寄存器中。 我们结构中的每个值都是 8 个字节（对于 x64，对于 x86 它将是 4 个字节）。 因此，我们将从结构中提取这些 QWORD 值并将其移动到 RCX、RDX、R8、R9 ，剩下的值会在调整好归位空间后存入栈。 根据 msdn 文档，Windows 中 x64 函数的调用约定是：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">__kernel_entry NTSYSCALLAPI NTSTATUS <span class="title">NtAllocateVirtualMemory</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">  [in]      HANDLE    ProcessHandle,  <span class="comment">// goes into rcx</span></span></span></span><br><span class="line"><span class="params"><span class="function">  [in, out] PVOID     *BaseAddress,   <span class="comment">// goes into rdx</span></span></span></span><br><span class="line"><span class="params"><span class="function">  [in]      ULONG_PTR ZeroBits,       <span class="comment">// goes into r8</span></span></span></span><br><span class="line"><span class="params"><span class="function">  [in, out] PSIZE_T   RegionSize,     <span class="comment">// goes into r9</span></span></span></span><br><span class="line"><span class="params"><span class="function">  [in]      ULONG     AllocationType, <span class="comment">// goes to stack after adjusting homing space for 4 arguments</span></span></span></span><br><span class="line"><span class="params"><span class="function">  [in]      ULONG     Protect         <span class="comment">// goes to stack below the 5th argument after adjusting homing space for 4 arguments</span></span></span></span><br><span class="line"><span class="params"><span class="function">)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>这里解释一下文章中说到的<code>homing space</code>是什么：<a target="_blank" rel="noopener" href="https://sonictk.github.io/asm_tutorial/#windows:thewindowtothehardware/themicrosoftx64callingconvention/theshadowspace">相关文章</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Shadow 空间（有时也称为 Spill 空间或 Home 空间）占32个字节，位置在被调用函数返回地址的高地址位（并且可以用作暂存空间），在堆栈参数（如果有）之下。 在运行调用指令之前，调用者必须为其被调用者的影子空间保留空间。注意这个概念只存在于x64汇编环境下，在x86下并没有这个概念，所以对于x64下堆栈的操作，不但要考虑堆栈对齐，还需要考虑homing space，需要保留32个字节</span><br></pre></td></tr></table></figure>
+<p>将此上面的逻辑转换为汇编代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">section .text</span><br><span class="line"></span><br><span class="line">global WorkCallback</span><br><span class="line"></span><br><span class="line">WorkCallback:</span><br><span class="line">    mov rbx, rdx                ; backing up the struct as we are going to stomp rdx</span><br><span class="line">    mov rax, [rbx]              ; NtAllocateVirtualMemory</span><br><span class="line">    mov rcx, [rbx + 0x8]        ; HANDLE ProcessHandle</span><br><span class="line">    mov rdx, [rbx + 0x10]       ; PVOID *BaseAddress</span><br><span class="line">    xor r8, r8                  ; ULONG_PTR ZeroBits</span><br><span class="line">    mov r9, [rbx + 0x18]        ; PSIZE_T RegionSize</span><br><span class="line">    mov r10, [rbx + 0x20]       ; ULONG Protect</span><br><span class="line">    mov [rsp+0x30], r10         ; stack pointer for 6th arg</span><br><span class="line">    mov r10, 0x3000             ; ULONG AllocationType</span><br><span class="line">    mov [rsp+0x28], r10         ; stack pointer for 5th arg</span><br><span class="line">    jmp rax</span><br></pre></td></tr></table></figure>
+<p>解释一下上面的汇编代码：</p>
+<ul>
+<li>
+<p>第一行备份我们的结构体指针，因为回调函数穿来时是保存在RDX寄存器中的，我们保存在RBX寄存器，因为等会RDX寄存器会被我们用来传参，即等会调用<code>NtAllocateVirtualMemory</code>时</p>
+</li>
+<li>
+<p>然我我们从结构体指针取出<code>NtAllocateVirtualMemory</code>函数的地址存入RAX寄存器中，等会使用jmp命令跳转</p>
+</li>
+<li>
+<p>然后我们将结构体中的第二个变量<code>HANDLE ProcessHandle</code>存入RCX中，正常传参</p>
+</li>
+<li>
+<p>将第三个参数传入RDX中，和上面一样， 正常传参</p>
+</li>
+<li>
+<p>将R8寄存器置0，正常传参</p>
+</li>
+<li>
+<p>将第四个参数传入R9，正常传参</p>
+</li>
+<li>
+<p>将第六个参数读入R10寄存器，然后将其存储到栈结构当中，此时计算的流程如下</p>
+<p>1.此时栈顶指针RSP指向栈顶，其中的值是<code>TppWorkpExecuteCallback</code>的地址，占8字节，即返回地址，我们要将第六个参数和第五个参数存入这个栈帧空间</p>
+<p>2.预留homing space即32字节</p>
+<p>3.那么第五个参数的存储地址为：RSP指针+8字节（返回地址）+32字节（homing space）=RSP+40=RSP+0x28</p>
+<p>4.第六个参数的地址为：RSP指针+8字节（返回地址）+32字节（homing space）+8字节（第五个参数）=RSP+48=RSP+0x30</p>
+</li>
+<li>
+<p>此时全部六个参数入栈，jmp到RAX即<code>NtAllocateVirtualMemory</code>函数地址执行，此时由于是jmp不会改变栈结构</p>
+</li>
+</ul>
+<p>将其编译运行，以下是程序在jmp到<code>NtAllocateVirtualMemory</code>前的运行流程</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/finalStack.png" alt="img"></p>
+<ul>
+<li>反汇编代码显示的就是我们写的汇编代码，当前的RIP指针停在jmp之前，此时栈空间已被我们初始化，参数也完成了传递</li>
+<li>此时的RCX，RDX，R8，R9还有栈中包含着调用<code>NtAllocateVirtualMemory</code>的传参</li>
+<li>转储显示内存中的 <code>NTALLOCATEVIRTUALMEMORY_ARGS</code> 结构。每个 8 字节内存块是一个与结构内容相关的对象</li>
+<li>堆栈显示了调整后的 <code>NtAllocateVirtualMemory</code> 堆栈</li>
+</ul>
+<p>在执行 <code>NtAllocateVirtualMemory</code> 后，查看调用堆栈，堆栈可以完美展开。还可以看到 <code>NtAllocateVirtualMemory</code> 的系统调用返回零（RAX寄存器中保存返回地址），这意味着调用成功</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/stacktrace.png" alt="img"></p>
+<p>可以看到上述的调用堆栈没有出现任何我们RX区域中的地址，并且可以正常进行函数的调用</p>
+<p>基于这个项目，也看到了有师傅写了<a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/12273">相关文章</a>，也基于此重新开发了cs的shellcode（基于stager）</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/03/28/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%881%EF%BC%89/" rel="prev" title="基于堆栈跟踪规避的免杀学习（一）">
+      <i class="fa fa-chevron-left"></i> 基于堆栈跟踪规避的免杀学习（一）
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Indirect-Syscall-is-Dead-Long-Live-Custom-Call-Stacks"><span class="nav-number">1.</span> <span class="nav-text">Indirect Syscall is Dead! Long Live Custom Call Stacks</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">37</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
