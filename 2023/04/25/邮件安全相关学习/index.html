@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"ka1t4v.github.io","root":"/","scheme":"Mist","version":"7.8.0","exturl":false,"sidebar":{"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="被阿里云ctf一道邮件题目击碎，来系统学习一下邮件安全相关的概念，可能会在后续邮件钓鱼方面有用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="邮件安全相关学习">
+<meta property="og:url" content="https://ka1t4v.github.io/2023/04/25/%E9%82%AE%E4%BB%B6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E5%AD%A6%E4%B9%A0/index.html">
+<meta property="og:site_name" content="Ka1t4v">
+<meta property="og:description" content="被阿里云ctf一道邮件题目击碎，来系统学习一下邮件安全相关的概念，可能会在后续邮件钓鱼方面有用">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_046a5264c3e7fc7347e02366292a8945.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_7c1bf3e68aeef69fd00b0de2bb41172c.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_feac078e02a5d8fab8bebabf5118e0cc.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_9e87d1b1fa5591ded65e410a1c862748.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_c7d25ebb9bf69ddcada9d1ea9ac193ad.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_7cfb0e6939c87d760833d41719bdf0b5.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_0f297c4bab26e8423d50adebabd8d560.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_9a0376f8a1b40fb665137455df5fcf6e.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_df09d10384d63fc64e898a4655ee9689.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_616239e4f2582380be4772bb389f1f64.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_c8d7416a3a6263db2b51570d67e11c2d.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_3fd3db3dfc5ca13e2e96e98e265d3c34.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_236a74960a394ff4a2f13ceafd5a5256.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_49b4e0ae30ea5c4f58f3895b7bf08918.png">
+<meta property="og:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_3badd3d7880b5eb5707a75bb88589ed6.png">
+<meta property="article:published_time" content="2023-04-25T14:46:25.000Z">
+<meta property="article:modified_time" content="2023-04-24T18:46:23.879Z">
+<meta property="article:author" content="Ka1t4v">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_046a5264c3e7fc7347e02366292a8945.png">
+
+<link rel="canonical" href="https://ka1t4v.github.io/2023/04/25/%E9%82%AE%E4%BB%B6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E5%AD%A6%E4%B9%A0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>邮件安全相关学习 | Ka1t4v</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Ka1t4v</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="https://ka1t4v.github.io/2023/04/25/%E9%82%AE%E4%BB%B6%E5%AE%89%E5%85%A8%E7%9B%B8%E5%85%B3%E5%AD%A6%E4%B9%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+      <meta itemprop="name" content="Ka1t4v">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Ka1t4v">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          邮件安全相关学习
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-04-25 22:46:25" itemprop="dateCreated datePublished" datetime="2023-04-25T22:46:25+08:00">2023-04-25</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/ReadTeam/" itemprop="url" rel="index"><span itemprop="name">ReadTeam</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>被阿里云ctf一道邮件题目击碎，来系统学习一下邮件安全相关的概念，可能会在后续邮件钓鱼方面有用</p>
+<span id="more"></span>
+<h1>邮件安全相关学习</h1>
+<h2 id="基础概念"><a class="header-anchor" href="#基础概念">¶</a>基础概念</h2>
+<ul>
+<li>SMTP协议<br>
+简单邮件传输协议（Simple Mail Transfer Protocol, SMTP）是在Internet传输email的标准，端口号为25，客户端发送邮件和服务器之间传输邮件使用SMTP协议</li>
+<li>IMAP协议<br>
+交互邮件访问协议(Interactive Mail Access Protocol)主要作用是客户端从邮件服务器获取邮件信息等。端口号为143</li>
+<li>POP3协议<br>
+邮局协议版本3(Post Office Protocol – Version 3),主要用于使用客户端远程管理服务器上的电子邮件，端口号为110</li>
+</ul>
+<blockquote>
+<p>IMAP和POP3都是客户端请求服务器进行邮件管理，区别在于：POP3协议，在客户端上的操作不会同步到服务器上，IMAP协议则会进行同步</p>
+</blockquote>
+<p>一个邮件的发送流程大概如下图所示<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_046a5264c3e7fc7347e02366292a8945.png" alt=""></p>
+<ul>
+<li>发送方通过SMTP协议发给发送方的MTA(Mail Transmission Agent)</li>
+<li>发送方的MTA通过SMTP协议发给接收方的MTA</li>
+<li>最终接收方使用POP3(Post Office Protocol)或IMAP(Internet Message Access Protocol)协议接收邮件</li>
+</ul>
+<p>邮件文件是以eml格式存储的，一封邮件的组成是由邮件头和邮件体构成的,一个普通邮件大概内容如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;</span><br><span class="line"> b=PzAol9Jei1o8pl494IsTjI1vfJ7sXSgwVxPUTHNekHPD9fwjF8o21cKswp0RHOWvg09593oE/EH7IEPs2vX73AocRU6gadAtnAwu7A6E81VPEaL7DuL+ivynqePMytQodqsFHoHzVznigQ+KvwLU8yt02LjE/W50cseunJvYzb6bImfj7hiLJNzP/FLyQ1JCembmRvR3Jz0Ggxl3YAp89rxSt0cHC8GoAHR4lXx/HiDDALarnfQhwtDwElv7Mkc1ys2fd0r2vrnHtJGZOFJD4lgUkGzG/HrcIuQ/jHuDoR5S8JP0Z/enIGjQH6lbTcjzAc/n6dvO0FZ7xQw04N5ccg==</span><br><span class="line">ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;</span><br><span class="line"> s=arcselector9901;</span><br><span class="line"> h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;</span><br><span class="line"> bh=JeA5XguPLkrVgUc0WDXoO9XJFJqLs3SpgUYd2zDtTOE=;</span><br><span class="line"> b=oLBa99mXtdl+5fPpdzzsc20OMXPkN7tof+D1kgTwK37dqwtPQKuDneKB75+sldcbWUeCIvtj6dRQYDP+OZ7vBv0krqDfkkwRmFrZ1p8OT8voH8dRW8LFaG0TC1DZNdSjMugWWQ/Q8lf+8oMp6FZjdLqzQAV0cwLzO9t/HkYobp4nsH5/loGRvep3136DYGxDhm/yCt1S337GZ5gvE5oYMVQCkJOauTJoMYMr1Ggv3EAww3gesO0LouHHIaNCqlahQWMDBEvAsjMrZZn1eDJsdXlsDl2MZSznS0w/uv5CRn6Wzh/krOOq7ICh9itykNkOwaUE+29n1F+PGQlk2fClAw==</span><br><span class="line">ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;</span><br><span class="line"> dkim=none; arc=none</span><br><span class="line">DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;</span><br><span class="line"> s=selector1;</span><br><span class="line"> h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;</span><br><span class="line"> bh=JeA5XguPLkrVgUc0WDXoO9XJFJqLs3SpgUYd2zDtTOE=;</span><br><span class="line"> b=pJzFMORNXxLY7fNiMs0CsabeqWzyvFinNtYF4u7T7Nu7+fM5Ma7NTQYdRslQK6gbfTf9VFnPueE5KnpSeChA39ogql++Tt+exW1aXc4KFRnn/pwzXeo2aK3ML5bpi9w57mPcTJDZH7sWthFn+axgSLibJ7O3IZvfeXEnxK/CmZjLSvKuKXA9KXs01Q197c9TBpasBx8S6V8RMOZ9oOsbKYf9wEi965aG5DobPCNNXujD76jxZlYcA+i0iS/dgkuPsUuKRp0taDT+/uQkCAsoWvsu+3mooIkG20qug8hprMWfvlxXV9X5Nil2j0FMAVhor/M4s9uwtYfTvlJyXK1pOg==</span><br><span class="line">Received: from DS7PR12MB6312.namprd12.prod.outlook.com (2603:10b6:8:93::6) by</span><br><span class="line"> MW4PR12MB7440.namprd12.prod.outlook.com (2603:10b6:303:223::22) with</span><br><span class="line"> Microsoft SMTP Server (version=TLS1_2,</span><br><span class="line"> cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6319.32; Sun, 23 Apr</span><br><span class="line"> 2023 10:15:05 +0000</span><br><span class="line">Received: from DS7PR12MB6312.namprd12.prod.outlook.com</span><br><span class="line"> ([fe80::ed52:456d:546b:2649]) by DS7PR12MB6312.namprd12.prod.outlook.com</span><br><span class="line"> ([fe80::ed52:456d:546b:2649%2]) with mapi id 15.20.6319.032; Sun, 23 Apr 2023</span><br><span class="line"> 10:15:04 +0000</span><br><span class="line">Content-Type: text/html; charset=&quot;us-ascii&quot;</span><br><span class="line">Content-Transfer-Encoding: 7bit</span><br><span class="line">To: ka1t4v@outlook.com</span><br><span class="line">Subject: test emai head</span><br><span class="line">From: ka1t4v@outlook.com</span><br><span class="line">Date: Sun, 23 Apr 2023 05:13:55 +0000</span><br><span class="line">Return-Path: ka1t4v@outlook.com</span><br><span class="line">Message-ID: &lt;DS7PR12MB631241610035A64FA73C0D67D1669@DS7PR12MB6312.namprd12.prod.outlook.com&gt;</span><br><span class="line">MIME-Version: 1.0</span><br><span class="line"></span><br><span class="line">test email body</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>邮件头中需要重点关注的主要字段为Received、From、to、subject、cc和bcc五个字段。解释如下：</p>
+<ul>
+<li>Received：该字段的基本格式为Received from A by B for C ,其中A为发送方，B为收件方，C为邮件的收件地址。该字段由接收邮件的邮件服务器添加，可使用该字段来追踪邮件传输路线</li>
+<li>From：在邮件中显示的发件人</li>
+<li>To：在邮件中显示的收件人地址</li>
+<li>Subject：邮件主题，如果有包含ASCII码以外的字符，需要进行编码</li>
+<li>Cc：邮件的抄送地址</li>
+<li>Bcc：邮件的暗送地址（邮件客户端通常显示抄送地址而不显示暗送地址）</li>
+</ul>
+<p>在这个传输过程中代表发送方身份的字段有</p>
+<ul>
+<li>Mail From：邮件的实际发送人，即信封上的发件人</li>
+<li>From：邮件内容中的发件人，即展示给用户看的发件人</li>
+<li>Sender：一般在代发邮件中用来标识代发邮件的来源</li>
+</ul>
+<p>邮件体包含纯文本、超文本、内嵌资源、附件。服务器会通过第一个content-type判断邮件内容。如果包含了其他内容，邮件体会被分成多个段，每个段又包含段头和段体。</p>
+<p>Content-type内容分为三种：</p>
+<ul>
+<li>Multipart/mixed：内容是混合组合类型，内容可以是文本、声音和附件等不同邮件内容的混合体</li>
+<li>Multipart/related：表示消息体的内容是关联（依赖）组合类型，例如正文使用HTML代码引用内嵌图片资源等等</li>
+<li>Multipart/alternative表示消息体中的内容是选择组合类型，例如一封邮件的正文同时采用HTML格式和普通文本格式进行表示</li>
+</ul>
+<p>邮件正文内容编码方式由邮件头Content-Transfer-Enconding字段决定，常见的有BASE64、Quoted-printable方式。</p>
+<ul>
+<li>BASE64是将二进制数据转换成可打印的ASC||字符的一种常见的编码方式</li>
+<li>Quoted-printable也是一种将二进制数据转成可以打印的ASC||字符的编码方式，它对ASC||字符不进行转换，只对非ASC||字符的数据进行编码转化</li>
+</ul>
+<p>使用python可以实现一个简单的邮件发送demo，使用outlook邮件服务进行发送</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> smtplib</span><br><span class="line"><span class="keyword">from</span> email.mime.text <span class="keyword">import</span> MIMEText</span><br><span class="line"><span class="keyword">from</span> email.header <span class="keyword">import</span> Header</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置发件人、收件人、主题、正文等信息</span></span><br><span class="line">sender = <span class="string">&#x27;xxx@outlook.com&#x27;</span></span><br><span class="line">password = <span class="string">&#x27;xxx&#x27;</span></span><br><span class="line">recipients = [<span class="string">&#x27;xxx@outlook.com&#x27;</span>]</span><br><span class="line">subject = <span class="string">&#x27;test&#x27;</span></span><br><span class="line">body = <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">test</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line">message = MIMEText(body, <span class="string">&#x27;html&#x27;</span>)</span><br><span class="line">message[<span class="string">&#x27;From&#x27;</span>] = Header(<span class="string">&#x27;xxx@outlook.com&#x27;</span>)</span><br><span class="line">message[<span class="string">&#x27;To&#x27;</span>] =  Header(<span class="string">&#x27;xxx@outlook.com&#x27;</span>)</span><br><span class="line">message[<span class="string">&#x27;Subject&#x27;</span>] = Header(<span class="string">&#x27;test&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 连接到 SMTP 服务器并登录</span></span><br><span class="line">smtp_server = <span class="string">&#x27;smtp.office365.com&#x27;</span></span><br><span class="line">smtp_port = <span class="number">587</span></span><br><span class="line">smtp_username = sender</span><br><span class="line">smtp_password = password</span><br><span class="line">server = smtplib.SMTP(smtp_server, smtp_port)</span><br><span class="line">server.starttls()</span><br><span class="line">server.login(smtp_username, smtp_password)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 发送邮件</span></span><br><span class="line"><span class="keyword">try</span>:    </span><br><span class="line">    server.sendmail(sender, recipients, message.as_string())</span><br><span class="line"><span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">    <span class="built_in">print</span>(e)</span><br><span class="line">    </span><br><span class="line"><span class="comment"># 断开连接</span></span><br><span class="line">server.quit()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="邮件安全协议"><a class="header-anchor" href="#邮件安全协议">¶</a>邮件安全协议</h2>
+<h3 id="SPF（Sender-Policy-Framework）"><a class="header-anchor" href="#SPF（Sender-Policy-Framework）">¶</a>SPF（Sender Policy Framework）</h3>
+<p>SPF是指发件人策略框架(Sender Policy Framework),SPF是一种防止邮件伪造的方法，它可以认证邮件发件人的发件域。<br>
+SPF的本质其实就是服务器上的一条DNS记录，若主机A的IP是192.168.1.1，<a target="_blank" rel="noopener" href="http://xn--test-p85f70xwshl9bd07ijfh.com">声称的发件域test.com</a>，为了确认发件人是否伪造邮件服务器会去查询test.com的SPF记录，若IP192.168.1.1在SPF记录中就认为这封邮件是合法的，如果不存在那么这封邮件就会被认为是垃圾邮件或仿冒邮件，进行退信或者投入垃圾箱。<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_7c1bf3e68aeef69fd00b0de2bb41172c.png" alt=""><br>
+比如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">v=spf1 include:spf.163.com -all</span><br><span class="line">v=spf1 ip4:192.168.1.1/24 -all</span><br></pre></td></tr></table></figure>
+<p>SPF存储在DNS解析的txt字段下，可以使用nslookup或dig查询一个域名的SPF记录</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">nslookup -q=txt xxx.com</span><br><span class="line">dig -t txt 163.com</span><br></pre></td></tr></table></figure>
+<p>SPF认证主要针对于<strong>Mail From</strong>和<strong>HELO</strong>字段，即发件人字段，注意和邮件内容中的From字段区分开</p>
+<h3 id="DKIM（DomainKeys-Identified-Mail）"><a class="header-anchor" href="#DKIM（DomainKeys-Identified-Mail）">¶</a>DKIM（DomainKeys Identified Mail）</h3>
+<p>该协议主要作用是校验邮件标头签名信息，防止邮件内容被篡改。邮件的发送者先将DKIM的公钥设置到dns上去，然后将邮件的签名插入邮件头中一起发送出去，邮件的接收者接受到该邮件后，根据DKIM签名上标注的域名查询其dns获取公钥，验证邮件签名的有效性<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_feac078e02a5d8fab8bebabf5118e0cc.png" alt=""><br>
+上面的邮件示例中就有DKIM头</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;</span><br><span class="line"> s=selector1;</span><br><span class="line"> h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;</span><br><span class="line"> bh=JeA5XguPLkrVgUc0WDXoO9XJFJqLs3SpgUYd2zDtTOE=;</span><br><span class="line"> b=pJzFMORNXxLY7fNiMs0CsabeqWzyvFinNtYF4u7T7Nu7+fM5Ma7NTQYdRslQK6gbfTf9VFnPueE5KnpSeChA39ogql++Tt+exW1aXc4KFRnn/pwzXeo2aK3ML5bpi9w57mPcTJDZH7sWthFn+axgSLibJ7O3IZvfeXEnxK/CmZjLSvKuKXA9KXs01Q197c9TBpasBx8S6V8RMOZ9oOsbKYf9wEi965aG5DobPCNNXujD76jxZlYcA+i0iS/dgkuPsUuKRp0taDT+/uQkCAsoWvsu+3mooIkG20qug8hprMWfvlxXV9X5Nil2j0FMAVhor/M4s9uwtYfTvlJyXK1pOg==</span><br></pre></td></tr></table></figure>
+<p>其中各个字段的意思为：</p>
+<ul>
+<li>a：签名算法</li>
+<li>c：用于对表头和正文的算法规范化，simple或relaxed</li>
+<li>d：指出是哪个域的签名，在DMARC检查签名中的域是否和发送者的域相匹配中用到</li>
+<li>q：定义用于检索DKIM公钥的查询方法，可选项，不存在时默认为“dns /txt/”</li>
+<li>s：在DNS中寻找RSA公钥的参数，即一个txt记录头，会拼接到d签名进行dns查询</li>
+<li>h：指出对于邮件中的哪些头进行签名</li>
+<li>bh：邮件正文的hash</li>
+<li>b：具体的签名，包括在h中指出的字段，和DKIM头本身（视b=为空）</li>
+</ul>
+<p>DKIM是利用到密码学的签名协议，发件方首先需要在DNS记录上增加自己的公钥，发件时使用自己的私钥对邮件的内容进行签名，并将签名的结果写在邮件内容中，当收件人收到信件时向DNS请求公钥对信件内容进行校验<br>
+DKIM中几个比较重要的字段有</p>
+<ul>
+<li>d 表示实际校验的域名</li>
+<li>h 表示签名内容的涵盖范围</li>
+<li>l 是可选参数，表示body的长度</li>
+</ul>
+<p>默认请求DNS的路径为<code>selector._domainkey.xxx.com</code></p>
+<p>针对这几个参数都有一些安全问题，会导致邮件伪造<br>
+DKIM校验有几个特点：<br>
+1.DKIM校验内容为h=后的字段<br>
+2.DKIM一定会校验Body和From<br>
+3.如果有多个头部，DKIM会校验最后一个头部</p>
+<h3 id="DMARC"><a class="header-anchor" href="#DMARC">¶</a>DMARC</h3>
+<p>由于SPF协议只能保证发件人的IP是否是域名允许的IP，DKIM只能保证邮件的内容没有经过篡改，两者都没有保护最终收件人看到的From字段是否是一个正确且真实的，因此增加了DMARC协议<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_9e87d1b1fa5591ded65e410a1c862748.png" alt=""><br>
+DMARC协议会根据SPF、DKIM两者验证的返回结果，以及对From字段做的一致性检查，最终给出一个结论，判断这封邮件是应当拒收还是接收</p>
+<h2 id="相关工具和脚本"><a class="header-anchor" href="#相关工具和脚本">¶</a>相关工具和脚本</h2>
+<h3 id="python-dkim签名库"><a class="header-anchor" href="#python-dkim签名库">¶</a>python dkim签名库</h3>
+<p>python提供了简单的dkim签名库，我们可以使用自己的私钥对相应字段进行签名，生成我们可控的dkim签名<br>
+下载：<br>
+<code>pip install dkimpy</code><br>
+简单使用demo，生成一个dkim签名<br>
+通过openssl生成公钥和私钥</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openssl genrsa -out private.pem 1024</span><br><span class="line">openssl rsa -in private.pem -pubout -out public.pem</span><br></pre></td></tr></table></figure>
+<p>生成dkim签名</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> smtplib</span><br><span class="line"><span class="keyword">from</span> email.mime.text <span class="keyword">import</span> MIMEText</span><br><span class="line"><span class="keyword">from</span> email.mime.multipart <span class="keyword">import</span> MIMEMultipart</span><br><span class="line"><span class="keyword">from</span> email.mime.application <span class="keyword">import</span> MIMEApplication</span><br><span class="line"><span class="keyword">from</span> email.header <span class="keyword">import</span> Header</span><br><span class="line"><span class="keyword">import</span> dkim</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置发件人、收件人、主题、正文等信息</span></span><br><span class="line">sender = <span class="string">&#x27;xxx@outlook.com&#x27;</span></span><br><span class="line">password = <span class="string">&#x27;xxxx&#x27;</span></span><br><span class="line">recipients = [<span class="string">&#x27;xxxxx@outlook.com&#x27;</span>]</span><br><span class="line">subject = <span class="string">&#x27;test subject&#x27;</span></span><br><span class="line">body = <span class="string">&quot;&quot;&quot;</span></span><br><span class="line"><span class="string">test body</span></span><br><span class="line"><span class="string">&quot;&quot;&quot;</span></span><br><span class="line">message = MIMEText(body, <span class="string">&#x27;html&#x27;</span>)</span><br><span class="line">message[<span class="string">&#x27;From&#x27;</span>] = Header(<span class="string">&#x27;xxx@outlook.com&#x27;</span>)</span><br><span class="line">message[<span class="string">&#x27;To&#x27;</span>] =  Header(<span class="string">&#x27;xxxxx@outlook.com&#x27;</span>)</span><br><span class="line">message[<span class="string">&#x27;Subject&#x27;</span>] = Header(<span class="string">&#x27;test subject&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># DKIM Private Key for example.com RSA-2048bit</span></span><br><span class="line">privateKey = <span class="built_in">open</span>(<span class="string">&#x27;private.pem&#x27;</span>).read()</span><br><span class="line"></span><br><span class="line"><span class="comment"># Specify headers in &quot;byte&quot; form</span></span><br><span class="line">headers=[<span class="string">b&#x27;From&#x27;</span>, <span class="string">b&#x27;To&#x27;</span>, <span class="string">b&#x27;Subject&#x27;</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># Generate message signature</span></span><br><span class="line">sig = dkim.sign(message = message.as_bytes(), </span><br><span class="line">                selector = <span class="string">b&#x27;introduction&#x27;</span>, </span><br><span class="line">                domain = <span class="string">b&#x27;example.com&#x27;</span>, </span><br><span class="line">                privkey = privateKey.encode(), </span><br><span class="line">                canonicalize = (<span class="string">b&#x27;relaxed&#x27;</span>, <span class="string">b&#x27;relaxed&#x27;</span>),</span><br><span class="line">                include_headers=headers)</span><br><span class="line">sig = sig.decode()</span><br><span class="line"><span class="built_in">print</span>(sig)</span><br></pre></td></tr></table></figure>
+<h3 id="swaks"><a class="header-anchor" href="#swaks">¶</a>swaks</h3>
+<p>swaks堪称SMTP协议的瑞士军刀，使用它我们可以灵活的操作SMTP协议报文<br>
+简单的发送邮件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">swaks --to user@example.com --from admin@qq.com --h-From: &#x27;管理员&lt;admin@qq.com&gt;&#x27; --body test --header test --ehlo gmail.com --server test-server.example.net -p 2525 -au &lt;USER&gt; -ap &lt;PASS&gt;</span><br></pre></td></tr></table></figure>
+<p>上面的一些参数解释：</p>
+<ul>
+<li>–to 收信人</li>
+<li>–from 发信人</li>
+<li>–h-From 邮件内的From字段</li>
+<li>–ehlo 打招呼字段</li>
+<li>–body 邮件body</li>
+<li>–header 邮件头</li>
+<li>–server指定邮件服务器 -p指定端口 -au指定认证用户名 -ap指定认证密码</li>
+</ul>
+<p>同样支持发送附件使用<code>--attach /tmp/test.txt</code>参数<br>
+也支持直接发送eml文件使用<code>--data /tmp/mail.eml</code>参数</p>
+<h3 id="espoofer"><a class="header-anchor" href="#espoofer">¶</a>espoofer</h3>
+<p>发现的一个开源的邮件欺骗工具，利用现有公开方法bypass SPF/DKIM/DMARC校验，并且支持伪造DKIM签名<br>
+地址：<a target="_blank" rel="noopener" href="https://github.com/chenjj/espoofer">https://github.com/chenjj/espoofer</a></p>
+<h2 id="攻击面"><a class="header-anchor" href="#攻击面">¶</a>攻击面</h2>
+<p>现有的基于邮件认证协议的攻击，更多的关注在发件人伪造攻击，造成发件人欺骗和钓鱼邮件<br>
+不同的攻击路径：<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_c7d25ebb9bf69ddcada9d1ea9ac193ad.png" alt=""></p>
+<h3 id="SPF绕过"><a class="header-anchor" href="#SPF绕过">¶</a>SPF绕过</h3>
+<p>SPF绕过主要是为了伪造From字段，SPF主要来校验From字段中声明的域名的SPF记录中是否有真实发送IP的记录，如果有即可信任校验成功</p>
+<ul>
+<li>利用子域名未设置SPF<br>
+因为未设置SPF的话，SPF检测结果是none，是放行的，所以虽然qq.com上设置了spf，但时mail.qq.com上没有设置spf，我们就可以伪造mail.qq.com域下的任何用户<br>
+下面的例子在检查MAIL FROM时，notexist.bank.com未设置spf，所以spf检测为none，spf检查helo通过，最终spf通过，dmarc检查MAIL FROM字段和From字段的域是否符合，主域相同所以dmarc通过</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">HELO attack.com</span><br><span class="line">MAIL FROM: &lt;any@notexist.bank.com&gt;</span><br><span class="line">From: &lt;sec@bank.com&gt;</span><br><span class="line">To: &lt;target@target.com&gt;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>利用Mail From和Helo混乱特性<br>
+SMTP提供了HELO和MAIL FROM两个字段来表示发件人的邮箱地址，SPF标准指出应当同时对两者进行验证，但是，检查MAIL FROM是强制的，而HELO只是推荐进行检查<br>
+DMARC标准指出DMARC验证应该使用MAIL FROM进行，当MAIL FROM为空才使用HELO进行验证。利用上面这两种机制，可使用下面的两种机制进行发件人欺骗<br>
+1.Mail From写入不存在的子域名<br>
+这种攻击方式如下图所示，MAIL FROM输入为合法域名下的不存在子域名，因为不存在子域名的SPF策略，SPF无法对其进行验证，转而使用HELO字段进行SPF验证，而HELO字段是攻击者可以进行任意设置的，因此可以通过SPF验证；同时，因为MAIL FROm地址不为空，DMARC将继续使用MAIL FROM进行域对齐，因为二级域名为合法域，与FORM字段域名相同，因此DMARC域名对齐验证通过。邮件成功绕过DMARC身份认证<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_7cfb0e6939c87d760833d41719bdf0b5.png" alt=""><br>
+2.“空” MAIL FROM<br>
+在某些SPF实现中，将对(右侧内容视作注释内容，因此当使用(any@legitimate.com作为MAIL FROM地址时，SPF会将其视为空，然后使用HELO字段进行SPF验证，与上面相同，SPF通过验证并将验证结果传递给DMARC，在某些DMARC的验证中，仅仅将其视为普通地址进行与FROM域名进行域对齐身份验证，成功通过DMARC验证<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_0f297c4bab26e8423d50adebabd8d560.png" alt=""></li>
+</ul>
+<h3 id="DKIM绕过"><a class="header-anchor" href="#DKIM绕过">¶</a>DKIM绕过</h3>
+<p>DKIM绕过主要为了伪造邮件文件内容中的一些字段，由于DKIM对内容进行签名，所以需要绕过DKIM校验从而伪造字段比如From字段和邮件body，从而造成发件人伪造和邮件内容伪造</p>
+<ul>
+<li>利用特殊字符截断<br>
+dkim使用<code>attack.com.\x00.any._domainkey.bank.com</code>请求公钥，dns把\x00视为截断，所以最终将在attack.com请求公钥，导致dkim检测通过</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">HELO attack.com</span><br><span class="line">MAIL FROM: &lt;any@attack.com&gt;</span><br><span class="line">DKIM-Signature: ...;d=bank.com;s=attack.com.\x00.any;...</span><br><span class="line">From: &lt;sec@bank.com&gt;</span><br><span class="line">To: &lt;victim@victim.com&gt;</span><br></pre></td></tr></table></figure>
+<p>在C语言中，NUL(“\x00”)被认为是终止符，而在Perl和PHP中，将不被视为终止符，利用这种特性，攻击者对任意电子邮件可以构造绕过身份认证，首先他们使用自己的私有DKIM对邮件进行签名、生成DKIM-Signature标头，将标头中的<code>d=&quot;legitimate.com&quot;</code>，而<code>s=&quot;atttacker.com.\x00.any&quot;</code>,当Gmail服务器（Gmail服务器存在该问题）其DKIM组件查询<code>s._domiankey.d</code>，即<code>attack.com.\x00.any._domainkey.legitimate</code>来获取公钥，DNS组件进行对改地址进行解析时会将NUL字符视为终止符，因此将从attack.com获取公钥（攻击者的公钥），然后DKIM组件使用攻击者的公钥验证伪造邮件，错误的认为合法域名已经对该域进行可签名。另一方面，DMARC将使用<code>d=legitimate.com</code>域名与FORM域名对齐认证，二者相同，成功通过DMARC认证<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_9a0376f8a1b40fb665137455df5fcf6e.png" alt=""></p>
+<h3 id="DMARC绕过"><a class="header-anchor" href="#DMARC绕过">¶</a>DMARC绕过</h3>
+<p>DMARC基于SPF和DKIM的认证头进行二次对其验证，所以需要读取认证头中的一些字段，从而存在一些认证结果注入攻击<br>
+SPF和DKIM以头部中的Authentication-Results将验证结果传递给DMARC组件，下面为Authentication-Results实例<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_df09d10384d63fc64e898a4655ee9689.png" alt=""><br>
+其中spf=pass和dkim=pass表示邮件服务器通过了example.com的spf和dkim认证，smtp.mailfrom表示SPF组件验证的域名，header.d表示DKIM验证的域名，括号内的内容为备注。DMARC组件解析这个字段来进行DMAR域名对齐认证<br>
+这种身份认证的绕过方式来源于认证结果从一个组件传递到另一个组件的过程中，元字符的存在因起了身份认证类似于SQLi的攻击。对于某些特殊字符，SPF和DKIM会将这些字符视为数据，而DMARC组件在解析认证结果时将会将其视为控制信息，从而发生攻击</p>
+<h4 id="DKIM认证结果注入"><a class="header-anchor" href="#DKIM认证结果注入">¶</a>DKIM认证结果注入</h4>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_616239e4f2582380be4772bb389f1f64.png" alt=""><br>
+攻击者使用自己的私钥生成DKIM-Signature标头，在标头中使用带（的d=，例如在下例中，<code>d=legitimate.com(.attacker.com</code>,DKIM组件将查询<code>selector._domainkey.legitimate.com(. attacker.com</code>,该域名在攻击者的控制之下，获取攻击者的公钥并通过dkim验证，返回的结果如下<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_c8d7416a3a6263db2b51570d67e11c2d.png" alt=""><br>
+当DMARC收到Authentication-Results，对d=xxx进行解析时，将会将其解析为<code>legitmate.com</code>,因为会将“（”后的内容视为注释，同时DMARC中解析到的域名与FORM标头匹配，成功通过DMARC身份认证</p>
+<blockquote>
+<p>“（双引号）和‘（单引号）与”(”具有相同的效果</p>
+</blockquote>
+<h4 id="SPF认证结果注入"><a class="header-anchor" href="#SPF认证结果注入">¶</a>SPF认证结果注入</h4>
+<p>SPF认证结果注入与DKIM认证结果注入与DKIM结果认证类似，攻击者在MAIL FROM中使用相同的网址SPF认证注入攻击，例如下面的SPF认证结果注入<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_3fd3db3dfc5ca13e2e96e98e265d3c34.png" alt=""><br>
+在一些邮件服务器中，对MAIL FROM的语法进行了一定的限制，MIAL FROM中不再能使用上面的特殊字符，但是我们可以使用另一种方式来进行SPF认证结果注入，如下图所示，邮件服务器进行SPF查询时将使用<code>legitimate.com'@a.attack.com</code>进行查询，该域名的SPF记录为攻击者设定，因此伪造的邮件能够成功通过SPF验证，而DMARC进行身份验证结果解析时，将’后的内容视为注释，使用域名legitimate.com与MAIL FROM域名进行对齐，成功通过DMARC认证<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_236a74960a394ff4a2f13ceafd5a5256.png" alt=""></p>
+<h3 id="其他发件人伪造攻击方法"><a class="header-anchor" href="#其他发件人伪造攻击方法">¶</a>其他发件人伪造攻击方法</h3>
+<ul>
+<li>空Mail From头<br>
+有些STMP服务器遇到空Mail From头可以通过，理论上按照SPF协议，如果服务器遇到空Mail From需要去验证HELO字段，但是由于对HELO字段的滥用，所以就很多服务器不根据HELO字段完成SPF验证，所以碰到空Mail From头的判断结果就变成none</li>
+<li>Mail From头和From头不一样<br>
+邮箱一般以显示给用户的是Data内的From头，有些邮箱通过直接设置From的办法来欺骗受害者，但是目前大部分邮箱如果Mail From头和From不一样会显示转发</li>
+<li>多个From头<br>
+多个From头正常的处理方式是会被退信的，但是有一部分邮箱是只取部分显示，比如只显示第一个或只显示最后一个，根据有些服务器不同的处理方式，从而造成发信人欺骗</li>
+<li>From头上写多个Email地址<br>
+因为一个邮件可能被多个人编辑，所以可以在From上设置多个地址，然后设置一个Sender来确定真正的发件人，作为攻击者可以设置From头为<code>&lt;admin@qq.com&gt;,&lt;test@attack.com&gt;</code>或者增加一些基于基本规则的变化如<code>[admin@qq.com],&lt;test@attack.com&gt;</code></li>
+<li>From头本身支持的格式<br>
+<img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_49b4e0ae30ea5c4f58f3895b7bf08918.png" alt=""><br>
+Mail From和From字段都是支持富文本的。比如<code>&lt;@a.com,@b.com:admin@c.com&gt;</code>依然是合法的地址，其中@a.com和@b.com是路由部分，admin@c.com是真正的发送者的地址<br>
+From字段是可以设置为地址列表的，且列表种的元素可以为空，如<code>&lt;a@a.com&gt;,,&lt;b@b.com&gt;</code><br>
+圆括号作为注释可以插入在地址中：<code>&lt;admin(username)@a.com(domain)&gt;</code></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">From: zhang(b@b.com) san&lt;@c.com, @d.com:a@a.com (e@e.com) &gt; (f@f.com) </span><br><span class="line">注释：b@b.com e@e.com f@f.com</span><br><span class="line">路由：@c.com, @d.com</span><br><span class="line">发件人地址：a@a.com</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>From字段语法特性利用例子如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//多个email地址</span><br><span class="line">From: &lt;any@attack.com&gt;,&lt;admin@bank.com&gt;</span><br><span class="line">//利用From语法</span><br><span class="line">From: &lt;any@attack.com,@any.com:admin@bank.com&gt;</span><br><span class="line">//利用字段编码</span><br><span class="line">From: bs64(&lt;any@bank.com&gt;),&lt;any@attack.com&gt;</span><br><span class="line">//利用反斜杠</span><br><span class="line">From: &lt;admin@bank.com&gt;\,&lt;any@attack.com&gt;</span><br><span class="line">//利用有无尖括号</span><br><span class="line">From: admin@bank.com,&lt;any@attack.com&gt;</span><br><span class="line">From: &lt;any@attack.com&gt;admin@bank.com</span><br></pre></td></tr></table></figure>
+<ul>
+<li>利用Sender头<br>
+Sender字段定义为代发用户，不同的邮箱对Sender头的处理并不一样，有些会把Sender头作为代发，有些会直接显示出来，有时可以利用此来绕过代发显示</li>
+<li>利用From解析错误<br>
+利用解析错误，当From无法找到时会显示Sender为发件人</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">From</span><br><span class="line"> : &lt;any@attack.com&gt;</span><br><span class="line">Sender: &lt;admin@bank.com&gt;</span><br><span class="line">To: &lt;victim@victim.com&gt;</span><br></pre></td></tr></table></figure>
+<p>或者当邮件服务器和邮件代理客户端在处理不同的From格式时，解析方式不同而造成发件人伪造<br>
+虽然邮件服务器拒绝使用多个From头的电子邮件，但是攻击者使用折叠空间成功的From头绕过。因为服务器的DMARC组件可以识别出成功折叠的From头，验证<code>attack.com</code>，但是邮件代理客户端却将其作为未知头，而不是From头，因此将展示它认为只有一个From字段，即<code>admin@bank.com</code>，因此将<code>admin@bank.com</code>展示给客户</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">From</span><br><span class="line"> : &lt;any@attack.com&gt;</span><br><span class="line">From: &lt;admin@bank.com&gt;</span><br><span class="line">To: &lt;victim@victim.com&gt;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>这种情况要求请求邮件服务器能够成功识别出From头，而邮件代理客户端不能识别</p>
+</blockquote>
+<p><img src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/blogimg/upload_3badd3d7880b5eb5707a75bb88589ed6.png" alt=""></p>
+<p>参考：<br>
+<a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/O_59DiULIFzc5W3RmhXjrQ">https://mp.weixin.qq.com/s/O_59DiULIFzc5W3RmhXjrQ</a><br>
+<a target="_blank" rel="noopener" href="https://anchorety.github.io/2020/10/18/%E9%82%AE%E4%BB%B6%E5%AE%89%E5%85%A8%E4%B9%8B%E5%8F%91%E4%BB%B6%E4%BA%BA%E4%BC%AA%E9%80%A0/">https://anchorety.github.io/2020/10/18/邮件安全之发件人伪造/</a><br>
+<a target="_blank" rel="noopener" href="https://datacon.qianxin.com/blog/archives/277">https://datacon.qianxin.com/blog/archives/277</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/04/18/ADCS%E7%9B%B8%E5%85%B3%E5%AD%A6%E4%B9%A0/" rel="prev" title="ADCS相关攻击面学习">
+      <i class="fa fa-chevron-left"></i> ADCS相关攻击面学习
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link"><span class="nav-number">1.</span> <span class="nav-text">邮件安全相关学习</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.</span> <span class="nav-text">基础概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%82%AE%E4%BB%B6%E5%AE%89%E5%85%A8%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.2.</span> <span class="nav-text">邮件安全协议</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SPF%EF%BC%88Sender-Policy-Framework%EF%BC%89"><span class="nav-number">1.2.1.</span> <span class="nav-text">SPF（Sender Policy Framework）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DKIM%EF%BC%88DomainKeys-Identified-Mail%EF%BC%89"><span class="nav-number">1.2.2.</span> <span class="nav-text">DKIM（DomainKeys Identified Mail）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DMARC"><span class="nav-number">1.2.3.</span> <span class="nav-text">DMARC</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E5%B7%A5%E5%85%B7%E5%92%8C%E8%84%9A%E6%9C%AC"><span class="nav-number">1.3.</span> <span class="nav-text">相关工具和脚本</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#python-dkim%E7%AD%BE%E5%90%8D%E5%BA%93"><span class="nav-number">1.3.1.</span> <span class="nav-text">python dkim签名库</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#swaks"><span class="nav-number">1.3.2.</span> <span class="nav-text">swaks</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#espoofer"><span class="nav-number">1.3.3.</span> <span class="nav-text">espoofer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%94%BB%E5%87%BB%E9%9D%A2"><span class="nav-number">1.4.</span> <span class="nav-text">攻击面</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SPF%E7%BB%95%E8%BF%87"><span class="nav-number">1.4.1.</span> <span class="nav-text">SPF绕过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DKIM%E7%BB%95%E8%BF%87"><span class="nav-number">1.4.2.</span> <span class="nav-text">DKIM绕过</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DMARC%E7%BB%95%E8%BF%87"><span class="nav-number">1.4.3.</span> <span class="nav-text">DMARC绕过</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#DKIM%E8%AE%A4%E8%AF%81%E7%BB%93%E6%9E%9C%E6%B3%A8%E5%85%A5"><span class="nav-number">1.4.3.1.</span> <span class="nav-text">DKIM认证结果注入</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#SPF%E8%AE%A4%E8%AF%81%E7%BB%93%E6%9E%9C%E6%B3%A8%E5%85%A5"><span class="nav-number">1.4.3.2.</span> <span class="nav-text">SPF认证结果注入</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E5%8F%91%E4%BB%B6%E4%BA%BA%E4%BC%AA%E9%80%A0%E6%94%BB%E5%87%BB%E6%96%B9%E6%B3%95"><span class="nav-number">1.4.4.</span> <span class="nav-text">其他发件人伪造攻击方法</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Ka1t4v"
+      src="https://ka1t4v.oss-cn-zhangjiakou.aliyuncs.com/config/avatar.jpg">
+  <p class="site-author-name" itemprop="name">Ka1t4v</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">41</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">10</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/ka1t4v" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;ka1t4v" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ka1t4v@gmail.com" title="E-Mail → mailto:ka1t4v@gmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 2022 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Ka1t4v</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
